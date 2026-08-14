@@ -4,6 +4,7 @@ function uninstall() {
     console.log("Uninstalling Superpowers skills from Cline...");
     try {
         const removed = uninstallSkills();
+
         console.log(`\n✅ Removed ${removed.length} skills:`);
         for (const skill of removed) {
             console.log(`   - ${skill}`);
