@@ -1,43 +1,43 @@
 # superpowers-cline
 
-CLI để cài đặt và tự động cập nhật **Superpowers skills** cho **Cline**.
+CLI to install and auto-update **Superpowers skills** for **Cline**.
 
-[Superpowers](https://github.com/obra/superpowers) là bộ skills (methodology) cho coding agents: brainstorming, TDD, systematic-debugging, subagent-driven-development, v.v. CLI này clone upstream, copy skills vào Cline, và giúp bạn cập nhật khi upstream có bản mới — không cần copy thủ công, không bị outdate.
+[Superpowers](https://github.com/obra/superpowers) is a set of skills (methodology) for coding agents: brainstorming, TDD, systematic-debugging, subagent-driven-development, etc. This CLI clones upstream, copies skills into Cline, and helps you update when upstream releases a new version — no manual copying, no getting outdated.
 
-## Tính năng
+## Features
 
-- **install** — clone upstream `obra/superpowers` và cài skills vào `~/.cline/skills/` (global).
-- **install-project** — cài skills vào `.cline/skills/` trong project hiện tại (workaround cho IDE extension không detect global skills).
-- **update** — `git pull` upstream rồi đồng bộ lại global skills.
-- **status** — xem commit hiện tại, có bản mới không, danh sách skills đã cài.
-- **uninstall** — gỡ global skills do CLI này cài (không đụng skill khác của bạn).
-- **uninstall-project** — gỡ project skills do CLI này cài.
-- **Wrapper Cline-specific** — skill `using-superpowers` được thay bằng bản tối ưu cho Cline (hướng dẫn dùng `use_skill`, `use_subagents`, slash commands).
+- **install** — clone upstream `obra/superpowers` and install skills into `~/.cline/skills/` (global).
+- **install-project** — install skills into `.cline/skills/` in the current project (workaround for IDE extensions that don't detect global skills).
+- **update** — `git pull` upstream then re-sync global skills.
+- **status** — view the current commit, whether a new version is available, and the list of installed skills.
+- **uninstall** — remove global skills installed by this CLI (won't touch your other skills).
+- **uninstall-project** — remove project skills installed by this CLI.
+- **Cline-specific wrapper** — the `using-superpowers` skill is replaced with an optimized version for Cline (guidance on using `use_skill`, `use_subagents`, slash commands).
 
-## Cài đặt
+## Installation
 
 ```bash
-# Từ thư mục dự án này
-npm link          # tạo lệnh `supcline` dùng được toàn cục
+# From this project directory
+npm link          # creates a globally usable `supcline` command
 ```
 
-Hoặc chạy trực tiếp:
+Or run directly:
 
 ```bash
 node bin/cli.js install
 ```
 
-## Sử dụng
+## Usage
 
 ```bash
-# Cài global (mọi project)
+# Install globally (all projects)
 supcline install
 
-# Cài vào project hiện tại (khi IDE không detect global skills)
+# Install into the current project (when the IDE doesn't detect global skills)
 cd /path/to/project
 supcline install-project
 
-# Cập nhật / kiểm tra / gỡ
+# Update / check / uninstall
 supcline update
 supcline status
 supcline uninstall
@@ -45,12 +45,12 @@ supcline uninstall-project
 supcline help
 ```
 
-## Khi nào dùng global vs project
+## When to use global vs project
 
-- **Global** (`install`): cài vào `~/.cline/skills/`, dùng cho mọi project. Hoạt động tốt với Cline CLI.
-- **Project** (`install-project`): cài vào `<project>/.cline/skills/`, dùng khi IDE extension (Antigravity/VS Code) không detect được global skills. Cần chạy lại cho từng project.
+- **Global** (`install`): installs into `~/.cline/skills/`, used for all projects. Works well with Cline CLI.
+- **Project** (`install-project`): installs into `<project>/.cline/skills/`, used when the IDE extension (Antigravity/VS Code) can't detect global skills. Needs to be re-run for each project.
 
-## Cấu trúc
+## Structure
 
 ```
 superpowers-cline/
@@ -59,21 +59,21 @@ superpowers-cline/
 │   ├── commands/             # install / install-project / update / status / uninstall / uninstall-project
 │   ├── lib/                  # config, repo (git), sync (copy + manifest)
 │   └── wrapper/
-│       └── using-superpowers/  # skill wrapper Cline-specific
+│       └── using-superpowers/  # Cline-specific skill wrapper
 └── package.json
 ```
 
-## Dữ liệu CLI
+## CLI data
 
-- Cache repo: `~/.superpowers-cline/repo`
-- Manifest global: `~/.superpowers-cline/manifest.json`
-- Config (nguồn, đường dẫn): `~/.superpowers-cline/config.json`
-- Skills global: `~/.cline/skills/`
-- Skills project: `<project>/.cline/skills/` + manifest tại `<project>/.cline/superpowers-manifest.json`
+- Repo cache: `~/.superpowers-cline/repo`
+- Global manifest: `~/.superpowers-cline/manifest.json`
+- Config (source, paths): `~/.superpowers-cline/config.json`
+- Global skills: `~/.cline/skills/`
+- Project skills: `<project>/.cline/skills/` + manifest at `<project>/.cline/superpowers-manifest.json`
 
-## Đổi nguồn sang fork (tùy chọn)
+## Switching to a fork as the source (optional)
 
-Mặc định dùng thẳng upstream `obra/superpowers`. Muốn dùng fork riêng, sửa `sourceUrl` trong `~/.superpowers-cline/config.json` rồi chạy lại `install`.
+By default it uses the upstream `obra/superpowers` directly. To use your own fork, edit `sourceUrl` in `~/.superpowers-cline/config.json` and run `install` again.
 
 ## License
 
