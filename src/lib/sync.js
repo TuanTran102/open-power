@@ -3,7 +3,6 @@ const path = require("path");
 const {
     CLI_ROOT,
     getManifestPath,
-    getRepoDir,
     loadConfig,
 } = require("./config");
 const { getSkillsSourceDir, getCurrentCommit } = require("./repo");
@@ -32,8 +31,7 @@ function getWrapperSkillDir() {
     return path.join(__dirname, "..", "wrapper", "using-superpowers");
 }
 
-function readManifest() {
-    const manifestPath = getManifestPath();
+function readManifest(manifestPath) {
     if (fs.existsSync(manifestPath)) {
         try {
             return JSON.parse(fs.readFileSync(manifestPath, "utf8"));
@@ -44,20 +42,23 @@ function readManifest() {
     return null;
 }
 
-function writeManifest(manifest) {
-    fs.mkdirSync(CLI_ROOT, { recursive: true });
-    fs.writeFileSync(getManifestPath(), JSON.stringify(manifest, null, 4) + "\n");
+function writeManifest(manifestPath, manifest) {
+    fs.mkdirSync(path.dirname(manifestPath), { recursive: true });
+    fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 4) + "\n");
 }
 
 /**
- * Sync skills from the cached repo into Cline's skills directory.
+ * Core sync: copy skills from the cached repo into a target skills directory.
  * - Copies all upstream skills.
  * - Overrides `using-superpowers` with our Cline-specific wrapper.
- * - Records installed skill names in the manifest so uninstall is safe.
+ * - Writes a manifest next to the target so uninstall is safe.
+ *
+ * @param {string} targetSkillsDir - Directory to install skills into (e.g. ~/.cline/skills or <project>/.cline/skills)
+ * @param {string} manifestPath - Path to write the manifest
+ * @returns {object} manifest
  */
-function syncSkills() {
+function syncSkillsTo(targetSkillsDir, manifestPath) {
     const config = loadConfig();
-    const clineSkillsDir = config.clineSkillsDir;
     const sourceDir = getSkillsSourceDir();
     const wrapperDir = getWrapperSkillDir();
 
@@ -65,7 +66,7 @@ function syncSkills() {
         throw new Error(`Skills source not found: ${sourceDir}`);
     }
 
-    fs.mkdirSync(clineSkillsDir, { recursive: true });
+    fs.mkdirSync(targetSkillsDir, { recursive: true });
 
     // Copy all upstream skills
     const upstreamSkills = fs
@@ -74,11 +75,11 @@ function syncSkills() {
         .map((e) => e.name);
 
     for (const skillName of upstreamSkills) {
-        copyDir(path.join(sourceDir, skillName), path.join(clineSkillsDir, skillName));
+        copyDir(path.join(sourceDir, skillName), path.join(targetSkillsDir, skillName));
     }
 
     // Override using-superpowers with our wrapper
-    copyDir(wrapperDir, path.join(clineSkillsDir, config.wrapperSkillName));
+    copyDir(wrapperDir, path.join(targetSkillsDir, config.wrapperSkillName));
 
     // Record manifest (dedupe: wrapper replaces upstream's using-superpowers)
     const installedSkills = [
@@ -92,9 +93,17 @@ function syncSkills() {
         skills: installedSkills,
         wrapperSkill: config.wrapperSkillName,
     };
-    writeManifest(manifest);
+    writeManifest(manifestPath, manifest);
 
     return manifest;
+}
+
+/**
+ * Sync skills into the global Cline skills directory (~/.cline/skills).
+ */
+function syncSkills() {
+    const config = loadConfig();
+    return syncSkillsTo(config.clineSkillsDir, getManifestPath());
 }
 
 /**
@@ -104,7 +113,7 @@ function syncSkills() {
 function uninstallSkills() {
     const config = loadConfig();
     const clineSkillsDir = config.clineSkillsDir;
-    const manifest = readManifest();
+    const manifest = readManifest(getManifestPath());
 
     if (!manifest || !Array.isArray(manifest.skills)) {
         throw new Error("No manifest found. Nothing to uninstall.");
@@ -128,6 +137,7 @@ module.exports = {
     readManifest,
     writeManifest,
     syncSkills,
+    syncSkillsTo,
     uninstallSkills,
     getWrapperSkillDir,
 };

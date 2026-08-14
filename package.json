@@ -4,7 +4,8 @@
     "description": "CLI to install and auto-update Superpowers skills for Cline",
     "type": "commonjs",
     "bin": {
-        "superpowers-cline": "bin/cli.js"
+        "superpowers-cline": "bin/cli.js",
+        "supcline": "bin/cli.js"
     },
     "scripts": {
         "start": "node bin/cli.js"
