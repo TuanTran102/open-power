@@ -1,41 +1,41 @@
 # superpowers-cline
 
-CLI để cài đặt và tự động cập nhật **Superpowers skills** cho **Cline**.
+CLI to install and auto-update **Superpowers skills** for **Cline**.
 
-[Superpowers](https://github.com/obra/superpowers) là bộ skills (methodology) cho coding agents: brainstorming, TDD, systematic-debugging, subagent-driven-development, v.v. CLI này clone upstream, copy skills vào `~/.cline/skills/` (global), và giúp bạn cập nhật khi upstream có bản mới — không cần copy thủ công, không bị outdate.
+[Superpowers](https://github.com/obra/superpowers) is a collection of skills (methodologies) for coding agents: brainstorming, TDD, systematic-debugging, subagent-driven-development, etc. This CLI clones the upstream repo, copies the skills into `~/.cline/skills/` (global), and helps you stay up to date when upstream releases new versions — no manual copying, no stale skills.
 
-## Tính năng
+## Features
 
-- **install** — clone upstream `obra/superpowers` và cài skills vào `~/.cline/skills/`.
-- **update** — `git pull` upstream rồi đồng bộ lại skills.
-- **status** — xem commit hiện tại, có bản mới không, danh sách skills đã cài.
-- **uninstall** — gỡ đúng các skills do CLI này cài (không đụng skill khác của bạn).
-- **Wrapper Cline-specific** — skill `using-superpowers` được thay bằng bản tối ưu cho Cline (hướng dẫn dùng `use_skill`, `use_subagents`, slash commands).
+- **install** — clone upstream `obra/superpowers` and install skills into `~/.cline/skills/`.
+- **update** — `git pull` upstream, then re-sync the skills.
+- **status** — show the current commit, whether a newer version is available, and the list of installed skills.
+- **uninstall** — remove only the skills installed by this CLI (leaves your other skills untouched).
+- **Cline-specific wrapper** — the `using-superpowers` skill is replaced with a Cline-optimized version (instructions for using `use_skill`, `use_subagents`, and slash commands).
 
-## Cài đặt
+## Installation
 
 ```bash
-# Từ thư mục dự án này
-npm link          # tạo lệnh `superpowers-cline` dùng được toàn cục
+# From this project directory
+npm link          # creates the global `superpowers-cline` command
 ```
 
-Hoặc chạy trực tiếp:
+Or run it directly:
 
 ```bash
 node bin/cli.js install
 ```
 
-## Sử dụng
+## Usage
 
 ```bash
-superpowers-cline install     # cài lần đầu (global)
-superpowers-cline update      # cập nhật khi có bản mới
-superpowers-cline status      # kiểm tra version & skills
-superpowers-cline uninstall   # gỡ cài
-superpowers-cline help        # xem trợ giúp
+superpowers-cline install     # first-time install (global)
+superpowers-cline update      # update when a new version is available
+superpowers-cline status      # check version & skills
+superpowers-cline uninstall   # remove installation
+superpowers-cline help        # show help
 ```
 
-## Cấu trúc
+## Structure
 
 ```
 superpowers-cline/
@@ -44,20 +44,20 @@ superpowers-cline/
 │   ├── commands/             # install / update / status / uninstall
 │   ├── lib/                  # config, repo (git), sync (copy + manifest)
 │   └── wrapper/
-│       └── using-superpowers/  # skill wrapper Cline-specific
+│       └── using-superpowers/  # Cline-specific skill wrapper
 └── package.json
 ```
 
-## Dữ liệu CLI
+## CLI Data
 
-- Cache repo: `~/.superpowers-cline/repo`
-- Manifest (danh sách skills đã cài): `~/.superpowers-cline/manifest.json`
-- Config (nguồn, đường dẫn): `~/.superpowers-cline/config.json`
-- Skills cài vào: `~/.cline/skills/`
+- Repo cache: `~/.superpowers-cline/repo`
+- Manifest (list of installed skills): `~/.superpowers-cline/manifest.json`
+- Config (source, paths): `~/.superpowers-cline/config.json`
+- Skills installed to: `~/.cline/skills/`
 
-## Đổi nguồn sang fork (tùy chọn)
+## Switching to a Fork (Optional)
 
-Mặc định dùng thẳng upstream `obra/superpowers`. Muốn dùng fork riêng, sửa `sourceUrl` trong `~/.superpowers-cline/config.json` rồi chạy lại `install`.
+By default, the CLI uses the upstream `obra/superpowers` repo directly. To use your own fork, edit `sourceUrl` in `~/.superpowers-cline/config.json` and run `install` again.
 
 ## License
 
