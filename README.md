@@ -1,79 +1,101 @@
-# superpowers-cline
+# open-power (`opow`)
 
-CLI to install and auto-update **Superpowers skills** for **Cline**.
+CLI to install and auto-update **Superpowers skills** for **Cline** and **Antigravity** (project-level).
 
-[Superpowers](https://github.com/obra/superpowers) is a set of skills (methodology) for coding agents: brainstorming, TDD, systematic-debugging, subagent-driven-development, etc. This CLI clones upstream, copies skills into Cline, and helps you update when upstream releases a new version — no manual copying, no getting outdated.
+[Superpowers](https://github.com/obra/superpowers) is a set of skills (methodology) for coding agents: brainstorming, TDD, systematic-debugging, subagent-driven-development, etc. This CLI clones upstream, copies skills into your project's agent directory, and helps you update when upstream releases a new version.
 
 ## Features
 
-- **install** — clone upstream `obra/superpowers` and install skills into `~/.cline/skills/` (global).
-- **install-project** — install skills into `.cline/skills/` in the current project (workaround for IDE extensions that don't detect global skills).
-- **update** — `git pull` upstream then re-sync global skills.
-- **status** — view the current commit, whether a new version is available, and the list of installed skills.
-- **uninstall** — remove global skills installed by this CLI (won't touch your other skills).
-- **uninstall-project** — remove project skills installed by this CLI.
-- **Cline-specific wrapper** — the `using-superpowers` skill is replaced with an optimized version for Cline (guidance on using `use_skill`, `use_subagents`, slash commands).
+- **Project-Level Installation**:
+  - **Cline**: `<project>/.cline/skills/` + manifest at `<project>/.cline/superpowers-manifest.json`
+  - **Antigravity**: `<project>/.agents/skills/` + manifest at `<project>/.agents/superpowers-manifest.json`
+- **Platform-Specific Wrappers**: The `using-superpowers` skill is automatically adapted for each platform:
+  - **Cline**: Optimized for `use_skill`, `use_subagents`, slash commands.
+  - **Antigravity**: Optimized for Progressive Disclosure (`view_file`), hierarchical rules (`AGENTS.md` / `GEMINI.md`), and subagents.
+- **Safe Uninstallation & Updates**: Uses per-project manifests to only touch skills installed by this CLI, leaving custom skills intact.
+- **Upstream Cache**: Cached upstream repository in `~/.open-power/repo` for fast operations across projects.
 
 ## Installation
 
 ```bash
-# From this project directory
-npm link          # creates a globally usable `supcline` command
+# Link globally
+npm link
+
+# Now you can use `opow`
 ```
 
-Or run directly:
+Or run directly with Node:
 
 ```bash
-node bin/cli.js install
+node bin/cli.js <command>
 ```
 
 ## Usage
 
+Navigate to your project directory:
+
 ```bash
-# Install globally (all projects)
-supcline install
+cd /path/to/my-project
 
-# Install into the current project (when the IDE doesn't detect global skills)
-cd /path/to/project
-supcline install-project
+# Install for both Cline and Antigravity (default)
+opow install
 
-# Update / check / uninstall
-supcline update
-supcline status
-supcline uninstall
-supcline uninstall-project
-supcline help
+# Install only for Antigravity (.agents/skills)
+opow install antigravity
+# or: opow install agy
+
+# Install only for Cline (.cline/skills)
+opow install cline
+
+# Check installation and upstream status in current project
+opow status
+
+# Update skills in current project to latest upstream
+opow update
+
+# Uninstall skills from current project
+opow uninstall antigravity
+opow uninstall cline
+# or uninstall all:
+opow uninstall
 ```
 
-## When to use global vs project
+## Commands & Options
 
-- **Global** (`install`): installs into `~/.cline/skills/`, used for all projects. Works well with Cline CLI.
-- **Project** (`install-project`): installs into `<project>/.cline/skills/`, used when the IDE extension (Antigravity/VS Code) can't detect global skills. Needs to be re-run for each project.
+| Command | Description |
+|---|---|
+| `install [target]` | Clone upstream (if needed) and install skills into current project |
+| `update [target]` | `git pull` upstream cache and re-sync project skills |
+| `status [target]` | Show current commit, update availability, and installed skills |
+| `uninstall [target]` | Remove installed skills from current project |
+| `help` | Show usage and help information |
+
+**Targets**: `cline`, `antigravity` (or `agy`), `all` (default).
 
 ## Structure
 
 ```
-superpowers-cline/
-├── bin/cli.js                # entry point
+open-power/
+├── bin/
+│   └── cli.js                  # Entry point
 ├── src/
-│   ├── commands/             # install / install-project / update / status / uninstall / uninstall-project
-│   ├── lib/                  # config, repo (git), sync (copy + manifest)
+│   ├── commands/               # install / update / status / uninstall
+│   ├── lib/                    # config, repo (git), sync, targets
 │   └── wrapper/
-│       └── using-superpowers/  # Cline-specific skill wrapper
+│       ├── cline/              # Cline-specific skill wrapper
+│       └── antigravity/        # Antigravity-specific skill wrapper
 └── package.json
 ```
 
-## CLI data
+## Switching to a Fork as the Source (Optional)
 
-- Repo cache: `~/.superpowers-cline/repo`
-- Global manifest: `~/.superpowers-cline/manifest.json`
-- Config (source, paths): `~/.superpowers-cline/config.json`
-- Global skills: `~/.cline/skills/`
-- Project skills: `<project>/.cline/skills/` + manifest at `<project>/.cline/superpowers-manifest.json`
+By default it uses upstream `obra/superpowers`. To use a custom fork, edit `sourceUrl` in `~/.open-power/config.json`:
 
-## Switching to a fork as the source (optional)
-
-By default it uses the upstream `obra/superpowers` directly. To use your own fork, edit `sourceUrl` in `~/.superpowers-cline/config.json` and run `install` again.
+```json
+{
+    "sourceUrl": "https://github.com/your-username/superpowers.git"
+}
+```
 
 ## License
 

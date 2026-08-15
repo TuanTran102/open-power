@@ -1,22 +1,34 @@
+const path = require("path");
 const { ensureRepo } = require("../lib/repo");
-const { syncSkills } = require("../lib/sync");
+const { syncTargetSkills } = require("../lib/sync");
+const { resolveTargets } = require("../lib/targets");
 const { loadConfig } = require("../lib/config");
 
-function install() {
+function install(targetArg) {
     const config = loadConfig();
-    console.log(`Installing Superpowers skills for Cline...`);
+    const targets = resolveTargets(targetArg);
+    const projectDir = process.cwd();
+
+    console.log(`Ensuring upstream Superpowers repository cache...`);
     console.log(`  Source: ${config.sourceUrl}`);
-    console.log(`  Target: ${config.clineSkillsDir}`);
-
     ensureRepo();
-    const manifest = syncSkills();
 
-    console.log(`\n✅ Installed ${manifest.skills.length} skills:`);
-    for (const skill of manifest.skills) {
-        console.log(`   - ${skill}`);
+    for (const target of targets) {
+        const targetSkillsDir = target.getSkillsDir(projectDir);
+        console.log(`\nInstalling Superpowers skills for ${target.name}...`);
+        console.log(`  Project: ${projectDir}`);
+        console.log(`  Target:  ${targetSkillsDir}`);
+
+        const manifest = syncTargetSkills(target, projectDir);
+
+        console.log(`\n✅ Installed ${manifest.skills.length} skills for ${target.name}:`);
+        for (const skill of manifest.skills) {
+            console.log(`   - ${skill}`);
+        }
+        console.log(`\nCommit: ${manifest.sourceCommit}`);
     }
-    console.log(`\nCommit: ${manifest.sourceCommit}`);
-    console.log(`\nRestart Cline (or open the Skills tab) to see the new skills.`);
+
+    console.log(`\n🎉 Done! Restart your IDE / agent session to load the new skills.`);
 }
 
 module.exports = { install };

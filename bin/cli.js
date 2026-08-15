@@ -4,33 +4,88 @@ const { install } = require("../src/commands/install");
 const { update } = require("../src/commands/update");
 const { status } = require("../src/commands/status");
 const { uninstall } = require("../src/commands/uninstall");
-const { installProject } = require("../src/commands/install-project");
-const { uninstallProject } = require("../src/commands/uninstall-project");
 
 const HELP = `
-superpowers-cline — Install & auto-update Superpowers skills for Cline
+open-power (opow) — Install & auto-update Superpowers skills for Cline & Antigravity
 
 Usage:
-  superpowers-cline <command>
+  opow <command> [target] [options]
 
 Commands:
-  install             Clone upstream and install skills into ~/.cline/skills/ (global)
-  install-project     Install skills into .cline/skills/ in the current project
-  update              Pull latest upstream and re-sync global skills
-  status              Show installed version, update availability, and skill list
-  uninstall           Remove global skills installed by this CLI
-  uninstall-project   Remove project skills installed by this CLI
-  help                Show this help
+  install [target]      Install skills into current project (default target: all)
+  update [target]       Pull latest upstream and re-sync project skills
+  status [target]       Show project installed status, skills, and upstream commit
+  uninstall [target]    Remove skills from current project
+  help                  Show this help
+
+Targets:
+  cline                 Install into .cline/skills/ (with Cline-optimized wrapper)
+  antigravity, agy      Install into .agents/skills/ (with Antigravity-optimized wrapper)
+  all (default)         Install into both .cline/skills/ and .agents/skills/
 
 Options:
-  -h, --help  Show this help
+  -t, --target <name>   Specify target (cline | antigravity | agy | all)
+  -h, --help            Show this help
+
+Examples:
+  # Install for both Cline and Antigravity in current project
+  opow install
+
+  # Install only for Antigravity (.agents/skills)
+  opow install antigravity
+  # or: opow install agy
+
+  # Install only for Cline (.cline/skills)
+  opow install cline
+
+  # Check project status
+  opow status
+
+  # Update skills to latest upstream
+  opow update
+
+  # Uninstall from Antigravity
+  opow uninstall agy
 `;
 
-function main() {
-    const args = process.argv.slice(2);
-    const command = args[0];
+function parseArgs(argv) {
+    const raw = argv.slice(2);
+    let command = null;
+    let target = null;
 
-    if (!command || command === "help" || command === "-h" || command === "--help") {
+    for (let i = 0; i < raw.length; i++) {
+        const arg = raw[i];
+
+        if (arg === "-h" || arg === "--help" || arg === "help") {
+            return { command: "help" };
+        }
+
+        if (arg === "-t" || arg === "--target") {
+            if (i + 1 < raw.length) {
+                target = raw[++i];
+            }
+            continue;
+        }
+
+        if (arg.startsWith("--target=")) {
+            target = arg.split("=")[1];
+            continue;
+        }
+
+        if (!command) {
+            command = arg;
+        } else if (!target) {
+            target = arg;
+        }
+    }
+
+    return { command, target };
+}
+
+function main() {
+    const { command, target } = parseArgs(process.argv);
+
+    if (!command || command === "help") {
         console.log(HELP);
         return;
     }
@@ -38,25 +93,19 @@ function main() {
     try {
         switch (command) {
             case "install":
-                install();
-                break;
-            case "install-project":
-                installProject();
+                install(target);
                 break;
             case "update":
-                update();
+                update(target);
                 break;
             case "status":
-                status();
+                status(target);
                 break;
             case "uninstall":
-                uninstall();
-                break;
-            case "uninstall-project":
-                uninstallProject();
+                uninstall(target);
                 break;
             default:
-                console.log(`Unknown command: ${command}`);
+                console.log(`Unknown command: "${command}"`);
                 console.log(HELP);
                 process.exitCode = 1;
         }

@@ -1,11 +1,13 @@
 {
-    "name": "superpowers-cline",
-    "version": "1.0.0",
-    "description": "CLI to install and auto-update Superpowers skills for Cline",
+    "name": "open-power",
+    "version": "1.1.0",
+    "description": "CLI to install and auto-update Superpowers skills for Cline and Antigravity",
     "type": "commonjs",
     "bin": {
-        "superpowers-cline": "bin/cli.js",
-        "supcline": "bin/cli.js"
+        "open-power": "bin/cli.js",
+        "opow": "bin/cli.js",
+        "supcline": "bin/cli.js",
+        "supagy": "bin/cli.js"
     },
     "scripts": {
         "start": "node bin/cli.js"

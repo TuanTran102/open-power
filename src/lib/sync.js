@@ -1,10 +1,6 @@
 const fs = require("fs");
 const path = require("path");
-const {
-    CLI_ROOT,
-    getManifestPath,
-    loadConfig,
-} = require("./config");
+const { loadConfig } = require("./config");
 const { getSkillsSourceDir, getCurrentCommit } = require("./repo");
 
 function copyDir(src, dest) {
@@ -27,10 +23,6 @@ function removeDir(dir) {
     }
 }
 
-function getWrapperSkillDir() {
-    return path.join(__dirname, "..", "wrapper", "using-superpowers");
-}
-
 function readManifest(manifestPath) {
     if (fs.existsSync(manifestPath)) {
         try {
@@ -50,17 +42,19 @@ function writeManifest(manifestPath, manifest) {
 /**
  * Core sync: copy skills from the cached repo into a target skills directory.
  * - Copies all upstream skills.
- * - Overrides `using-superpowers` with our Cline-specific wrapper.
- * - Writes a manifest next to the target so uninstall is safe.
+ * - Overrides `using-superpowers` with the target-specific wrapper.
+ * - Writes a manifest so uninstall is safe.
  *
- * @param {string} targetSkillsDir - Directory to install skills into (e.g. ~/.cline/skills or <project>/.cline/skills)
- * @param {string} manifestPath - Path to write the manifest
+ * @param {object} target - Target definition from targets.js
+ * @param {string} [projectDir] - Project root directory (default: process.cwd())
  * @returns {object} manifest
  */
-function syncSkillsTo(targetSkillsDir, manifestPath) {
+function syncTargetSkills(target, projectDir = process.cwd()) {
     const config = loadConfig();
     const sourceDir = getSkillsSourceDir();
-    const wrapperDir = getWrapperSkillDir();
+    const targetSkillsDir = target.getSkillsDir(projectDir);
+    const manifestPath = target.getManifestPath(projectDir);
+    const wrapperDir = target.getWrapperDir();
 
     if (!fs.existsSync(sourceDir)) {
         throw new Error(`Skills source not found: ${sourceDir}`);
@@ -78,8 +72,10 @@ function syncSkillsTo(targetSkillsDir, manifestPath) {
         copyDir(path.join(sourceDir, skillName), path.join(targetSkillsDir, skillName));
     }
 
-    // Override using-superpowers with our wrapper
-    copyDir(wrapperDir, path.join(targetSkillsDir, config.wrapperSkillName));
+    // Override using-superpowers with target wrapper if exists
+    if (fs.existsSync(wrapperDir)) {
+        copyDir(wrapperDir, path.join(targetSkillsDir, config.wrapperSkillName));
+    }
 
     // Record manifest (dedupe: wrapper replaces upstream's using-superpowers)
     const installedSkills = [
@@ -88,6 +84,7 @@ function syncSkillsTo(targetSkillsDir, manifestPath) {
     ];
 
     const manifest = {
+        target: target.id,
         installedAt: new Date().toISOString(),
         sourceCommit: getCurrentCommit(),
         skills: installedSkills,
@@ -99,33 +96,41 @@ function syncSkillsTo(targetSkillsDir, manifestPath) {
 }
 
 /**
- * Sync skills into the global Cline skills directory (~/.cline/skills).
- */
-function syncSkills() {
-    const config = loadConfig();
-    return syncSkillsTo(config.clineSkillsDir, getManifestPath());
-}
-
-/**
- * Remove only the skills that this CLI installed (per manifest).
+ * Remove only the skills that this CLI installed for a target in the project.
  * Leaves any other user skills untouched.
+ *
+ * @param {object} target - Target definition from targets.js
+ * @param {string} [projectDir] - Project root directory (default: process.cwd())
+ * @returns {Array<string>} Array of removed skill names
  */
-function uninstallSkills() {
-    const config = loadConfig();
-    const clineSkillsDir = config.clineSkillsDir;
-    const manifest = readManifest(getManifestPath());
+function uninstallTargetSkills(target, projectDir = process.cwd()) {
+    const targetSkillsDir = target.getSkillsDir(projectDir);
+    const manifestPath = target.getManifestPath(projectDir);
+    const manifest = readManifest(manifestPath);
 
     if (!manifest || !Array.isArray(manifest.skills)) {
-        throw new Error("No manifest found. Nothing to uninstall.");
+        throw new Error(`No manifest found for ${target.name} at ${manifestPath}. Nothing to uninstall.`);
     }
 
     for (const skillName of manifest.skills) {
-        removeDir(path.join(clineSkillsDir, skillName));
+        removeDir(path.join(targetSkillsDir, skillName));
     }
 
     // Remove manifest
-    if (fs.existsSync(getManifestPath())) {
-        fs.rmSync(getManifestPath(), { force: true });
+    if (fs.existsSync(manifestPath)) {
+        fs.rmSync(manifestPath, { force: true });
+    }
+
+    // If targetSkillsDir is now empty, remove it
+    if (fs.existsSync(targetSkillsDir)) {
+        try {
+            const remaining = fs.readdirSync(targetSkillsDir);
+            if (remaining.length === 0) {
+                fs.rmdirSync(targetSkillsDir);
+            }
+        } catch (e) {
+            // ignore
+        }
     }
 
     return manifest.skills;
@@ -136,8 +141,6 @@ module.exports = {
     removeDir,
     readManifest,
     writeManifest,
-    syncSkills,
-    syncSkillsTo,
-    uninstallSkills,
-    getWrapperSkillDir,
+    syncTargetSkills,
+    uninstallTargetSkills,
 };

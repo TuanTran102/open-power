@@ -4,11 +4,9 @@ const fs = require("fs");
 
 const HOME = os.homedir();
 
-// Root directory for the CLI's own data (cache repo + manifest)
-const CLI_ROOT = path.join(HOME, ".superpowers-cline");
-
-// Where skills get installed for Cline (global)
-const CLINE_SKILLS_DIR = path.join(HOME, ".cline", "skills");
+// Root directory for the CLI's own data (cache repo + global config)
+const CLI_ROOT = path.join(HOME, ".open-power");
+const LEGACY_CLI_ROOT = path.join(HOME, ".superpowers-cline");
 
 // Upstream source of the Superpowers skills
 const DEFAULT_SOURCE_URL = "https://github.com/obra/superpowers.git";
@@ -16,22 +14,24 @@ const DEFAULT_SOURCE_URL = "https://github.com/obra/superpowers.git";
 // The wrapper skill we manage ourselves (overrides upstream's using-superpowers)
 const WRAPPER_SKILL_NAME = "using-superpowers";
 
+function getActiveCliRoot() {
+    if (!fs.existsSync(CLI_ROOT) && fs.existsSync(LEGACY_CLI_ROOT)) {
+        return LEGACY_CLI_ROOT;
+    }
+    return CLI_ROOT;
+}
+
 function getConfigPath() {
-    return path.join(CLI_ROOT, "config.json");
+    return path.join(getActiveCliRoot(), "config.json");
 }
 
 function getRepoDir() {
-    return path.join(CLI_ROOT, "repo");
-}
-
-function getManifestPath() {
-    return path.join(CLI_ROOT, "manifest.json");
+    return path.join(getActiveCliRoot(), "repo");
 }
 
 function getDefaultConfig() {
     return {
         sourceUrl: DEFAULT_SOURCE_URL,
-        clineSkillsDir: CLINE_SKILLS_DIR,
         wrapperSkillName: WRAPPER_SKILL_NAME,
     };
 }
@@ -52,19 +52,19 @@ function loadConfig() {
 }
 
 function saveConfig(config) {
-    fs.mkdirSync(CLI_ROOT, { recursive: true });
+    const root = getActiveCliRoot();
+    fs.mkdirSync(root, { recursive: true });
     fs.writeFileSync(getConfigPath(), JSON.stringify(config, null, 4) + "\n");
 }
 
 module.exports = {
     HOME,
     CLI_ROOT,
-    CLINE_SKILLS_DIR,
     DEFAULT_SOURCE_URL,
     WRAPPER_SKILL_NAME,
+    getActiveCliRoot,
     getConfigPath,
     getRepoDir,
-    getManifestPath,
     getDefaultConfig,
     loadConfig,
     saveConfig,
