@@ -5,14 +5,16 @@ const TARGETS = {
         id: "cline",
         name: "Cline",
         getSkillsDir: (projectDir) => path.join(projectDir, ".cline", "skills"),
+        getWorkflowsDir: (projectDir) => path.join(projectDir, ".clinerules", "workflows"),
         getManifestPath: (projectDir) => path.join(projectDir, ".cline", "superpowers-manifest.json"),
         getWrapperDir: () => path.join(__dirname, "..", "wrapper", "cline", "using-superpowers"),
     },
     antigravity: {
         id: "antigravity",
         name: "Antigravity",
-        getSkillsDir: (projectDir) => path.join(projectDir, ".agents", "skills"),
-        getManifestPath: (projectDir) => path.join(projectDir, ".agents", "superpowers-manifest.json"),
+        getSkillsDir: (projectDir) => path.join(projectDir, ".agent", "skills"),
+        getWorkflowsDir: (projectDir) => path.join(projectDir, ".agent", "workflows"),
+        getManifestPath: (projectDir) => path.join(projectDir, ".agent", "superpowers-manifest.json"),
         getWrapperDir: () => path.join(__dirname, "..", "wrapper", "antigravity", "using-superpowers"),
     },
 };

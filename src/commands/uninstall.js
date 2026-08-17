@@ -5,19 +5,27 @@ function uninstall(targetArg) {
     const targets = resolveTargets(targetArg);
     const projectDir = process.cwd();
 
-    console.log(`Uninstalling Superpowers skills from project...`);
+    console.log(`Uninstalling Superpowers & OpenSpec from project...`);
     console.log(`  Project: ${projectDir}`);
 
     let uninstalledAny = false;
 
     for (const target of targets) {
         try {
-            console.log(`\nUninstalling skills for ${target.name}...`);
+            console.log(`\nUninstalling for ${target.name}...`);
             const removed = uninstallTargetSkills(target, projectDir);
             uninstalledAny = true;
-            console.log(`✅ Removed ${removed.length} skills for ${target.name}:`);
-            for (const skill of removed) {
+
+            console.log(`✅ Removed ${removed.skills.length} skills for ${target.name}:`);
+            for (const skill of removed.skills) {
                 console.log(`   - ${skill}`);
+            }
+
+            if (removed.workflows && removed.workflows.length > 0) {
+                console.log(`✅ Removed ${removed.workflows.length} workflows for ${target.name}:`);
+                for (const wf of removed.workflows) {
+                    console.log(`   - /${wf}`);
+                }
             }
         } catch (err) {
             console.log(`⚠️  ${err.message}`);

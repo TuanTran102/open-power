@@ -1,6 +1,6 @@
 const { repoExists, pullRepo, getCurrentCommit, getRemoteCommit, fetchRepo } = require("../lib/repo");
-const { syncTargetSkills, readManifest } = require("../lib/sync");
-const { resolveTargets, TARGETS } = require("../lib/targets");
+const { syncTargetSkills, syncOpenSpec, readManifest } = require("../lib/sync");
+const { resolveTargets } = require("../lib/targets");
 
 function update(targetArg) {
     if (!repoExists()) {
@@ -25,10 +25,12 @@ function update(targetArg) {
     const projectDir = process.cwd();
     const targets = resolveTargets(targetArg);
 
+    console.log(`\nRe-syncing OpenSpec templates...`);
+    syncOpenSpec(projectDir);
+
     let updatedCount = 0;
     for (const target of targets) {
         const manifest = readManifest(target.getManifestPath(projectDir));
-        // If target was specifically requested or manifest exists in project, re-sync
         if (targetArg || manifest) {
             console.log(`\nRe-syncing skills for ${target.name}...`);
             const newManifest = syncTargetSkills(target, projectDir);

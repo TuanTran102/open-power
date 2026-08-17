@@ -1,6 +1,6 @@
 const path = require("path");
 const { ensureRepo } = require("../lib/repo");
-const { syncTargetSkills } = require("../lib/sync");
+const { syncTargetSkills, syncOpenSpec } = require("../lib/sync");
 const { resolveTargets } = require("../lib/targets");
 const { loadConfig } = require("../lib/config");
 
@@ -13,11 +13,19 @@ function install(targetArg) {
     console.log(`  Source: ${config.sourceUrl}`);
     ensureRepo();
 
+    console.log(`\nInitializing .opow workspace...`);
+    const opowInfo = syncOpenSpec(projectDir);
+    console.log(`  Specs:      ${opowInfo.specsDir}`);
+    console.log(`  Plans:      ${opowInfo.plansDir}`);
+    console.log(`  Templates:  ${opowInfo.hasTemplates ? "✅ Installed" : "⚠️ Missing"}`);
+
     for (const target of targets) {
         const targetSkillsDir = target.getSkillsDir(projectDir);
-        console.log(`\nInstalling Superpowers skills for ${target.name}...`);
-        console.log(`  Project: ${projectDir}`);
-        console.log(`  Target:  ${targetSkillsDir}`);
+        const targetWorkflowsDir = target.getWorkflowsDir(projectDir);
+        console.log(`\nInstalling Superpowers + OpenSpec for ${target.name}...`);
+        console.log(`  Project:   ${projectDir}`);
+        console.log(`  Skills:    ${targetSkillsDir}`);
+        console.log(`  Workflows: ${targetWorkflowsDir}`);
 
         const manifest = syncTargetSkills(target, projectDir);
 
@@ -25,10 +33,18 @@ function install(targetArg) {
         for (const skill of manifest.skills) {
             console.log(`   - ${skill}`);
         }
+
+        if (manifest.workflows && manifest.workflows.length > 0) {
+            console.log(`\n⚡ Installed ${manifest.workflows.length} Slash Commands / Workflows:`);
+            for (const wf of manifest.workflows) {
+                console.log(`   - /${wf}`);
+            }
+        }
+
         console.log(`\nCommit: ${manifest.sourceCommit}`);
     }
 
-    console.log(`\n🎉 Done! Restart your IDE / agent session to load the new skills.`);
+    console.log(`\n🎉 Done! Slash commands (/spec, /plan, /implement, /verify) & skills are ready.`);
 }
 
 module.exports = { install };

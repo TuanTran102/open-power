@@ -3,16 +3,20 @@ const path = require("path");
 const { loadConfig } = require("./config");
 const { getSkillsSourceDir, getCurrentCommit } = require("./repo");
 
-function copyDir(src, dest) {
+function copyDir(src, dest, overwrite = true) {
+    if (!fs.existsSync(src)) return;
     fs.mkdirSync(dest, { recursive: true });
     const entries = fs.readdirSync(src, { withFileTypes: true });
     for (const entry of entries) {
+        if (entry.name.startsWith(".") || entry.name.startsWith("._")) continue;
         const srcPath = path.join(src, entry.name);
         const destPath = path.join(dest, entry.name);
         if (entry.isDirectory()) {
-            copyDir(srcPath, destPath);
+            copyDir(srcPath, destPath, overwrite);
         } else {
-            fs.copyFileSync(srcPath, destPath);
+            if (overwrite || !fs.existsSync(destPath)) {
+                fs.copyFileSync(srcPath, destPath);
+            }
         }
     }
 }
@@ -39,11 +43,49 @@ function writeManifest(manifestPath, manifest) {
     fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 4) + "\n");
 }
 
+function getCustomSkillsDir() {
+    return path.join(__dirname, "..", "skills");
+}
+
+function getOpenSpecSourceDir() {
+    return path.join(__dirname, "..", "templates", "openspec");
+}
+
+function getWorkflowsSourceDir() {
+    return path.join(__dirname, "..", "templates", "workflows");
+}
+
 /**
- * Core sync: copy skills from the cached repo into a target skills directory.
- * - Copies all upstream skills.
- * - Overrides `using-superpowers` with the target-specific wrapper.
- * - Writes a manifest so uninstall is safe.
+ * Initialize / update the .opow/ directory in the target project.
+ * - Installs .opow/specs/templates/
+ * - Ensures .opow/plans/ directory exists
+ *
+ * @param {string} [projectDir] - Target project root
+ * @returns {object} opowInfo
+ */
+function syncOpenSpec(projectDir = process.cwd()) {
+    const openSpecSrc = getOpenSpecSourceDir();
+    const opowDir = path.join(projectDir, ".opow");
+    const targetSpecsDir = path.join(opowDir, "specs");
+    const targetPlansDir = path.join(opowDir, "plans");
+
+    fs.mkdirSync(targetSpecsDir, { recursive: true });
+    fs.mkdirSync(targetPlansDir, { recursive: true });
+
+    if (fs.existsSync(openSpecSrc)) {
+        copyDir(path.join(openSpecSrc, "templates"), path.join(targetSpecsDir, "templates"));
+    }
+
+    return {
+        opowDir,
+        specsDir: targetSpecsDir,
+        plansDir: targetPlansDir,
+        hasTemplates: fs.existsSync(path.join(targetSpecsDir, "templates")),
+    };
+}
+
+/**
+ * Core sync: copy skills and workflows from cached repo + local bundles into target directories.
  *
  * @param {object} target - Target definition from targets.js
  * @param {string} [projectDir] - Project root directory (default: process.cwd())
@@ -52,7 +94,10 @@ function writeManifest(manifestPath, manifest) {
 function syncTargetSkills(target, projectDir = process.cwd()) {
     const config = loadConfig();
     const sourceDir = getSkillsSourceDir();
+    const customSkillsDir = getCustomSkillsDir();
+    const workflowsSourceDir = getWorkflowsSourceDir();
     const targetSkillsDir = target.getSkillsDir(projectDir);
+    const targetWorkflowsDir = target.getWorkflowsDir(projectDir);
     const manifestPath = target.getManifestPath(projectDir);
     const wrapperDir = target.getWrapperDir();
 
@@ -62,33 +107,69 @@ function syncTargetSkills(target, projectDir = process.cwd()) {
 
     fs.mkdirSync(targetSkillsDir, { recursive: true });
 
-    // Copy all upstream skills
+    // 1. Copy all upstream skills
     const upstreamSkills = fs
         .readdirSync(sourceDir, { withFileTypes: true })
-        .filter((e) => e.isDirectory())
+        .filter((e) => e.isDirectory() && !e.name.startsWith("."))
         .map((e) => e.name);
 
     for (const skillName of upstreamSkills) {
         copyDir(path.join(sourceDir, skillName), path.join(targetSkillsDir, skillName));
     }
 
-    // Override using-superpowers with target wrapper if exists
+    // 2. Copy bundled custom skills (e.g. spec-driven-development)
+    const customSkills = [];
+    if (fs.existsSync(customSkillsDir)) {
+        const entries = fs
+            .readdirSync(customSkillsDir, { withFileTypes: true })
+            .filter((e) => e.isDirectory() && !e.name.startsWith("."))
+            .map((e) => e.name);
+
+        for (const skillName of entries) {
+            copyDir(path.join(customSkillsDir, skillName), path.join(targetSkillsDir, skillName));
+            customSkills.push(skillName);
+        }
+    }
+
+    // 3. Override using-superpowers with target wrapper if exists
     if (fs.existsSync(wrapperDir)) {
         copyDir(wrapperDir, path.join(targetSkillsDir, config.wrapperSkillName));
     }
 
-    // Record manifest (dedupe: wrapper replaces upstream's using-superpowers)
-    const installedSkills = [
+    // 4. Sync slash command workflows into target platform's workflows directory
+    const installedWorkflows = [];
+    if (fs.existsSync(workflowsSourceDir)) {
+        fs.mkdirSync(targetWorkflowsDir, { recursive: true });
+        const wfEntries = fs
+            .readdirSync(workflowsSourceDir, { withFileTypes: true })
+            .filter((e) => e.isFile() && e.name.endsWith(".md") && !e.name.startsWith("."))
+            .map((e) => e.name);
+
+        for (const wfFile of wfEntries) {
+            fs.copyFileSync(
+                path.join(workflowsSourceDir, wfFile),
+                path.join(targetWorkflowsDir, wfFile)
+            );
+            installedWorkflows.push(wfFile.replace(/\.md$/, ""));
+        }
+    }
+
+    // Record manifest
+    const allInstalledSkills = [
         ...upstreamSkills.filter((s) => s !== config.wrapperSkillName),
+        ...customSkills.filter((s) => s !== config.wrapperSkillName),
         config.wrapperSkillName,
     ];
+    const uniqueSkills = Array.from(new Set(allInstalledSkills));
 
     const manifest = {
         target: target.id,
         installedAt: new Date().toISOString(),
         sourceCommit: getCurrentCommit(),
-        skills: installedSkills,
+        skills: uniqueSkills,
+        workflows: installedWorkflows,
         wrapperSkill: config.wrapperSkillName,
+        openspec: true,
     };
     writeManifest(manifestPath, manifest);
 
@@ -96,15 +177,16 @@ function syncTargetSkills(target, projectDir = process.cwd()) {
 }
 
 /**
- * Remove only the skills that this CLI installed for a target in the project.
- * Leaves any other user skills untouched.
+ * Remove only the skills and workflows that this CLI installed for a target in the project.
+ * Leaves custom skills and workflows untouched.
  *
  * @param {object} target - Target definition from targets.js
  * @param {string} [projectDir] - Project root directory (default: process.cwd())
- * @returns {Array<string>} Array of removed skill names
+ * @returns {object} { skills: string[], workflows: string[] }
  */
 function uninstallTargetSkills(target, projectDir = process.cwd()) {
     const targetSkillsDir = target.getSkillsDir(projectDir);
+    const targetWorkflowsDir = target.getWorkflowsDir(projectDir);
     const manifestPath = target.getManifestPath(projectDir);
     const manifest = readManifest(manifestPath);
 
@@ -112,8 +194,19 @@ function uninstallTargetSkills(target, projectDir = process.cwd()) {
         throw new Error(`No manifest found for ${target.name} at ${manifestPath}. Nothing to uninstall.`);
     }
 
+    // Remove skills
     for (const skillName of manifest.skills) {
         removeDir(path.join(targetSkillsDir, skillName));
+    }
+
+    // Remove workflows
+    if (Array.isArray(manifest.workflows)) {
+        for (const wf of manifest.workflows) {
+            const wfPath = path.join(targetWorkflowsDir, `${wf}.md`);
+            if (fs.existsSync(wfPath)) {
+                fs.rmSync(wfPath, { force: true });
+            }
+        }
     }
 
     // Remove manifest
@@ -121,19 +214,23 @@ function uninstallTargetSkills(target, projectDir = process.cwd()) {
         fs.rmSync(manifestPath, { force: true });
     }
 
-    // If targetSkillsDir is now empty, remove it
-    if (fs.existsSync(targetSkillsDir)) {
-        try {
-            const remaining = fs.readdirSync(targetSkillsDir);
-            if (remaining.length === 0) {
-                fs.rmdirSync(targetSkillsDir);
+    // Cleanup empty dirs
+    for (const dir of [targetSkillsDir, targetWorkflowsDir]) {
+        if (fs.existsSync(dir)) {
+            try {
+                if (fs.readdirSync(dir).length === 0) {
+                    fs.rmdirSync(dir);
+                }
+            } catch (e) {
+                // ignore
             }
-        } catch (e) {
-            // ignore
         }
     }
 
-    return manifest.skills;
+    return {
+        skills: manifest.skills,
+        workflows: manifest.workflows || [],
+    };
 }
 
 module.exports = {
@@ -141,6 +238,7 @@ module.exports = {
     removeDir,
     readManifest,
     writeManifest,
+    syncOpenSpec,
     syncTargetSkills,
     uninstallTargetSkills,
 };

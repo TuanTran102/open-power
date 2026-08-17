@@ -20,8 +20,8 @@ Commands:
 
 Targets:
   cline                 Install into .cline/skills/ (with Cline-optimized wrapper)
-  antigravity, agy      Install into .agents/skills/ (with Antigravity-optimized wrapper)
-  all (default)         Install into both .cline/skills/ and .agents/skills/
+  antigravity, agy      Install into .agent/skills/ (with Antigravity-optimized wrapper)
+  all (default)         Install into both .cline/skills/ and .agent/skills/
 
 Options:
   -t, --target <name>   Specify target (cline | antigravity | agy | all)
@@ -31,7 +31,7 @@ Examples:
   # Install for both Cline and Antigravity in current project
   opow install
 
-  # Install only for Antigravity (.agents/skills)
+  # Install only for Antigravity (.agent/skills)
   opow install antigravity
   # or: opow install agy
 

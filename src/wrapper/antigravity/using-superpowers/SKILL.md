@@ -19,16 +19,20 @@ This is not negotiable. You cannot rationalize your way out of this.
 
 **Invoke relevant or requested skills BEFORE any response or action** — including clarifying questions, exploring the codebase, or checking files. If it turns out wrong for the situation, you don't have to use it.
 
-**Before entering plan mode:** if you haven't already brainstormed, invoke the brainstorming skill first.
+**Before entering plan mode or writing code:**
+1. If brainstorming or designing a feature/API: invoke `brainstorming` and `spec-driven-development` to create/update the OpenSpec in `.opow/specs/`.
+2. Ensure Acceptance Criteria (*Given - When - Then*) are defined.
+3. Then invoke `writing-plans` (saving plan to `.opow/plans/`) and `test-driven-development`.
 
 Then announce "Using [skill] to [purpose]" and follow the skill exactly. If it has a checklist, create a todo per item.
 
 ## Skill Priority
 
-When multiple skills apply, process skills come first — they set the approach, then implementation skills (frontend-design, etc.) carry it out. Brainstorming and systematic-debugging are Superpowers' most common process skills, but the rule holds for any of them.
+When multiple skills apply, process and specification skills come first — they set the approach, then implementation skills (frontend-design, etc.) carry it out.
 
-- "Let's build X" → superpowers:brainstorming first, then implementation skills.
-- "Fix this bug" → superpowers:systematic-debugging first, then domain skills.
+- "Let's build X" → `brainstorming` + `spec-driven-development` (create OpenSpec in `.opow/specs/`) → `writing-plans` (plan in `.opow/plans/`) → `test-driven-development`.
+- "Fix this bug" → `systematic-debugging` (root cause analysis) → domain skills → verification.
+- "Wrap up feature" → `verification-before-completion` (verify 100% OpenSpec Acceptance Criteria).
 
 ## Red Flags
 
@@ -51,13 +55,13 @@ These thoughts mean STOP—you're rationalizing:
 
 ## Platform Adaptation: Antigravity
 
-You are running inside **Google Antigravity**. Antigravity discovers skills in workspace (`.agents/skills/`) and global roots, presenting their names and descriptions in the system prompt. To use Superpowers effectively in Antigravity:
+You are running inside **Google Antigravity**. Antigravity discovers skills in workspace (`.agent/skills/`) and global roots, presenting their names and descriptions in the system prompt. To use Superpowers and OpenSpec effectively in Antigravity:
 
-- **Skill Activation & Progressive Disclosure:** Antigravity lists available skills (name + description) in your prompt. When a task or workflow matches a skill, activate it immediately by viewing its `SKILL.md` file using `view_file` (with `IsSkillFile: true` when applicable) before proceeding.
-- **Subagents & Delegation:** Antigravity provides subagent mechanisms (e.g. browser subagents, parallel agents). For skills requiring subagent execution — `subagent-driven-development`, `dispatching-parallel-agents`, `requesting-code-review` — formulate clear, focused prompts for each subagent.
-- **Rules & Workflows:** Hierarchical rules (`AGENTS.md`, `GEMINI.md`, `.agents/rules/*.md`) and slash command workflows complement skills. Superpowers process skills guide the execution lifecycle (brainstorming → planning → execution → verification).
-- **Execution & Tools:** Antigravity executes shell commands via `run_command` and manages background processes via `manage_task`.
-- **Todo & Progress Tracking:** Use implementation plan artifacts or step tracking to maintain checklist items when required by skills.
+- **Skill Activation & Progressive Disclosure:** Antigravity lists available skills in your prompt. When a task or workflow matches a skill, activate it immediately by viewing its `SKILL.md` file using `view_file` (with `IsSkillFile: true` when applicable) before proceeding.
+- **OpenSpec & Workflows:** Specifications and plans reside in `.opow/` (`.opow/specs/` and `.opow/plans/`). Refer to the `spec-driven-development` skill for the unified 5-phase lifecycle.
+- **Subagents & Delegation:** Antigravity provides subagent mechanisms. For skills requiring subagent execution — `subagent-driven-development`, `dispatching-parallel-agents`, `requesting-code-review` — formulate clear, focused prompts for each subagent with their specific OpenSpec slice.
+- **Rules & Hierarchies:** Hierarchical rules (`AGENTS.md`, `GEMINI.md`, `.agent/rules/*.md`) complement skills. Superpowers process skills guide the execution lifecycle.
+- **Execution & Verification:** Execute commands via `run_command` and verify all OpenSpec Acceptance Criteria before marking tasks complete.
 
 ## User Instructions
 
