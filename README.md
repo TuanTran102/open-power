@@ -45,7 +45,8 @@ npm install -g .
 ### Option 2: Using `npm link`
 
 ```bash
-
+# Run from this repository directory (useful for development)
+npm link
 ```
 
 ### Option 3: Run directly with Node or npx
