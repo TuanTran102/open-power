@@ -1,6 +1,6 @@
 # open-power (`opow`)
 
-CLI to install and auto-update **Superpowers skills** and **OpenSpec standards** for **Cline** and **Antigravity** (project-level).
+CLI to install and auto-update **Superpowers skills** and **OpenSpec standards** for **Cline**, **Antigravity**, **Claude Code**, and **Codex** (project-level).
 
 `open-power` unifies the requirements rigor of **OpenSpec** (Spec-Driven Development) with the execution methodology of **Superpowers** (TDD, Subagents, Systematic Debugging, Verification) into a single, seamless developer tool.
 
@@ -21,12 +21,16 @@ CLI to install and auto-update **Superpowers skills** and **OpenSpec standards**
   - `.opow/specs/templates/`: Standard templates for features (`feature.spec.md`), API contracts (`api.spec.md`), and schemas (`schema-template.json`).
   - `.opow/specs/<feature>.spec.md`: Active feature specifications and data contracts.
   - `.opow/plans/<feature>.plan.md`: Actionable atomic implementation plans.
-- **Project-Level Agent Integration**:
-  - **Cline**: `<project>/.cline/skills/` + manifest at `<project>/.cline/superpowers-manifest.json`
-  - **Antigravity**: `<project>/.agent/skills/` + manifest at `<project>/.agent/superpowers-manifest.json`
+- **Multi-Platform Agent Integration**:
+  - **Cline**: `<project>/.cline/skills/` + workflows at `<project>/.clinerules/workflows/` + manifest at `<project>/.cline/superpowers-manifest.json`
+  - **Antigravity**: `<project>/.agent/skills/` + workflows at `<project>/.agent/workflows/` + manifest at `<project>/.agent/superpowers-manifest.json`
+  - **Claude Code**: `<project>/.claude/skills/` + commands at `<project>/.claude/commands/` + manifest at `<project>/.claude/superpowers-manifest.json`
+  - **Codex**: `<project>/.codex/skills/` + workflows at `<project>/.codex/workflows/` + manifest at `<project>/.codex/superpowers-manifest.json`
 - **Tailored Platform Wrappers (`using-superpowers`)**:
   - **Cline**: Optimized for `use_skill`, `use_subagents`, and slash commands.
   - **Antigravity**: Optimized for Progressive Disclosure (`view_file`), hierarchical rules (`AGENTS.md` / `GEMINI.md`), and subagents.
+  - **Claude Code**: Optimized for Anthropic CLI file viewing, slash commands (`.claude/commands/`), and delegated worker tasks.
+  - **Codex**: Optimized for OpenAI agent workflows, slash commands (`.codex/workflows/`), and hierarchical instructions (`AGENTS.md` / `CODEX.md`).
 - **Dedicated Skill (`spec-driven-development`)**: Teaches the agent to formulate specs and convert Acceptance Criteria directly into TDD tests.
 - **Safe Sync & Updates**: Uses manifests to only touch managed files, leaving custom skills and specs intact.
 - **Upstream Cache**: Cached upstream in `~/.open-power/repo` for ultra-fast multi-project setups.
@@ -68,35 +72,48 @@ Navigate to your project directory:
 ```bash
 cd /path/to/my-project
 
-# Install OpenSpec templates & skills for both Cline and Antigravity (default)
+# Install OpenSpec templates & skills for default targets (Cline & Antigravity)
 opow install
 
-# Install only for Antigravity (.agent/skills)
+# Install for all 4 platforms simultaneously
+opow install all
+
+# Install only for Claude Code (.claude/skills, .claude/commands)
+opow install claude
+# or:
+opow install cc
+
+# Install only for Codex (.codex/skills, .codex/workflows)
+opow install codex
+# or:
+opow install cdx
+
+# Install only for Antigravity (.agent/skills, .agent/workflows)
 opow install antigravity
 # or:
 opow install agy
 
-# Install only for Cline (.cline/skills)
+# Install only for Cline (.cline/skills, .clinerules/workflows)
 opow install cline
 
-# Check installation and upstream status in the current project
-opow status
+# Check installation and upstream status across all targets
+opow status all
 
 # Update skills and OpenSpec templates in the current project
 opow update
 
-# Uninstall skills from the current project
+# Uninstall skills from a specific target
+opow uninstall claude
+opow uninstall codex
 opow uninstall antigravity
 opow uninstall cline
-# or uninstall all:
-opow uninstall
 ```
 
 ---
 
 ## How to Use with Your AI Agent (Slash Commands & Workflows)
 
-`opow install` registers native **Slash Commands** (`.agent/workflows/` for Antigravity, `.clinerules/workflows/` for Cline). You can trigger each phase simply by typing `/` in the chat!
+`opow install` registers native **Slash Commands** across all platforms (`.agent/workflows/` for Antigravity, `.clinerules/workflows/` for Cline, `.claude/commands/` for Claude Code, `.codex/workflows/` for Codex). You can trigger each phase simply by typing `/` in the chat!
 
 ### 4-Phase Slash Command Workflow
 
@@ -125,7 +142,7 @@ opow uninstall
 
 ---
 
-## Project Structure After `opow install`
+## Project Structure
 
 ```
 <project>/
@@ -138,15 +155,21 @@ opow uninstall
 │   │   └── <feature>.spec.md
 │   └── plans/                            # Implementation plans
 │       └── <feature>.plan.md
-├── .agent/skills/                        # Antigravity skills (or .cline/skills)
-│   ├── brainstorming/
-│   ├── test-driven-development/
-│   ├── subagent-driven-development/
-│   ├── systematic-debugging/
-│   ├── verification-before-completion/
-│   ├── spec-driven-development/          # OpenSpec authoring skill
-│   └── using-superpowers/                # Integrated platform wrapper
-└── .agent/superpowers-manifest.json
+├── .claude/                              # Claude Code target
+│   ├── skills/                           # Superpowers skills
+│   ├── commands/                         # Slash commands (/spec, /plan, /implement, /verify)
+│   └── superpowers-manifest.json
+├── .codex/                               # Codex target
+│   ├── skills/                           # Superpowers skills
+│   ├── workflows/                        # Slash commands (/spec, /plan, /implement, /verify)
+│   └── superpowers-manifest.json
+├── .agent/                               # Antigravity target
+│   ├── skills/                           # Superpowers skills
+│   ├── workflows/                        # Slash commands (/spec, /plan, /implement, /verify)
+│   └── superpowers-manifest.json
+└── .cline/                               # Cline target
+    ├── skills/                           # Superpowers skills
+    └── superpowers-manifest.json
 ```
 
 ---
@@ -161,10 +184,10 @@ opow uninstall
 | `uninstall [target]` | Safely remove installed skills from current project |
 | `help` | Show usage and help information |
 
-**Targets**: `cline`, `antigravity` (or `agy`), `all` (default).
+**Targets**: `cline`, `antigravity` (or `agy`), `claude` (or `cc`), `codex` (or `cdx`), `all`.
 
 **Options**:
-- `-t, --target <name>`: Specify target platform (`cline`, `antigravity`, `agy`, `all`).
+- `-t, --target <name>`: Specify target platform (`cline`, `antigravity`, `agy`, `claude`, `cc`, `codex`, `cdx`, `all`).
 - `-h, --help`: Show help text.
 
 ---

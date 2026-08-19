@@ -2,3 +2,9 @@
 ._*
 *.log
 node_modules/
+.agent/
+.cline/
+.clinerules/
+.claude/
+.codex/
+.opow/

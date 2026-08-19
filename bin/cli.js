@@ -6,13 +6,13 @@ const { status } = require("../src/commands/status");
 const { uninstall } = require("../src/commands/uninstall");
 
 const HELP = `
-open-power (opow) — Install & auto-update Superpowers skills for Cline & Antigravity
+open-power (opow) — Install & auto-update Superpowers skills for Cline, Antigravity, Claude Code & Codex
 
 Usage:
   opow <command> [target] [options]
 
 Commands:
-  install [target]      Install skills into current project (default target: all)
+  install [target]      Install skills into current project (default targets: cline, antigravity)
   update [target]       Pull latest upstream and re-sync project skills
   status [target]       Show project installed status, skills, and upstream commit
   uninstall [target]    Remove skills from current project
@@ -21,15 +21,28 @@ Commands:
 Targets:
   cline                 Install into .cline/skills/ (with Cline-optimized wrapper)
   antigravity, agy      Install into .agent/skills/ (with Antigravity-optimized wrapper)
-  all (default)         Install into both .cline/skills/ and .agent/skills/
+  claude, cc            Install into .claude/skills/ (with Claude Code-optimized wrapper)
+  codex, cdx            Install into .codex/skills/ (with Codex-optimized wrapper)
+  all                   Install into all 4 platform directories
 
 Options:
-  -t, --target <name>   Specify target (cline | antigravity | agy | all)
+  -t, --target <name>   Specify target (cline | antigravity | agy | claude | cc | codex | cdx | all)
   -h, --help            Show this help
 
 Examples:
-  # Install for both Cline and Antigravity in current project
+  # Install for default targets (Cline & Antigravity)
   opow install
+
+  # Install for all 4 platforms
+  opow install all
+
+  # Install only for Claude Code (.claude/skills)
+  opow install claude
+  # or: opow install cc
+
+  # Install only for Codex (.codex/skills)
+  opow install codex
+  # or: opow install cdx
 
   # Install only for Antigravity (.agent/skills)
   opow install antigravity
@@ -38,14 +51,14 @@ Examples:
   # Install only for Cline (.cline/skills)
   opow install cline
 
-  # Check project status
-  opow status
+  # Check project status across all platforms
+  opow status all
 
   # Update skills to latest upstream
   opow update
 
-  # Uninstall from Antigravity
-  opow uninstall agy
+  # Uninstall from Claude Code
+  opow uninstall cc
 `;
 
 function parseArgs(argv) {
