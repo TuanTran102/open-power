@@ -3,9 +3,9 @@ const assert = require("node:assert/strict");
 const fs = require("fs");
 const path = require("path");
 const os = require("os");
-const { TARGETS } = require("../src/lib/targets");
-const { syncTargetSkills, syncOpenSpec, uninstallTargetSkills, readManifest } = require("../src/lib/sync");
-const { ensureRepo } = require("../src/lib/repo");
+const { TARGETS } = require("../../src/lib/targets");
+const { syncTargetSkills, syncOpenSpec, uninstallTargetSkills, readManifest } = require("../../src/lib/sync");
+const { ensureRepo } = require("../../src/lib/repo");
 
 describe("sync & target lifecycle", () => {
     let tempDir;

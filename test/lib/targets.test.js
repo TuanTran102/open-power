@@ -1,7 +1,7 @@
 const { describe, it } = require("node:test");
 const assert = require("node:assert/strict");
 const path = require("path");
-const { TARGETS, ALIASES, resolveTargets } = require("../src/lib/targets");
+const { TARGETS, ALIASES, resolveTargets } = require("../../src/lib/targets");
 
 describe("targets", () => {
     describe("TARGETS definition", () => {
