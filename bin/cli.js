@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
-const { install } = require("../src/commands/install");
-const { update } = require("../src/commands/update");
-const { status } = require("../src/commands/status");
-const { uninstall } = require("../src/commands/uninstall");
+const installMod = require("../src/commands/install");
+const updateMod = require("../src/commands/update");
+const statusMod = require("../src/commands/status");
+const uninstallMod = require("../src/commands/uninstall");
 
 const HELP = `
 open-power (opow) — Install & auto-update Superpowers skills for Cline, Antigravity, Claude Code & Codex
@@ -106,16 +106,16 @@ function main() {
     try {
         switch (command) {
             case "install":
-                install(target);
+                installMod.install(target);
                 break;
             case "update":
-                update(target);
+                updateMod.update(target);
                 break;
             case "status":
-                status(target);
+                statusMod.status(target);
                 break;
             case "uninstall":
-                uninstall(target);
+                uninstallMod.uninstall(target);
                 break;
             default:
                 console.log(`Unknown command: "${command}"`);
@@ -128,4 +128,12 @@ function main() {
     }
 }
 
-main();
+if (require.main === module) {
+    main();
+}
+
+module.exports = {
+    HELP,
+    parseArgs,
+    main,
+};

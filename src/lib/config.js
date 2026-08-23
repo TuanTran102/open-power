@@ -60,6 +60,7 @@ function saveConfig(config) {
 module.exports = {
     HOME,
     CLI_ROOT,
+    LEGACY_CLI_ROOT,
     DEFAULT_SOURCE_URL,
     WRAPPER_SKILL_NAME,
     getActiveCliRoot,

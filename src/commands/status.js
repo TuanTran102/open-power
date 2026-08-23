@@ -1,6 +1,6 @@
 const fs = require("fs");
 const path = require("path");
-const { repoExists, getCurrentCommit, getRemoteCommit, fetchRepo } = require("../lib/repo");
+const repo = require("../lib/repo");
 const { readManifest } = require("../lib/sync");
 const { loadConfig } = require("../lib/config");
 const { resolveTargets } = require("../lib/targets");
@@ -15,18 +15,18 @@ function status(targetArg) {
     console.log(`Source:  ${config.sourceUrl}`);
     console.log(`Project: ${projectDir}`);
 
-    if (!repoExists()) {
+    if (!repo.repoExists()) {
         console.log("\n⚠️  No cached upstream repository found. Run `opow install` first.");
         return;
     }
 
-    const current = getCurrentCommit();
+    const current = repo.getCurrentCommit();
     console.log(`Cached upstream commit: ${current}`);
 
     // Check for remote updates
     try {
-        fetchRepo();
-        const remote = getRemoteCommit();
+        repo.fetchRepo();
+        const remote = repo.getRemoteCommit();
         if (remote === current) {
             console.log("Upstream status: ✅ Up to date");
         } else {

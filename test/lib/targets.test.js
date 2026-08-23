@@ -13,12 +13,14 @@ describe("targets", () => {
             assert.equal(TARGETS.cline.getSkillsDir(projectDir), path.join(projectDir, ".cline", "skills"));
             assert.equal(TARGETS.cline.getWorkflowsDir(projectDir), path.join(projectDir, ".clinerules", "workflows"));
             assert.equal(TARGETS.cline.getManifestPath(projectDir), path.join(projectDir, ".cline", "superpowers-manifest.json"));
+            assert.ok(TARGETS.cline.getWrapperDir().endsWith(path.join("wrapper", "cline", "using-superpowers")));
 
             assert.equal(TARGETS.antigravity.id, "antigravity");
             assert.equal(TARGETS.antigravity.name, "Antigravity");
             assert.equal(TARGETS.antigravity.getSkillsDir(projectDir), path.join(projectDir, ".agent", "skills"));
             assert.equal(TARGETS.antigravity.getWorkflowsDir(projectDir), path.join(projectDir, ".agent", "workflows"));
             assert.equal(TARGETS.antigravity.getManifestPath(projectDir), path.join(projectDir, ".agent", "superpowers-manifest.json"));
+            assert.ok(TARGETS.antigravity.getWrapperDir().endsWith(path.join("wrapper", "antigravity", "using-superpowers")));
 
             assert.equal(TARGETS.claude.id, "claude");
             assert.equal(TARGETS.claude.name, "Claude Code");

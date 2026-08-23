@@ -1,10 +1,10 @@
-const { execSync } = require("child_process");
+const childProcess = require("child_process");
 const fs = require("fs");
 const path = require("path");
 const { getRepoDir, loadConfig } = require("./config");
 
 function runGit(args, cwd) {
-    return execSync(`git ${args}`, {
+    return childProcess.execSync(`git ${args}`, {
         cwd,
         encoding: "utf8",
         stdio: ["ignore", "pipe", "pipe"],
@@ -49,6 +49,7 @@ function ensureRepo() {
 }
 
 module.exports = {
+    runGit,
     repoExists,
     cloneRepo,
     pullRepo,

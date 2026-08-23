@@ -1,25 +1,25 @@
-const { repoExists, pullRepo, getCurrentCommit, getRemoteCommit, fetchRepo } = require("../lib/repo");
+const repo = require("../lib/repo");
 const { syncTargetSkills, syncOpenSpec, readManifest } = require("../lib/sync");
 const { resolveTargets } = require("../lib/targets");
 
 function update(targetArg) {
-    if (!repoExists()) {
+    if (!repo.repoExists()) {
         console.log("⚠️  No cached repo found. Run `install` first.");
         return;
     }
 
-    const before = getCurrentCommit();
+    const before = repo.getCurrentCommit();
     console.log(`Current upstream cache commit: ${before}`);
 
     try {
-        pullRepo();
+        repo.pullRepo();
     } catch (err) {
         console.log("No updates available (already up to date) or pull failed.");
         console.log(String(err.message || err));
         return;
     }
 
-    const after = getCurrentCommit();
+    const after = repo.getCurrentCommit();
     console.log(`Latest upstream commit: ${after}`);
 
     const projectDir = process.cwd();
