@@ -143,9 +143,9 @@ opow uninstall -a
 |---|---|---|
 | **`/spec [name]`** | Audit codebase (`openspec-explore`), brainstorm, draw UI mockups via Pencil MCP, and create `.opow/changes/<name>/` (`proposal`, `design`, `tasks`, delta `specs/`) | `brainstorming`, `openspec-explore`, `spec-driven-development` |
 | **`/plan [name]`** | Transform change proposal into atomic TDD implementation plan in `.opow/plans/<name>.plan.md` | `writing-plans` |
-| **`/implement`** | Execute tasks using strict Test-Driven Development (Red-Green-Refactor) and Subagents | `test-driven-development`, `subagent-driven-development` |
+| **`/implement`** | Set up isolated workspace (`.worktrees/<name>`) and execute tasks using strict TDD (Red-Green-Refactor) and Subagents | `using-git-worktrees`, `test-driven-development`, `subagent-driven-development` |
 | **`/verify`** | Run test suite and check off 100% of Acceptance Criteria against Delta Specs | `verification-before-completion` |
-| **`/archive`** | Merge delta specs into Living Specs (`.opow/specs/`) and move change to `.opow/archive/` | `spec-driven-development` |
+| **`/archive`** | Merge delta specs into Living Specs (`.opow/specs/`), merge code into main, clean up worktree, and move change to `.opow/archive/` | `spec-driven-development` |
 | **`/explore`** *(Optional)* | Standalone fast spike to audit codebase, dependencies, and evaluate feasibility without scaffolding files | `openspec-explore` |
 | **`/sync-spec`** | Audit code drift or Git diff and reverse-sync into OpenSpec living specs or proposals | `openspec-sync` |
 
@@ -160,14 +160,15 @@ opow uninstall -a
 2. **Generate the Plan**: Type `/plan user-auth`
    > Agent breaks the spec into atomic tasks linked to each Acceptance Criterion and saves to `.opow/plans/user-auth.plan.md`.
 
-3. **Develop with TDD**: Type `/implement`
-   > Agent authors failing tests (Red), writes minimal code to pass (Green), refactors, and ticks off `tasks.md`.
+3. **Develop in Isolated Worktree with TDD**: Type `/implement`
+   > Agent creates an isolated Git Worktree (`.worktrees/user-auth` on branch `feat/user-auth`) via `using-git-worktrees` to prevent multi-tasking conflicts, authors failing tests (Red), writes minimal code to pass (Green), refactors, and ticks off `tasks.md`.
 
 4. **Verify**: Type `/verify`
    > Agent runs the entire test suite and confirms 100% of Acceptance Criteria in `.opow/changes/user-auth/specs/` are fulfilled.
 
-5. **Archive & Update Living Specs**: Type `/archive`
-   > Agent merges delta specs into `.opow/specs/auth/spec.md` (Living Specs) and moves the change to `.opow/archive/user-auth/`.
+5. **Archive, Merge & Clean Up**: Type `/archive`
+   > Agent merges delta specs into `.opow/specs/auth/spec.md` (Living Specs), merges `feat/user-auth` into `main`, removes `.worktrees/user-auth`, and moves the change to `.opow/archive/user-auth/`.
+
 
 ---
 

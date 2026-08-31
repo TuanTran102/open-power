@@ -47,9 +47,17 @@ describe("workflows / slash commands", () => {
         assert.ok(content.toLowerCase().includes("codebase"));
     });
 
-    it("explore workflow describes optional spike and feasibility investigation", () => {
-        const content = fs.readFileSync(path.join(workflowsDir, "explore.md"), "utf8");
-        assert.ok(content.toLowerCase().includes("spike") || content.toLowerCase().includes("optional"));
+    it("implement workflow guides isolated Git Worktree setup", () => {
+        const content = fs.readFileSync(path.join(workflowsDir, "implement.md"), "utf8");
+        assert.ok(content.includes("using-git-worktrees"));
+        assert.ok(content.includes(".worktrees/"));
+    });
+
+    it("archive workflow guides merging branch and cleaning up worktree", () => {
+        const content = fs.readFileSync(path.join(workflowsDir, "archive.md"), "utf8");
+        assert.ok(content.includes("worktree remove"));
+        assert.ok(content.includes(".worktrees/"));
     });
 });
+
 

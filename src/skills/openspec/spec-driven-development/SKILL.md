@@ -108,8 +108,9 @@ For frontend or UI/UX features, text specifications alone can leave ambiguity in
 
 1. **`/spec` (Explore & Spec)**: Brainstorm requirements (`brainstorming`), audit codebase and dependencies (`openspec-explore`), design visual UI mockups (`pencil` MCP), and author `.opow/changes/<change-id>/` (`proposal.md`, `design.md`, `tasks.md`, delta `specs/`).
 2. **`writing-plans` (`/plan`)**: Break down `tasks.md` into atomic TDD steps in `.opow/plans/<change-id>.plan.md`.
-3. **`test-driven-development` (`/implement`)**: Implement each task using Red-Green-Refactor + subagents.
+3. **`test-driven-development` (`/implement`)**: Set up an isolated workspace via `using-git-worktrees` (`.worktrees/<change-id>`), then implement each task using Red-Green-Refactor + subagents.
 4. **`/verify` (`verification-before-completion`)**: Validate 100% Acceptance Criteria and automated test suites.
-5. **`/archive`**: Merge delta specs into living specs (`.opow/specs/`) and move the change folder to `.opow/archive/<change-id>/`.
+5. **`/archive`**: Merge delta specs into living specs (`.opow/specs/`), merge feature branch into `main`, clean up `.worktrees/<change-id>`, and move the change folder to `.opow/archive/<change-id>/`.
 
 *(Note: `/explore` remains available as an optional standalone spike command for lightweight investigations without scaffolding files).*
+
