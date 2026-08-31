@@ -2,7 +2,7 @@
 
 CLI to install and auto-update **Superpowers skills** and **OpenSpec standards** for **Cline**, **Antigravity**, **Claude Code**, and **Codex** (project-level).
 
-`open-power` unifies the requirements rigor of **OpenSpec** (Spec-Driven Development) with the execution methodology of **Superpowers** (TDD, Subagents, Systematic Debugging, Verification) into a single, seamless developer tool.
+`open-power` unifies the requirements rigor of **OpenSpec** (Spec-Driven Development & Living Specs) with the execution discipline of **Superpowers** (Brainstorming, Codebase Auditing, TDD, Subagents, Systematic Debugging, Verification) into a single, seamless developer tool.
 
 ---
 
@@ -10,28 +10,32 @@ CLI to install and auto-update **Superpowers skills** and **OpenSpec standards**
 
 | Layer | Component | Focus |
 |---|---|---|
-| **WHAT (Requirements)** | **OpenSpec** | Standardized markdown specs (`.opow/specs/`), data schemas, and *Given-When-Then* Acceptance Criteria |
-| **HOW (Execution)** | **Superpowers** | Engineering discipline: Brainstorming → Plans (`.opow/plans/`) → TDD (Red-Green) → Verification |
+| **WHAT (Requirements & Living Specs)** | **OpenSpec** | Living Specs (`.opow/specs/`), Active Change Proposals (`.opow/changes/`), Delta Specs (`ADDED`, `MODIFIED`, `REMOVED`), and History Archive (`.opow/archive/`) |
+| **HOW (Execution Discipline)** | **Superpowers** | Engineering discipline: Brainstorming → Codebase Audit (`openspec-explore`) → Atomic TDD Plans (`.opow/plans/`) → Red-Green-Refactor → Verification |
 
 ---
 
 ## Features
 
-- **Spec & Plan Workspace (`.opow/`)**:
-  - `.opow/specs/templates/`: Standard templates for features (`feature.spec.md`), API contracts (`api.spec.md`), and schemas (`schema-template.json`).
-  - `.opow/specs/<feature>.spec.md`: Active feature specifications and data contracts.
-  - `.opow/plans/<feature>.plan.md`: Actionable atomic implementation plans.
+- **Living Spec & Change Workspace (`.opow/`)**:
+  - `.opow/specs/<domain>/spec.md`: Living specifications representing current system behavior (Source of Truth).
+  - `.opow/changes/<change-id>/`: Active in-flight changes (`proposal.md`, `design.md`, `tasks.md`, delta `specs/`).
+  - `.opow/archive/<change-id>/`: Audit history of completed changes.
+  - `.opow/templates/`: Reusable templates (`proposal.md`, `design.md`, `tasks.md`, `delta.spec.md`, `living.spec.md`).
+  - `.opow/plans/<change-id>.plan.md`: Actionable atomic TDD implementation plans.
 - **Multi-Platform Agent Integration**:
-  - **Cline**: `<project>/.cline/skills/` + workflows at `<project>/.clinerules/workflows/` + manifest at `<project>/.cline/superpowers-manifest.json`
   - **Antigravity**: `<project>/.agent/skills/` + workflows at `<project>/.agent/workflows/` + manifest at `<project>/.agent/superpowers-manifest.json`
+  - **Cline**: `<project>/.cline/skills/` + workflows at `<project>/.clinerules/workflows/` + manifest at `<project>/.cline/superpowers-manifest.json`
   - **Claude Code**: `<project>/.claude/skills/` + commands at `<project>/.claude/commands/` + manifest at `<project>/.claude/superpowers-manifest.json`
   - **Codex**: `<project>/.codex/skills/` + workflows at `<project>/.codex/workflows/` + manifest at `<project>/.codex/superpowers-manifest.json`
 - **Tailored Platform Wrappers (`using-superpowers`)**:
-  - **Cline**: Optimized for `use_skill`, `use_subagents`, and slash commands.
-  - **Antigravity**: Optimized for Progressive Disclosure (`view_file`), hierarchical rules (`AGENTS.md` / `GEMINI.md`), and subagents.
-  - **Claude Code**: Optimized for Anthropic CLI file viewing, slash commands (`.claude/commands/`), and delegated worker tasks.
-  - **Codex**: Optimized for OpenAI agent workflows, slash commands (`.codex/workflows/`), and hierarchical instructions (`AGENTS.md` / `CODEX.md`).
-- **Dedicated Skill (`spec-driven-development`)**: Teaches the agent to formulate specs and convert Acceptance Criteria directly into TDD tests.
+  - **Antigravity**: Progressive Disclosure (`view_file`), rules (`AGENTS.md` / `GEMINI.md`), and subagents.
+  - **Cline**: `use_skill`, `use_subagents`, and slash commands.
+  - **Claude Code**: Anthropic CLI file viewing, slash commands (`.claude/commands/`), and delegated worker tasks.
+  - **Codex**: OpenAI agent workflows, slash commands (`.codex/workflows/`), and hierarchical instructions (`AGENTS.md` / `CODEX.md`).
+- **Dedicated Skills**:
+  - `openspec-explore`: Technical thinking partner for auditing codebase, checking dependencies, and preparing Delta Spec inputs.
+  - `spec-driven-development`: Guides drafting delta specs and managing the Propose ➔ Apply ➔ Archive lifecycle.
 - **Safe Sync & Updates**: Uses manifests to only touch managed files, leaving custom skills and specs intact.
 - **Upstream Cache**: Cached upstream in `~/.open-power/repo` for ultra-fast multi-project setups.
 
@@ -115,30 +119,42 @@ opow uninstall cline
 
 `opow install` registers native **Slash Commands** across all platforms (`.agent/workflows/` for Antigravity, `.clinerules/workflows/` for Cline, `.claude/commands/` for Claude Code, `.codex/workflows/` for Codex). You can trigger each phase simply by typing `/` in the chat!
 
-### 4-Phase Slash Command Workflow
+### 6-Step End-to-End Development Loop
+
+```
+/explore ──▶ /spec ──▶ /plan ──▶ /implement ──▶ /verify ──▶ /archive
+```
 
 | Slash Command | Purpose | Underlying Skills |
 |---|---|---|
-| **`/spec [feature-name]`** | Interview, brainstorm edge cases, and draft `.opow/specs/<feature>.spec.md` with Acceptance Criteria | `brainstorming`, `spec-driven-development` |
-| **`/plan [feature-name]`** | Transform approved OpenSpec into atomic implementation tasks in `.opow/plans/<feature>.plan.md` | `writing-plans` |
+| **`/explore`** | Audit codebase, dependencies, and evaluate feasibility before proposing changes | `openspec-explore` |
+| **`/spec [name]`** | Interview, brainstorm, and create `.opow/changes/<name>/` (`proposal`, `design`, `tasks`, delta `specs/`) | `brainstorming`, `spec-driven-development` |
+| **`/plan [name]`** | Transform change proposal into atomic TDD implementation plan in `.opow/plans/<name>.plan.md` | `writing-plans` |
 | **`/implement`** | Execute tasks using strict Test-Driven Development (Red-Green-Refactor) and Subagents | `test-driven-development`, `subagent-driven-development` |
-| **`/verify`** | Run test suite and check off 100% of Acceptance Criteria against OpenSpec | `verification-before-completion` |
+| **`/verify`** | Run test suite and check off 100% of Acceptance Criteria against Delta Specs | `verification-before-completion` |
+| **`/archive`** | Merge delta specs into Living Specs (`.opow/specs/`) and move change to `.opow/archive/` | `spec-driven-development` |
 
 ---
 
 ### Step-by-Step Example
 
-1. **Author the Spec**: Type `/spec user-auth`
-   > Agent interviews you on schema and requirements, drafts `.opow/specs/user-auth.spec.md` with Given-When-Then criteria, and waits for your approval.
+1. **Investigate Codebase**: Type `/explore user-auth`
+   > Agent inspects existing authentication routes, databases, and dependencies, and outlines affected areas.
 
-2. **Generate the Plan**: Type `/plan user-auth`
+2. **Author the Change Proposal**: Type `/spec user-auth`
+   > Agent drafts `proposal.md`, `design.md`, `tasks.md`, and delta specs (`specs/auth.spec.md`) with `ADDED` / `MODIFIED` / `REMOVED` criteria in `.opow/changes/user-auth/`.
+
+3. **Generate the Plan**: Type `/plan user-auth`
    > Agent breaks the spec into atomic tasks linked to each Acceptance Criterion and saves to `.opow/plans/user-auth.plan.md`.
 
-3. **Develop with TDD**: Type `/implement`
-   > Agent authors failing tests (Red), writes minimal code to pass (Green), refactors, and checks off tasks.
+4. **Develop with TDD**: Type `/implement`
+   > Agent authors failing tests (Red), writes minimal code to pass (Green), refactors, and ticks off `tasks.md`.
 
-4. **Verify & Sign-Off**: Type `/verify`
-   > Agent runs the entire test suite and confirms 100% of Acceptance Criteria in `.opow/specs/user-auth.spec.md` are fulfilled.
+5. **Verify**: Type `/verify`
+   > Agent runs the entire test suite and confirms 100% of Acceptance Criteria in `.opow/changes/user-auth/specs/` are fulfilled.
+
+6. **Archive & Update Living Specs**: Type `/archive`
+   > Agent merges delta specs into `.opow/specs/auth/spec.md` (Living Specs) and moves the change to `.opow/archive/user-auth/`.
 
 ---
 
@@ -147,29 +163,22 @@ opow uninstall cline
 ```
 <project>/
 ├── .opow/                                # Open-Power specifications & plans
-│   ├── specs/                            # Active specifications & templates
-│   │   ├── templates/                    # Reusable spec templates
-│   │   │   ├── feature.spec.md
-│   │   │   ├── api.spec.md
-│   │   │   └── schema-template.json
-│   │   └── <feature>.spec.md
+│   ├── specs/                            # Living Specs (Source of Truth by domain)
+│   │   └── auth/spec.md
+│   ├── changes/                          # Active change proposals
+│   │   └── user-auth/
+│   │       ├── proposal.md
+│   │       ├── design.md
+│   │       ├── tasks.md
+│   │       └── specs/
+│   │           └── auth.spec.md          # Delta spec (ADDED / MODIFIED / REMOVED)
+│   ├── archive/                          # Completed history archive
+│   ├── templates/                        # Reusable OpenSpec templates
 │   └── plans/                            # Implementation plans
-│       └── <feature>.plan.md
-├── .claude/                              # Claude Code target
-│   ├── skills/                           # Superpowers skills
-│   ├── commands/                         # Slash commands (/spec, /plan, /implement, /verify)
-│   └── superpowers-manifest.json
-├── .codex/                               # Codex target
-│   ├── skills/                           # Superpowers skills
-│   ├── workflows/                        # Slash commands (/spec, /plan, /implement, /verify)
-│   └── superpowers-manifest.json
-├── .agent/                               # Antigravity target
-│   ├── skills/                           # Superpowers skills
-│   ├── workflows/                        # Slash commands (/spec, /plan, /implement, /verify)
-│   └── superpowers-manifest.json
-└── .cline/                               # Cline target
-    ├── skills/                           # Superpowers skills
-    └── superpowers-manifest.json
+├── .claude/                              # Claude Code target (.claude/skills/, .claude/commands/)
+├── .codex/                               # Codex target (.codex/skills/, .codex/workflows/)
+├── .agent/                               # Antigravity target (.agent/skills/, .agent/workflows/)
+└── .cline/                               # Cline target (.cline/skills/, .clinerules/workflows/)
 ```
 
 ---
@@ -178,7 +187,7 @@ opow uninstall cline
 
 | Command | Description |
 |---|---|
-| `install [target]` | Initialize OpenSpec templates and install skills into current project |
+| `install [target]` | Initialize OpenSpec workspace and install skills into current project |
 | `update [target]` | Pull latest upstream cache and re-sync skills & OpenSpec templates |
 | `status [target]` | Show current commit, update availability, OpenSpec status, and skills |
 | `uninstall [target]` | Safely remove installed skills from current project |
