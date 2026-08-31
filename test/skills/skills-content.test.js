@@ -36,4 +36,12 @@ describe("skills / content validation", () => {
         assert.ok(content.includes("5-Step Development Loop") || content.includes("5-Step"));
         assert.ok(content.includes("openspec-explore"));
     });
+
+    it("validates spec-driven-development skill includes Pencil MCP availability guard and halting", () => {
+        const skillPath = path.join(__dirname, "../../src/skills/openspec/spec-driven-development/SKILL.md");
+        const content = fs.readFileSync(skillPath, "utf8");
+        assert.ok(content.toLowerCase().includes("pencil"));
+        assert.ok(content.toLowerCase().includes("unavailable") || content.toLowerCase().includes("fails"));
+        assert.ok(content.toLowerCase().includes("halt") || content.toLowerCase().includes("wait"));
+    });
 });

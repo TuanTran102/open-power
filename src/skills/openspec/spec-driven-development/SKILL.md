@@ -102,11 +102,15 @@ For frontend or UI/UX features, text specifications alone can leave ambiguity in
 3. **Developer Verification Gate**:
    - Reviewers and developers inspect both the Given-When-Then scenarios and rendered Pencil mockups to verify visual precision before code implementation.
 
+4. **Pencil MCP Availability Guard & Halting**:
+   - If the Pencil MCP server is unavailable, fails to connect, or returns an error during UI visual spec creation, notify the user immediately.
+   - Halt all further execution and wait for the user to complete setup before proceeding with specification or implementation.
+
 ---
 
 ## 4. The 5-Step Development Loop
 
-1. **`/spec` (Explore & Spec)**: Brainstorm requirements (`brainstorming`), audit codebase and dependencies (`openspec-explore`), design visual UI mockups (`pencil` MCP), and author `.opow/changes/<change-id>/` (`proposal.md`, `design.md`, `tasks.md`, delta `specs/`).
+1. **`/spec` (Explore & Spec)**: Brainstorm requirements (`brainstorming`), audit codebase and dependencies (`openspec-explore`), design visual UI mockups (`pencil` MCP - halt and alert user if unavailable), and author `.opow/changes/<change-id>/` (`proposal.md`, `design.md`, `tasks.md`, delta `specs/`).
 2. **`writing-plans` (`/plan`)**: Break down `tasks.md` into atomic TDD steps in `.opow/plans/<change-id>.plan.md`.
 3. **`test-driven-development` (`/implement`)**: Set up an isolated workspace via `using-git-worktrees` (`.worktrees/<change-id>`), then implement each task using Red-Green-Refactor + subagents.
 4. **`/verify` (`verification-before-completion`)**: Validate 100% Acceptance Criteria and automated test suites.

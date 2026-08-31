@@ -58,6 +58,14 @@ describe("workflows / slash commands", () => {
         assert.ok(content.includes("worktree remove"));
         assert.ok(content.includes(".worktrees/"));
     });
+
+    it("spec workflow guides halting and notifying user when Pencil MCP is unavailable", () => {
+        const content = fs.readFileSync(path.join(workflowsDir, "spec.md"), "utf8");
+        assert.ok(content.toLowerCase().includes("pencil"));
+        assert.ok(content.toLowerCase().includes("unavailable") || content.toLowerCase().includes("fails"));
+        assert.ok(content.toLowerCase().includes("halt") || content.toLowerCase().includes("wait"));
+    });
 });
+
 
 
