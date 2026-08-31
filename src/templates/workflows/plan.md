@@ -1,26 +1,25 @@
 ---
-description: Transform an approved OpenSpec document into an actionable, atomic implementation plan.
+description: Transform an approved OpenSpec change into an actionable, atomic TDD implementation plan.
 ---
 
 # Plan Workflow (/plan)
 
-**Purpose**: Transform an approved OpenSpec document into an actionable, atomic implementation plan.
+**Purpose**: Transform an approved change proposal into an actionable, atomic implementation plan.
 
 ## Steps
 
-1. **Load OpenSpec**:
-   - Locate and read the relevant specification file in `.opow/specs/<feature-name>.spec.md`.
-   - Verify that all Acceptance Criteria are well-defined.
+1. **Load OpenSpec Change Proposal**:
+   - Locate and read `.opow/changes/<change-name>/proposal.md`, `design.md`, and `specs/*.spec.md`.
+   - Verify that all Acceptance Criteria and Delta Requirements are complete.
 
-2. **Deconstruct into Atomic Tasks & Save Plan**:
+2. **Deconstruct into Atomic Tasks & Align `tasks.md`**:
    - Invoke `writing-plans`.
-   - Break down the requirements into small, testable tasks.
-   - For every task, map it 1:1 to specific Acceptance Criteria from the spec.
-   - **Save the plan to `.opow/plans/<feature-name>.plan.md`** (overriding any default `docs/` path).
+   - Synchronize and detail `.opow/changes/<change-name>/tasks.md`.
+   - Map every task 1:1 to specific Acceptance Criteria from the Delta Specs.
+   - **Save the plan to `.opow/plans/<change-name>.plan.md`**.
 
 3. **Plan TDD Test Strategy**:
-   - Specify which unit/integration tests must be authored for each task.
-   - Order tasks logically with dependencies resolved first.
+   - Specify unit/integration tests for each atomic step following Red-Green-Refactor.
 
 4. **Review & Gate**:
-   - Present the implementation plan in `.opow/plans/<feature-name>.plan.md` to the user for approval before running `/implement`.
+   - Present the plan to the user for sign-off before running `/implement`.

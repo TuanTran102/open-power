@@ -1,30 +1,25 @@
 ---
-description: Author a clear, unambiguous OpenSpec requirement document before writing any code.
+description: Author a structured OpenSpec change proposal (proposal.md, design.md, tasks.md, delta specs) in .opow/changes/.
 ---
 
 # Spec Workflow (/spec)
 
-**Purpose**: Author a clear, unambiguous OpenSpec requirement document before writing any code.
+**Purpose**: Author a structured OpenSpec change proposal in `.opow/changes/<change-name>/` before writing any code.
 
 ## Steps
 
 1. **Clarification & Brainstorming**:
    - Invoke `brainstorming` and `spec-driven-development`.
-   - Interview the user regarding feature goals, edge cases, data constraints, and non-goals.
+   - Discuss product intent, edge cases, and scope with the user.
 
-2. **Draft the OpenSpec**:
-   - Check `.opow/specs/templates/feature.spec.md` or `.opow/specs/templates/api.spec.md`.
-   - Create `.opow/specs/<feature-name>.spec.md`.
-   - Document:
-     - Context & Problem Statement
-     - Architecture & Schemas (JSON Schema)
-     - **Acceptance Criteria (AC)** strictly formatted as:
-       ```markdown
-       ### Scenario: [Scenario Name]
-       - **Given**: [Precondition]
-       - **When**: [Action]
-       - **Then**: [Observable outcome]
-       ```
+2. **Initialize Change Workspace**:
+   - Create `.opow/changes/<change-name>/` with subfolder `specs/`.
+   - Copy and populate standard templates from `.opow/templates/`:
+     - `proposal.md`: Why, Motivation, Scope, Non-Goals.
+     - `design.md`: Architecture overview and technical decisions.
+     - `tasks.md`: Trackable checklist of implementation steps.
+     - `specs/<domain>.spec.md`: Delta Specs with `ADDED`, `MODIFIED`, `REMOVED` requirements and *Given-When-Then* scenarios.
 
-3. **Review & Gate**:
-   - Request user feedback and approval on the spec before proceeding to `/plan`.
+3. **User Review Gate**:
+   - Present the proposal and delta specs to the user.
+   - Wait for explicit approval before proceeding to `/plan`.
