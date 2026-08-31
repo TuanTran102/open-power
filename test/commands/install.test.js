@@ -33,6 +33,8 @@ describe("commands / install", () => {
             assert.ok(logs.some((l) => l.includes("Installing Superpowers + OpenSpec for Antigravity")));
             assert.ok(logs.some((l) => l.includes("⚡ Installed")));
             assert.ok(fs.existsSync(path.join(tempDir, ".opow", "specs")));
+            assert.ok(fs.existsSync(path.join(tempDir, ".opow", "changes")));
+            assert.ok(fs.existsSync(path.join(tempDir, ".opow", "archive")));
             assert.ok(fs.existsSync(path.join(tempDir, ".cline", "skills")));
             assert.ok(fs.existsSync(path.join(tempDir, ".agent", "skills")));
         } finally {
@@ -70,7 +72,7 @@ describe("commands / install", () => {
             };
 
             install("claude");
-            assert.ok(logs.some((l) => l.includes("Templates:  ⚠️ Missing")));
+            assert.ok(logs.some((l) => l.includes("Templates:") && l.includes("⚠️ Missing")));
         } finally {
             fs.existsSync = origExistsSync;
             console.log = origLog;

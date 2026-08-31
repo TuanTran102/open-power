@@ -15,9 +15,11 @@ function install(targetArg) {
 
     console.log(`\nInitializing .opow workspace...`);
     const opowInfo = syncOpenSpec(projectDir);
-    console.log(`  Specs:      ${opowInfo.specsDir}`);
-    console.log(`  Plans:      ${opowInfo.plansDir}`);
-    console.log(`  Templates:  ${opowInfo.hasTemplates ? "✅ Installed" : "⚠️ Missing"}`);
+    console.log(`  Living Specs: ${opowInfo.specsDir}`);
+    console.log(`  Changes:      ${opowInfo.changesDir}`);
+    console.log(`  Archive:      ${opowInfo.archiveDir}`);
+    console.log(`  Plans:        ${opowInfo.plansDir}`);
+    console.log(`  Templates:    ${opowInfo.hasTemplates ? "✅ Installed" : "⚠️ Missing"}`);
 
     for (const target of targets) {
         const targetSkillsDir = target.getSkillsDir(projectDir);

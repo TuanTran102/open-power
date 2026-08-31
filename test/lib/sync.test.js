@@ -84,12 +84,16 @@ describe("sync & target lifecycle", () => {
         assert.equal(readManifest(manifestPath), null);
     });
 
-    it("initializes .opow directory with specs templates and plans", () => {
+    it("initializes .opow directory with specs, changes, archive, plans, and templates", () => {
         const opowInfo = syncOpenSpec(tempDir);
 
         assert.ok(fs.existsSync(opowInfo.specsDir));
+        assert.ok(fs.existsSync(opowInfo.changesDir));
+        assert.ok(fs.existsSync(opowInfo.archiveDir));
         assert.ok(fs.existsSync(opowInfo.plansDir));
-        assert.ok(fs.existsSync(path.join(opowInfo.specsDir, "templates", "feature.spec.md")));
+        assert.ok(fs.existsSync(opowInfo.templatesDir));
+        assert.ok(fs.existsSync(path.join(opowInfo.templatesDir, "proposal.md")));
+        assert.ok(fs.existsSync(path.join(opowInfo.templatesDir, "delta.spec.md")));
     });
 
     it("syncOpenSpec handles non-existent templates source gracefully", () => {

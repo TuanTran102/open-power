@@ -67,20 +67,31 @@ function syncOpenSpec(projectDir = process.cwd()) {
     const openSpecSrc = getOpenSpecSourceDir();
     const opowDir = path.join(projectDir, ".opow");
     const targetSpecsDir = path.join(opowDir, "specs");
+    const targetChangesDir = path.join(opowDir, "changes");
+    const targetArchiveDir = path.join(opowDir, "archive");
     const targetPlansDir = path.join(opowDir, "plans");
+    const targetTemplatesDir = path.join(opowDir, "templates");
 
     fs.mkdirSync(targetSpecsDir, { recursive: true });
+    fs.mkdirSync(targetChangesDir, { recursive: true });
+    fs.mkdirSync(targetArchiveDir, { recursive: true });
     fs.mkdirSync(targetPlansDir, { recursive: true });
+    fs.mkdirSync(targetTemplatesDir, { recursive: true });
 
     if (fs.existsSync(openSpecSrc)) {
-        copyDir(path.join(openSpecSrc, "templates"), path.join(targetSpecsDir, "templates"));
+        const srcTemplates = path.join(openSpecSrc, "templates");
+        copyDir(srcTemplates, targetTemplatesDir);
+        copyDir(srcTemplates, path.join(targetSpecsDir, "templates"));
     }
 
     return {
         opowDir,
         specsDir: targetSpecsDir,
+        changesDir: targetChangesDir,
+        archiveDir: targetArchiveDir,
         plansDir: targetPlansDir,
-        hasTemplates: fs.existsSync(path.join(targetSpecsDir, "templates")),
+        templatesDir: targetTemplatesDir,
+        hasTemplates: fs.existsSync(targetTemplatesDir) && fs.readdirSync(targetTemplatesDir).length > 0,
     };
 }
 
