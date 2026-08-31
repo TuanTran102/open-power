@@ -13,7 +13,8 @@
     },
     "scripts": {
         "start": "node bin/cli.js",
-        "test": "node --test"
+        "test": "node --test",
+        "sync:upstream": "node scripts/sync-upstream.js"
     },
     "engines": {
         "node": ">=16"

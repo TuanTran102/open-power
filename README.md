@@ -37,8 +37,12 @@ CLI to install and auto-update **Superpowers skills** and **OpenSpec standards**
   - `openspec-explore`: Technical thinking partner for auditing codebase, checking dependencies, and preparing Delta Spec inputs.
   - `openspec-sync`: Audits codebase modifications or Git diff to detect spec drift and reverse-sync changes into OpenSpec.
   - `spec-driven-development`: Guides drafting delta specs and managing the Propose ➔ Apply ➔ Archive lifecycle.
+- **Offline & Deterministic (Vendored Bundled Skills)**:
+  - 100% offline installation & updates directly from bundled skills package (`src/skills/upstream/` and `src/skills/openspec/`).
+  - Zero runtime network calls, git cache dependencies, or transient upstream breakage.
+- **Maintainer Upstream Synchronization**:
+  - Maintainers can synchronize with upstream Superpowers repo on demand via `npm run sync:upstream`.
 - **Safe Sync & Updates**: Uses manifests to only touch managed files, leaving custom skills and specs intact.
-- **Upstream Cache**: Cached upstream in `~/.open-power/repo` for ultra-fast multi-project setups.
 
 ---
 
@@ -191,9 +195,9 @@ opow uninstall cline
 
 | Command | Description |
 |---|---|
-| `install [target]` | Initialize OpenSpec workspace and install skills into current project |
-| `update [target]` | Pull latest upstream cache and re-sync skills & OpenSpec templates |
-| `status [target]` | Show current commit, update availability, OpenSpec status, and skills |
+| `install [target]` | Initialize OpenSpec workspace and install bundled skills into current project |
+| `update [target]` | Re-sync skills & OpenSpec templates from the bundled package |
+| `status [target]` | Show bundled commit, OpenSpec workspace status, and installed skills |
 | `uninstall [target]` | Safely remove installed skills from current project |
 | `help` | Show usage and help information |
 
@@ -202,6 +206,20 @@ opow uninstall cline
 **Options**:
 - `-t, --target <name>`: Specify target platform (`cline`, `antigravity`, `agy`, `claude`, `cc`, `codex`, `cdx`, `all`).
 - `-h, --help`: Show help text.
+
+---
+
+## Maintainer Workflow (Updating Upstream Skills)
+
+To pull the latest upstream skills from `obra/superpowers` into the `open-power` package repository:
+
+```bash
+# Pull new upstream changes and update src/skills/upstream/ & vendor-meta.json
+npm run sync:upstream
+
+# Run the test suite to verify compatibility
+npm test
+```
 
 ---
 

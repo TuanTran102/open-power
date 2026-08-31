@@ -1,40 +1,20 @@
 const fs = require("fs");
 const path = require("path");
-const repo = require("../lib/repo");
-const { readManifest } = require("../lib/sync");
-const { loadConfig } = require("../lib/config");
+const { readManifest, getUpstreamCommit, getVendorMeta } = require("../lib/sync");
 const { resolveTargets } = require("../lib/targets");
 
 function status(targetArg) {
-    const config = loadConfig();
     const projectDir = process.cwd();
     const targets = resolveTargets(targetArg);
+    const bundledCommit = getUpstreamCommit();
+    const vendorMeta = getVendorMeta();
 
     console.log("open-power (opow) — Project Status");
     console.log("==================================");
-    console.log(`Source:  ${config.sourceUrl}`);
-    console.log(`Project: ${projectDir}`);
-
-    if (!repo.repoExists()) {
-        console.log("\n⚠️  No cached upstream repository found. Run `opow install` first.");
-        return;
-    }
-
-    const current = repo.getCurrentCommit();
-    console.log(`Cached upstream commit: ${current}`);
-
-    // Check for remote updates
-    try {
-        repo.fetchRepo();
-        const remote = repo.getRemoteCommit();
-        if (remote === current) {
-            console.log("Upstream status: ✅ Up to date");
-        } else {
-            console.log(`Upstream status: ⚠️  Update available (${remote})`);
-            console.log("Run `opow update` to sync latest skills.");
-        }
-    } catch (err) {
-        console.log("Upstream status: ⚠️  Could not check for remote updates (offline?).");
+    console.log(`Project:                 ${projectDir}`);
+    console.log(`Bundled upstream commit: ${bundledCommit}`);
+    if (vendorMeta?.upstream?.syncedAt) {
+        console.log(`Vendored at:             ${vendorMeta.upstream.syncedAt}`);
     }
 
     // Check .opow Status

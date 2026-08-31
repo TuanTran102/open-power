@@ -12,36 +12,49 @@ const {
     syncTargetSkills,
     syncOpenSpec,
     uninstallTargetSkills,
+    getUpstreamSkillsDir,
+    getOpenSpecSkillsDir,
+    getVendorMeta,
+    getUpstreamCommit,
 } = require("../../src/lib/sync");
-const { ensureRepo } = require("../../src/lib/repo");
 
 describe("sync & target lifecycle", () => {
     let tempDir;
 
     beforeEach(() => {
         tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "opow-test-"));
-        ensureRepo();
     });
 
     afterEach(() => {
         fs.rmSync(tempDir, { recursive: true, force: true });
     });
 
+    it("verifies bundled getters and vendor-meta resolution", () => {
+        const upstreamDir = getUpstreamSkillsDir();
+        assert.ok(fs.existsSync(upstreamDir), "getUpstreamSkillsDir() must exist");
+
+        const openspecDir = getOpenSpecSkillsDir();
+        assert.ok(fs.existsSync(openspecDir), "getOpenSpecSkillsDir() must exist");
+
+        const meta = getVendorMeta();
+        assert.ok(meta && meta.upstream && meta.upstream.commit);
+
+        const commit = getUpstreamCommit();
+        assert.equal(commit, meta.upstream.commit);
+    });
+
     it("copyDir handles non-existent src, overwrite flag, and ignores dot/underscore files", () => {
         const nonExistent = path.join(tempDir, "does-not-exist");
         const dest = path.join(tempDir, "dest");
-        // Should return cleanly
         copyDir(nonExistent, dest);
         assert.ok(!fs.existsSync(dest));
 
-        // Create src with normal file, dotfile, and underscore file
         const src = path.join(tempDir, "src");
         fs.mkdirSync(src, { recursive: true });
         fs.writeFileSync(path.join(src, "regular.txt"), "original");
         fs.writeFileSync(path.join(src, ".hidden.txt"), "hidden");
         fs.writeFileSync(path.join(src, "._apple_double"), "apple");
 
-        // Copy without overwrite
         fs.mkdirSync(dest, { recursive: true });
         fs.writeFileSync(path.join(dest, "regular.txt"), "keep_me");
         copyDir(src, dest, false);
@@ -50,14 +63,13 @@ describe("sync & target lifecycle", () => {
         assert.ok(!fs.existsSync(path.join(dest, ".hidden.txt")));
         assert.ok(!fs.existsSync(path.join(dest, "._apple_double")));
 
-        // Copy with overwrite = true
         copyDir(src, dest, true);
         assert.equal(fs.readFileSync(path.join(dest, "regular.txt"), "utf8"), "original");
     });
 
     it("removeDir safely handles non-existent and existing directories", () => {
         const nonExistent = path.join(tempDir, "no-dir");
-        removeDir(nonExistent); // should not throw
+        removeDir(nonExistent);
 
         const existingDir = path.join(tempDir, "to-remove");
         fs.mkdirSync(existingDir, { recursive: true });
@@ -71,15 +83,12 @@ describe("sync & target lifecycle", () => {
     it("readManifest and writeManifest handle valid, corrupt, and missing files", () => {
         const manifestPath = path.join(tempDir, "manifest.json");
 
-        // Missing
         assert.equal(readManifest(manifestPath), null);
 
-        // Write and read valid
         const sample = { target: "cline", skills: ["a", "b"] };
         writeManifest(manifestPath, sample);
         assert.deepEqual(readManifest(manifestPath), sample);
 
-        // Corrupt
         fs.writeFileSync(manifestPath, "{ corrupted json");
         assert.equal(readManifest(manifestPath), null);
     });
@@ -116,7 +125,7 @@ describe("sync & target lifecycle", () => {
         const origExistsSync = fs.existsSync;
         try {
             fs.existsSync = (p) => {
-                if (typeof p === "string" && p.includes("skills")) return false;
+                if (typeof p === "string" && p.includes("skills/upstream")) return false;
                 return origExistsSync(p);
             };
             assert.throws(() => syncTargetSkills(TARGETS.cline, tempDir), {
@@ -131,7 +140,7 @@ describe("sync & target lifecycle", () => {
         const origExistsSync = fs.existsSync;
         try {
             fs.existsSync = (p) => {
-                if (typeof p === "string" && (p.includes("templates/workflows") || p.includes("skills/using-superpowers"))) {
+                if (typeof p === "string" && (p.includes("templates/workflows") || p.includes("skills/openspec"))) {
                     return false;
                 }
                 return origExistsSync(p);
@@ -149,8 +158,11 @@ describe("sync & target lifecycle", () => {
         assert.equal(manifest.target, "cline");
         assert.ok(manifest.skills.includes("using-superpowers"));
         assert.ok(manifest.skills.includes("openspec-sync"));
+        assert.ok(manifest.skills.includes("openspec-explore"));
+        assert.ok(manifest.skills.includes("brainstorming"));
         assert.ok(manifest.workflows.includes("spec"));
         assert.ok(manifest.workflows.includes("sync-spec"));
+        assert.equal(manifest.sourceCommit, getUpstreamCommit());
 
         const skillsDir = TARGETS.cline.getSkillsDir(tempDir);
         const workflowsDir = TARGETS.cline.getWorkflowsDir(tempDir);
@@ -179,6 +191,7 @@ describe("sync & target lifecycle", () => {
         assert.ok(manifest.skills.includes("openspec-sync"));
         assert.ok(manifest.workflows.includes("spec"));
         assert.ok(manifest.workflows.includes("sync-spec"));
+        assert.equal(manifest.sourceCommit, getUpstreamCommit());
 
         const skillsDir = TARGETS.antigravity.getSkillsDir(tempDir);
         const workflowsDir = TARGETS.antigravity.getWorkflowsDir(tempDir);
@@ -212,8 +225,8 @@ describe("sync & target lifecycle", () => {
         assert.ok(manifest.workflows.includes("implement"));
         assert.ok(manifest.workflows.includes("verify"));
         assert.ok(manifest.workflows.includes("sync-spec"));
+        assert.equal(manifest.sourceCommit, getUpstreamCommit());
 
-        // Verify filesystem
         const skillsDir = TARGETS.claude.getSkillsDir(tempDir);
         const commandsDir = TARGETS.claude.getWorkflowsDir(tempDir);
         const manifestPath = TARGETS.claude.getManifestPath(tempDir);
@@ -225,11 +238,9 @@ describe("sync & target lifecycle", () => {
         assert.ok(fs.existsSync(path.join(commandsDir, "plan.md")));
         assert.ok(fs.existsSync(path.join(commandsDir, "sync-spec.md")));
 
-        // Verify Claude wrapper content was copied
         const wrapperContent = fs.readFileSync(path.join(skillsDir, "using-superpowers", "SKILL.md"), "utf8");
         assert.ok(wrapperContent.includes("Platform Adaptation: Claude Code"));
 
-        // Test uninstall
         const removed = uninstallTargetSkills(TARGETS.claude, tempDir);
         assert.ok(removed.skills.length > 0);
         assert.ok(!fs.existsSync(manifestPath));
@@ -245,8 +256,8 @@ describe("sync & target lifecycle", () => {
         assert.ok(manifest.skills.includes("openspec-sync"));
         assert.ok(manifest.workflows.includes("spec"));
         assert.ok(manifest.workflows.includes("sync-spec"));
+        assert.equal(manifest.sourceCommit, getUpstreamCommit());
 
-        // Verify filesystem
         const skillsDir = TARGETS.codex.getSkillsDir(tempDir);
         const workflowsDir = TARGETS.codex.getWorkflowsDir(tempDir);
         const manifestPath = TARGETS.codex.getManifestPath(tempDir);
@@ -257,11 +268,9 @@ describe("sync & target lifecycle", () => {
         assert.ok(fs.existsSync(path.join(workflowsDir, "spec.md")));
         assert.ok(fs.existsSync(path.join(workflowsDir, "sync-spec.md")));
 
-        // Verify Codex wrapper content was copied
         const wrapperContent = fs.readFileSync(path.join(skillsDir, "using-superpowers", "SKILL.md"), "utf8");
         assert.ok(wrapperContent.includes("Platform Adaptation: Codex"));
 
-        // Test uninstall
         const removed = uninstallTargetSkills(TARGETS.codex, tempDir);
         assert.ok(removed.skills.length > 0);
         assert.ok(!fs.existsSync(manifestPath));
@@ -274,7 +283,6 @@ describe("sync & target lifecycle", () => {
             message: /No manifest found for Cline at/,
         });
 
-        // Corrupt manifest
         const manifestPath = TARGETS.cline.getManifestPath(tempDir);
         writeManifest(manifestPath, { invalid: "data" });
         assert.throws(() => uninstallTargetSkills(TARGETS.cline, tempDir), {
@@ -285,14 +293,12 @@ describe("sync & target lifecycle", () => {
     it("uninstallTargetSkills handles directory cleanup edge cases gracefully", () => {
         syncTargetSkills(TARGETS.cline, tempDir);
 
-        // Add a non-superpower extra file in the skills directory to make rmdirSync not remove it
         const skillsDir = TARGETS.cline.getSkillsDir(tempDir);
         fs.writeFileSync(path.join(skillsDir, "custom-extra.txt"), "keep");
 
         uninstallTargetSkills(TARGETS.cline, tempDir);
-        assert.ok(fs.existsSync(skillsDir)); // kept because not empty
+        assert.ok(fs.existsSync(skillsDir));
 
-        // Clean up
         fs.rmSync(skillsDir, { recursive: true, force: true });
     });
 
@@ -303,7 +309,6 @@ describe("sync & target lifecycle", () => {
             fs.rmdirSync = () => {
                 throw new Error("EPERM: permission denied");
             };
-            // Should catch and not throw
             uninstallTargetSkills(TARGETS.cline, tempDir);
         } finally {
             fs.rmdirSync = origRmdirSync;

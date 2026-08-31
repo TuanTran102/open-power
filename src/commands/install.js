@@ -1,17 +1,13 @@
-const path = require("path");
-const { ensureRepo } = require("../lib/repo");
-const { syncTargetSkills, syncOpenSpec } = require("../lib/sync");
+const { syncTargetSkills, syncOpenSpec, getUpstreamCommit } = require("../lib/sync");
 const { resolveTargets } = require("../lib/targets");
-const { loadConfig } = require("../lib/config");
 
 function install(targetArg) {
-    const config = loadConfig();
     const targets = resolveTargets(targetArg);
     const projectDir = process.cwd();
+    const upstreamCommit = getUpstreamCommit();
 
-    console.log(`Ensuring upstream Superpowers repository cache...`);
-    console.log(`  Source: ${config.sourceUrl}`);
-    ensureRepo();
+    console.log(`Installing bundled Superpowers + OpenSpec skills...`);
+    console.log(`  Source Commit: ${upstreamCommit}`);
 
     console.log(`\nInitializing .opow workspace...`);
     const opowInfo = syncOpenSpec(projectDir);

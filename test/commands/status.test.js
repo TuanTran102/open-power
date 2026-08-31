@@ -5,7 +5,6 @@ const path = require("path");
 const os = require("os");
 const { status } = require("../../src/commands/status");
 const { install } = require("../../src/commands/install");
-const repo = require("../../src/lib/repo");
 
 describe("commands / status", () => {
     let tempDir;
@@ -15,7 +14,6 @@ describe("commands / status", () => {
         tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "opow-status-test-"));
         origCwd = process.cwd();
         process.chdir(tempDir);
-        repo.ensureRepo();
     });
 
     afterEach(() => {
@@ -23,85 +21,18 @@ describe("commands / status", () => {
         fs.rmSync(tempDir, { recursive: true, force: true });
     });
 
-    it("handles no cached upstream repository", () => {
-        const origRepoExists = repo.repoExists;
+    it("reports bundled commit, uninstalled target status, and missing .opow directories", () => {
         const logs = [];
         const origLog = console.log;
         console.log = (...args) => logs.push(args.join(" "));
 
         try {
-            repo.repoExists = () => false;
-            status();
-            assert.ok(logs.some((l) => l.includes("No cached upstream repository found")));
-        } finally {
-            repo.repoExists = origRepoExists;
-            console.log = origLog;
-        }
-    });
-
-    it("reports upstream up to date, uninstalled target status, and missing .opow directories", () => {
-        const origFetchRepo = repo.fetchRepo;
-        const origGetCurrentCommit = repo.getCurrentCommit;
-        const origGetRemoteCommit = repo.getRemoteCommit;
-        const logs = [];
-        const origLog = console.log;
-        console.log = (...args) => logs.push(args.join(" "));
-
-        try {
-            repo.fetchRepo = () => {};
-            repo.getCurrentCommit = () => "commit_abc";
-            repo.getRemoteCommit = () => "commit_abc";
-
             status("cline");
-            assert.ok(logs.some((l) => l.includes("Upstream status: ✅ Up to date")));
+            assert.ok(logs.some((l) => l.includes("open-power (opow) — Project Status")));
+            assert.ok(logs.some((l) => l.includes("Bundled upstream commit:") || l.includes("Upstream commit:")));
             assert.ok(logs.some((l) => l.includes("Status: Not installed in this project.")));
             assert.ok(logs.some((l) => l.includes("Specs:     ✗ Missing")));
         } finally {
-            repo.fetchRepo = origFetchRepo;
-            repo.getCurrentCommit = origGetCurrentCommit;
-            repo.getRemoteCommit = origGetRemoteCommit;
-            console.log = origLog;
-        }
-    });
-
-    it("reports upstream update available", () => {
-        const origFetchRepo = repo.fetchRepo;
-        const origGetCurrentCommit = repo.getCurrentCommit;
-        const origGetRemoteCommit = repo.getRemoteCommit;
-        const logs = [];
-        const origLog = console.log;
-        console.log = (...args) => logs.push(args.join(" "));
-
-        try {
-            repo.fetchRepo = () => {};
-            repo.getCurrentCommit = () => "commit_old";
-            repo.getRemoteCommit = () => "commit_new";
-
-            status("cline");
-            assert.ok(logs.some((l) => l.includes("Upstream status: ⚠️  Update available (commit_new)")));
-        } finally {
-            repo.fetchRepo = origFetchRepo;
-            repo.getCurrentCommit = origGetCurrentCommit;
-            repo.getRemoteCommit = origGetRemoteCommit;
-            console.log = origLog;
-        }
-    });
-
-    it("reports offline / error during remote fetch", () => {
-        const origFetchRepo = repo.fetchRepo;
-        const logs = [];
-        const origLog = console.log;
-        console.log = (...args) => logs.push(args.join(" "));
-
-        try {
-            repo.fetchRepo = () => {
-                throw new Error("Network unreachable");
-            };
-
-            status("cline");
-            assert.ok(logs.some((l) => l.includes("Could not check for remote updates (offline?).")));
-        } finally {
-            repo.fetchRepo = origFetchRepo;
             console.log = origLog;
         }
     });

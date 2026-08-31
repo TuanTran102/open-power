@@ -4,7 +4,6 @@ const fs = require("fs");
 const path = require("path");
 const os = require("os");
 const { install } = require("../../src/commands/install");
-const { ensureRepo } = require("../../src/lib/repo");
 
 describe("commands / install", () => {
     let tempDir;
@@ -14,7 +13,6 @@ describe("commands / install", () => {
         tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "opow-install-test-"));
         origCwd = process.cwd();
         process.chdir(tempDir);
-        ensureRepo();
     });
 
     afterEach(() => {
@@ -22,7 +20,7 @@ describe("commands / install", () => {
         fs.rmSync(tempDir, { recursive: true, force: true });
     });
 
-    it("installs default targets with slash commands and skills", () => {
+    it("installs default targets with slash commands and skills completely offline", () => {
         const logs = [];
         const origLog = console.log;
         console.log = (...args) => logs.push(args.join(" "));

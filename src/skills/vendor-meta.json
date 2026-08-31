@@ -1,0 +1,30 @@
+{
+    "upstream": {
+        "repo": "https://github.com/obra/superpowers.git",
+        "commit": "b36e0829c6d0140e93cfef2ca599b1b07d4a7797",
+        "syncedAt": "2026-08-31T07:44:00.000Z",
+        "skills": [
+            "brainstorming",
+            "dispatching-parallel-agents",
+            "executing-plans",
+            "finishing-a-development-branch",
+            "receiving-code-review",
+            "requesting-code-review",
+            "subagent-driven-development",
+            "systematic-debugging",
+            "test-driven-development",
+            "using-git-worktrees",
+            "using-superpowers",
+            "verification-before-completion",
+            "writing-plans",
+            "writing-skills"
+        ]
+    },
+    "openspec": {
+        "skills": [
+            "openspec-explore",
+            "openspec-sync",
+            "spec-driven-development"
+        ]
+    }
+}

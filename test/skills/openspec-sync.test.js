@@ -4,7 +4,7 @@ const fs = require("fs");
 const path = require("path");
 
 describe("skills / openspec-sync", () => {
-    const skillPath = path.join(__dirname, "../../src/skills/openspec-sync/SKILL.md");
+    const skillPath = path.join(__dirname, "../../src/skills/openspec/openspec-sync/SKILL.md");
 
     it("validates openspec-sync skill exists and has correct metadata", () => {
         assert.ok(fs.existsSync(skillPath), "Missing openspec-sync/SKILL.md");

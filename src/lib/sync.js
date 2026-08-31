@@ -1,7 +1,6 @@
 const fs = require("fs");
 const path = require("path");
 const { loadConfig } = require("./config");
-const { getSkillsSourceDir, getCurrentCommit } = require("./repo");
 
 function copyDir(src, dest, overwrite = true) {
     if (!fs.existsSync(src)) return;
@@ -43,8 +42,37 @@ function writeManifest(manifestPath, manifest) {
     fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 4) + "\n");
 }
 
+function getUpstreamSkillsDir() {
+    return path.join(__dirname, "..", "skills", "upstream");
+}
+
+function getOpenSpecSkillsDir() {
+    return path.join(__dirname, "..", "skills", "openspec");
+}
+
 function getCustomSkillsDir() {
-    return path.join(__dirname, "..", "skills");
+    return getOpenSpecSkillsDir();
+}
+
+function getVendorMetaPath() {
+    return path.join(__dirname, "..", "skills", "vendor-meta.json");
+}
+
+function getVendorMeta() {
+    const metaPath = getVendorMetaPath();
+    if (fs.existsSync(metaPath)) {
+        try {
+            return JSON.parse(fs.readFileSync(metaPath, "utf8"));
+        } catch (err) {
+            return null;
+        }
+    }
+    return null;
+}
+
+function getUpstreamCommit() {
+    const meta = getVendorMeta();
+    return meta?.upstream?.commit || "vendored";
 }
 
 function getOpenSpecSourceDir() {
@@ -96,7 +124,7 @@ function syncOpenSpec(projectDir = process.cwd()) {
 }
 
 /**
- * Core sync: copy skills and workflows from cached repo + local bundles into target directories.
+ * Core sync: copy skills and workflows from bundled local sources into target directories.
  *
  * @param {object} target - Target definition from targets.js
  * @param {string} [projectDir] - Project root directory (default: process.cwd())
@@ -104,41 +132,41 @@ function syncOpenSpec(projectDir = process.cwd()) {
  */
 function syncTargetSkills(target, projectDir = process.cwd()) {
     const config = loadConfig();
-    const sourceDir = getSkillsSourceDir();
-    const customSkillsDir = getCustomSkillsDir();
+    const upstreamDir = getUpstreamSkillsDir();
+    const openspecDir = getOpenSpecSkillsDir();
     const workflowsSourceDir = getWorkflowsSourceDir();
     const targetSkillsDir = target.getSkillsDir(projectDir);
     const targetWorkflowsDir = target.getWorkflowsDir(projectDir);
     const manifestPath = target.getManifestPath(projectDir);
     const wrapperDir = target.getWrapperDir();
 
-    if (!fs.existsSync(sourceDir)) {
-        throw new Error(`Skills source not found: ${sourceDir}`);
+    if (!fs.existsSync(upstreamDir)) {
+        throw new Error(`Skills source not found: ${upstreamDir}`);
     }
 
     fs.mkdirSync(targetSkillsDir, { recursive: true });
 
-    // 1. Copy all upstream skills
+    // 1. Copy all bundled upstream skills
     const upstreamSkills = fs
-        .readdirSync(sourceDir, { withFileTypes: true })
+        .readdirSync(upstreamDir, { withFileTypes: true })
         .filter((e) => e.isDirectory() && !e.name.startsWith("."))
         .map((e) => e.name);
 
     for (const skillName of upstreamSkills) {
-        copyDir(path.join(sourceDir, skillName), path.join(targetSkillsDir, skillName));
+        copyDir(path.join(upstreamDir, skillName), path.join(targetSkillsDir, skillName));
     }
 
-    // 2. Copy bundled custom skills (e.g. spec-driven-development)
-    const customSkills = [];
-    if (fs.existsSync(customSkillsDir)) {
+    // 2. Copy bundled OpenSpec skills
+    const openspecSkills = [];
+    if (fs.existsSync(openspecDir)) {
         const entries = fs
-            .readdirSync(customSkillsDir, { withFileTypes: true })
+            .readdirSync(openspecDir, { withFileTypes: true })
             .filter((e) => e.isDirectory() && !e.name.startsWith("."))
             .map((e) => e.name);
 
         for (const skillName of entries) {
-            copyDir(path.join(customSkillsDir, skillName), path.join(targetSkillsDir, skillName));
-            customSkills.push(skillName);
+            copyDir(path.join(openspecDir, skillName), path.join(targetSkillsDir, skillName));
+            openspecSkills.push(skillName);
         }
     }
 
@@ -168,7 +196,7 @@ function syncTargetSkills(target, projectDir = process.cwd()) {
     // Record manifest
     const allInstalledSkills = [
         ...upstreamSkills.filter((s) => s !== config.wrapperSkillName),
-        ...customSkills.filter((s) => s !== config.wrapperSkillName),
+        ...openspecSkills.filter((s) => s !== config.wrapperSkillName),
         config.wrapperSkillName,
     ];
     const uniqueSkills = Array.from(new Set(allInstalledSkills));
@@ -176,7 +204,7 @@ function syncTargetSkills(target, projectDir = process.cwd()) {
     const manifest = {
         target: target.id,
         installedAt: new Date().toISOString(),
-        sourceCommit: getCurrentCommit(),
+        sourceCommit: getUpstreamCommit(),
         skills: uniqueSkills,
         workflows: installedWorkflows,
         wrapperSkill: config.wrapperSkillName,
@@ -249,6 +277,14 @@ module.exports = {
     removeDir,
     readManifest,
     writeManifest,
+    getUpstreamSkillsDir,
+    getOpenSpecSkillsDir,
+    getCustomSkillsDir,
+    getVendorMetaPath,
+    getVendorMeta,
+    getUpstreamCommit,
+    getOpenSpecSourceDir,
+    getWorkflowsSourceDir,
     syncOpenSpec,
     syncTargetSkills,
     uninstallTargetSkills,
