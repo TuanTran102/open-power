@@ -47,5 +47,26 @@ describe("skills / content validation", () => {
         assert.ok(content.includes("antigravity-ide"));
         assert.ok(content.includes("execute"));
     });
+
+    it("validates subagent-driven-development hands off to /verify for OpenSpec plans", () => {
+        const skillPath = path.join(__dirname, "../../src/skills/upstream/subagent-driven-development/SKILL.md");
+        const content = fs.readFileSync(skillPath, "utf8");
+        assert.ok(content.includes("/verify"), "subagent-driven-development should reference /verify");
+        assert.ok(content.includes("OpenSpec") || content.includes(".opow"), "subagent-driven-development should reference OpenSpec/.opow");
+    });
+
+    it("validates executing-plans hands off to /verify for OpenSpec plans", () => {
+        const skillPath = path.join(__dirname, "../../src/skills/upstream/executing-plans/SKILL.md");
+        const content = fs.readFileSync(skillPath, "utf8");
+        assert.ok(content.includes("/verify"), "executing-plans should reference /verify");
+        assert.ok(content.includes("OpenSpec") || content.includes(".opow"), "executing-plans should reference OpenSpec/.opow");
+    });
+
+    it("validates finishing-a-development-branch references OpenSpec /archive deferral", () => {
+        const skillPath = path.join(__dirname, "../../src/skills/upstream/finishing-a-development-branch/SKILL.md");
+        const content = fs.readFileSync(skillPath, "utf8");
+        assert.ok(content.includes("/archive"), "finishing-a-development-branch should reference /archive");
+        assert.ok(content.includes("OpenSpec") || content.includes(".opow"), "finishing-a-development-branch should reference OpenSpec/.opow");
+    });
 });
 

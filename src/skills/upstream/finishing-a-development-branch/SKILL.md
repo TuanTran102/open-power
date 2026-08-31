@@ -9,6 +9,8 @@ description: Use when implementation is complete, all tests pass, and you need t
 
 **Core principle:** Verify tests → Detect environment → Present options → Execute choice → Clean up.
 
+**OpenSpec / OpenPower Workflows:** When operating in an OpenSpec lifecycle (`.opow/`), branch merge and worktree cleanup are deferred to `/archive` after verification in `/verify`. Use this skill directly only for standalone development tasks outside OpenSpec.
+
 **Announce at start:** "I'm using the finishing-a-development-branch skill to complete this work."
 
 ## Step 1: Verify Tests

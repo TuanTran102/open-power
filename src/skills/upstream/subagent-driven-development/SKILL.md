@@ -484,7 +484,10 @@ delete this plan's workspace (`rm -rf <workspace>`) — the git history is
 the record now. Sibling directories belong to other plans; leave them
 alone.
 
-Use superpowers:finishing-a-development-branch.
+### Handoff and Lifecycle
+- **OpenSpec / OpenPower Workflows:** If executing a plan within OpenSpec (e.g. plan located in `.opow/plans/` or `.opow/changes/`), do NOT remove the git worktree or merge/delete the feature branch. Keep the worktree intact and announce:
+  `Done! All implementation tasks complete. Handoff to /verify.`
+- **Standalone Plans:** For standalone plans outside OpenSpec, use `superpowers:finishing-a-development-branch`.
 
 ## Common Rationalizations
 
