@@ -20,9 +20,10 @@ This is not negotiable. You cannot rationalize your way out of this.
 **Invoke relevant or requested skills BEFORE any response or action** — including clarifying questions, exploring the codebase, or checking files. If it turns out wrong for the situation, you don't have to use it.
 
 **Before entering plan mode or writing code:**
-1. If brainstorming or designing a feature/API: invoke `brainstorming` and `spec-driven-development` to create/update the OpenSpec in `.opow/specs/`.
-2. Ensure Acceptance Criteria (*Given - When - Then*) are defined.
-3. Then invoke `writing-plans` (saving plan to `.opow/plans/`) and `test-driven-development`.
+1. If exploring ideas or auditing the codebase: invoke `brainstorming` and `openspec-explore`.
+2. If designing a feature/API: invoke `spec-driven-development` to create/update the change proposal in `.opow/changes/<change-id>/`.
+3. Ensure Acceptance Criteria (*Given - When - Then*) and Delta Specs are defined.
+4. Then invoke `writing-plans` (saving plan to `.opow/plans/`) and `test-driven-development`.
 
 Then announce "Using [skill] to [purpose]" and follow the skill exactly. If it has a checklist, create a todo per item.
 
@@ -30,9 +31,9 @@ Then announce "Using [skill] to [purpose]" and follow the skill exactly. If it h
 
 When multiple skills apply, process and specification skills come first — they set the approach, then implementation skills carry it out.
 
-- "Let's build X" → `brainstorming` + `spec-driven-development` (create OpenSpec in `.opow/specs/`) → `writing-plans` (plan in `.opow/plans/`) → `test-driven-development`.
+- "Let's explore/build X" → `brainstorming` + `openspec-explore` → `spec-driven-development` (create proposal in `.opow/changes/<change-id>/`) → `writing-plans` (plan in `.opow/plans/`) → `test-driven-development`.
 - "Fix this bug" → `systematic-debugging` (root cause analysis) → domain skills → verification.
-- "Wrap up feature" → `verification-before-completion` (verify 100% OpenSpec Acceptance Criteria).
+- "Wrap up feature" → `verification-before-completion` (verify 100% Delta Acceptance Criteria) → `/archive` (merge into `.opow/specs/`).
 
 ## Red Flags
 
@@ -58,8 +59,8 @@ These thoughts mean STOP—you're rationalizing:
 You are running inside **Codex** (OpenAI agent workflows). To use Superpowers and OpenSpec effectively in Codex:
 
 - **Skills Discovery:** Codex discovers project skills in `.codex/skills/`. When a skill is needed, read its `SKILL.md` instructions before taking action.
-- **Workflows:** Slash commands and workflows are located in `.codex/workflows/` (`/spec`, `/plan`, `/implement`, `/verify`).
-- **OpenSpec & Workflows:** Specifications and plans reside in `.opow/` (`.opow/specs/` and `.opow/plans/`). Refer to the `spec-driven-development` skill for the unified 5-phase lifecycle.
+- **Workflows:** Slash commands and workflows are located in `.codex/workflows/` (`/explore`, `/spec`, `/plan`, `/implement`, `/verify`, `/archive`).
+- **OpenSpec & Workflows:** Specifications and plans reside in `.opow/` (`.opow/specs/`, `.opow/changes/`, `.opow/archive/`, and `.opow/plans/`). Refer to the `spec-driven-development` skill for the unified 6-step lifecycle.
 - **Subagents & Delegation:** When orchestrating subagents (`subagent-driven-development`, `dispatching-parallel-agents`, `requesting-code-review`), provide isolated task boundaries and explicit acceptance criteria.
 - **Rules & Precedence:** Hierarchical instructions (`AGENTS.md`, `CODEX.md`, direct user prompt) guide high-level constraints.
 - **Verification:** Execute commands and verify all OpenSpec Acceptance Criteria before marking tasks complete.

@@ -20,9 +20,10 @@ This is not negotiable. You cannot rationalize your way out of this.
 **Invoke relevant or requested skills BEFORE any response or action** — including clarifying questions, exploring the codebase, or checking files. If it turns out wrong for the situation, you don't have to use it.
 
 **Before entering plan mode or writing code:**
-1. If brainstorming or designing a feature/API: invoke `brainstorming` and `spec-driven-development` to create/update the OpenSpec in `.opow/specs/`.
-2. Ensure Acceptance Criteria (*Given - When - Then*) are defined.
-3. Then invoke `writing-plans` (saving plan to `.opow/plans/`) and `test-driven-development`.
+1. If exploring ideas or auditing the codebase: invoke `brainstorming` and `openspec-explore`.
+2. If designing a feature/API: invoke `spec-driven-development` to create/update the change proposal in `.opow/changes/<change-id>/`.
+3. Ensure Acceptance Criteria (*Given - When - Then*) and Delta Specs are defined.
+4. Then invoke `writing-plans` (saving plan to `.opow/plans/`) and `test-driven-development`.
 
 Then announce "Using [skill] to [purpose]" and follow the skill exactly. If it has a checklist, create a todo per item.
 
@@ -30,9 +31,9 @@ Then announce "Using [skill] to [purpose]" and follow the skill exactly. If it h
 
 When multiple skills apply, process and specification skills come first — they set the approach, then implementation skills (frontend-design, etc.) carry it out.
 
-- "Let's build X" → `brainstorming` + `spec-driven-development` (create OpenSpec in `.opow/specs/`) → `writing-plans` (plan in `.opow/plans/`) → `test-driven-development`.
+- "Let's explore/build X" → `brainstorming` + `openspec-explore` → `spec-driven-development` (create proposal in `.opow/changes/<change-id>/`) → `writing-plans` (plan in `.opow/plans/`) → `test-driven-development`.
 - "Fix this bug" → `systematic-debugging` (root cause analysis) → domain skills → verification.
-- "Wrap up feature" → `verification-before-completion` (verify 100% OpenSpec Acceptance Criteria).
+- "Wrap up feature" → `verification-before-completion` (verify 100% Delta Acceptance Criteria) → `/archive` (merge into `.opow/specs/`).
 
 ## Red Flags
 
@@ -58,7 +59,7 @@ These thoughts mean STOP—you're rationalizing:
 You are running inside **Cline**. Cline loads skills on-demand and activates them automatically when your request matches a skill's description. To use Superpowers and OpenSpec effectively in Cline:
 
 - **Automatic triggering:** Cline sees the list of available skills at startup. When a request matches a skill's description, Cline activates it via the `use_skill` tool, which loads the full SKILL.md instructions. Trust this mechanism — it is your primary way to invoke skills.
-- **OpenSpec & Workflows:** Specifications and plans reside in `.opow/` (`.opow/specs/` and `.opow/plans/`). Refer to the `spec-driven-development` skill for the unified 5-phase lifecycle.
+- **OpenSpec & Workflows:** Specifications and plans reside in `.opow/` (`.opow/specs/`, `.opow/changes/`, `.opow/archive/`, and `.opow/plans/`). Refer to the `spec-driven-development` skill for the unified 6-step lifecycle.
 - **Subagents:** Cline provides a `use_subagents` tool (up to 5 in parallel). Skills that dispatch subagents — `subagent-driven-development`, `dispatching-parallel-agents`, `requesting-code-review` — rely on this. Pass focused prompts with their specific OpenSpec slice.
 - **Running scripts:** Skills may reference helper scripts. Cline executes these via `execute_command`.
 - **Todo tracking & Verification:** Use Cline's task_progress tracking to check off all OpenSpec Acceptance Criteria before finishing.
