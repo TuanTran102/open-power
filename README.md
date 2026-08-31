@@ -37,6 +37,9 @@ CLI to install and auto-update **Superpowers skills** and **OpenSpec standards**
   - `openspec-explore`: Technical thinking partner for auditing codebase, checking dependencies, and preparing Delta Spec inputs.
   - `openspec-sync`: Audits codebase modifications or Git diff to detect spec drift and reverse-sync changes into OpenSpec.
   - `spec-driven-development`: Guides drafting delta specs, managing the Propose ➔ Apply ➔ Archive lifecycle, and designing UI mockups via Pencil (pen.dev) MCP.
+- **Automatic .gitignore & Conciseness Rules**:
+  - Automatically provisions `.gitignore` entries for `.opow/`, `.worktrees/`, and all AI agent directories.
+  - Configures concise response rules (`be brief`) for Antigravity (`.agent/rules/brief.md`), Cline (`.clinerules`), Claude Code (`CLAUDE.md`), and Codex (`AGENTS.md`) without overwriting existing guidelines.
 - **Offline & Deterministic (Vendored Bundled Skills)**:
   - 100% offline installation & updates directly from bundled skills package (`src/skills/upstream/` and `src/skills/openspec/`).
   - Zero runtime network calls, git cache dependencies, or transient upstream breakage.

@@ -36,6 +36,14 @@ describe("commands / install", () => {
             assert.ok(fs.existsSync(path.join(tempDir, ".opow", "archive")));
             assert.ok(fs.existsSync(path.join(tempDir, ".cline", "skills")));
             assert.ok(fs.existsSync(path.join(tempDir, ".agent", "skills")));
+            assert.ok(fs.existsSync(path.join(tempDir, ".gitignore")));
+            const gitignoreContent = fs.readFileSync(path.join(tempDir, ".gitignore"), "utf8");
+            assert.ok(gitignoreContent.includes(".opow/"));
+            assert.ok(gitignoreContent.includes(".worktrees/"));
+            assert.ok(fs.existsSync(path.join(tempDir, ".clinerules", "brief.md")));
+            assert.match(fs.readFileSync(path.join(tempDir, ".clinerules", "brief.md"), "utf8"), /\bbe brief\b/i);
+            assert.ok(fs.existsSync(path.join(tempDir, ".agent", "rules", "brief.md")));
+            assert.match(fs.readFileSync(path.join(tempDir, ".agent", "rules", "brief.md"), "utf8"), /\bbe brief\b/i);
         } finally {
             console.log = origLog;
         }
@@ -51,6 +59,8 @@ describe("commands / install", () => {
             assert.ok(logs.some((l) => l.includes("Installing Superpowers + OpenSpec for Claude Code")));
             assert.ok(fs.existsSync(path.join(tempDir, ".claude", "skills")));
             assert.ok(fs.existsSync(path.join(tempDir, ".claude", "commands")));
+            assert.ok(fs.existsSync(path.join(tempDir, "CLAUDE.md")));
+            assert.match(fs.readFileSync(path.join(tempDir, "CLAUDE.md"), "utf8"), /\bbe brief\b/i);
         } finally {
             console.log = origLog;
         }

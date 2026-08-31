@@ -33,6 +33,9 @@ describe("commands / update", () => {
             assert.ok(logs.some((l) => l.includes("Re-syncing skills for Cline...")));
             assert.ok(logs.some((l) => l.includes("Re-syncing skills for Antigravity...")));
             assert.ok(logs.some((l) => l.includes("Update complete") || l.includes("Synced with bundled package")));
+            assert.ok(fs.existsSync(path.join(tempDir, ".gitignore")));
+            assert.ok(fs.existsSync(path.join(tempDir, ".clinerules", "brief.md")));
+            assert.ok(fs.existsSync(path.join(tempDir, ".agent", "rules", "brief.md")));
         } finally {
             console.log = origLog;
         }

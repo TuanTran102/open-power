@@ -1,4 +1,4 @@
-const { syncTargetSkills, syncOpenSpec, getUpstreamCommit } = require("../lib/sync");
+const { syncTargetSkills, syncOpenSpec, getUpstreamCommit, ensureGitignore, syncTargetRules } = require("../lib/sync");
 const { resolveTargets } = require("../lib/targets");
 
 function install(targetArg) {
@@ -17,6 +17,13 @@ function install(targetArg) {
     console.log(`  Plans:        ${opowInfo.plansDir}`);
     console.log(`  Templates:    ${opowInfo.hasTemplates ? "✅ Installed" : "⚠️ Missing"}`);
 
+    const gitignoreInfo = ensureGitignore(projectDir);
+    if (gitignoreInfo.created || gitignoreInfo.updated) {
+        console.log(`  Gitignore:    ✅ Configured (${gitignoreInfo.addedPatterns.length} entries added)`);
+    } else {
+        console.log(`  Gitignore:    ✅ Already up to date`);
+    }
+
     for (const target of targets) {
         const targetSkillsDir = target.getSkillsDir(projectDir);
         const targetWorkflowsDir = target.getWorkflowsDir(projectDir);
@@ -26,6 +33,7 @@ function install(targetArg) {
         console.log(`  Workflows: ${targetWorkflowsDir}`);
 
         const manifest = syncTargetSkills(target, projectDir);
+        const ruleInfo = syncTargetRules(target, projectDir);
 
         console.log(`\n✅ Installed ${manifest.skills.length} skills for ${target.name}:`);
         for (const skill of manifest.skills) {
@@ -36,6 +44,14 @@ function install(targetArg) {
             console.log(`\n⚡ Installed ${manifest.workflows.length} Slash Commands / Workflows:`);
             for (const wf of manifest.workflows) {
                 console.log(`   - /${wf}`);
+            }
+        }
+
+        if (ruleInfo && ruleInfo.rulePath) {
+            if (ruleInfo.created || ruleInfo.updated) {
+                console.log(`\n📝 Rules:     ✅ Configured "be brief" rule for ${target.name}`);
+            } else {
+                console.log(`\n📝 Rules:     ✅ "be brief" rule already active for ${target.name}`);
             }
         }
 

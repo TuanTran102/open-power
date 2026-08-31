@@ -36,6 +36,14 @@ describe("targets", () => {
             assert.equal(TARGETS.codex.getManifestPath(projectDir), path.join(projectDir, ".codex", "superpowers-manifest.json"));
             assert.ok(TARGETS.codex.getWrapperDir().endsWith(path.join("wrapper", "codex", "using-superpowers")));
         });
+
+        it("defines getRulePath for all targets", () => {
+            const projectDir = "/mock/project";
+            assert.equal(TARGETS.cline.getRulePath(projectDir), path.join(projectDir, ".clinerules"));
+            assert.equal(TARGETS.antigravity.getRulePath(projectDir), path.join(projectDir, ".agent", "rules", "brief.md"));
+            assert.equal(TARGETS.claude.getRulePath(projectDir), path.join(projectDir, "CLAUDE.md"));
+            assert.equal(TARGETS.codex.getRulePath(projectDir), path.join(projectDir, "AGENTS.md"));
+        });
     });
 
     describe("resolveTargets", () => {

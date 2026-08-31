@@ -8,6 +8,7 @@ const TARGETS = {
         getWorkflowsDir: (projectDir) => path.join(projectDir, ".clinerules", "workflows"),
         getManifestPath: (projectDir) => path.join(projectDir, ".cline", "superpowers-manifest.json"),
         getWrapperDir: () => path.join(__dirname, "..", "wrapper", "cline", "using-superpowers"),
+        getRulePath: (projectDir) => path.join(projectDir, ".clinerules"),
     },
     antigravity: {
         id: "antigravity",
@@ -16,6 +17,7 @@ const TARGETS = {
         getWorkflowsDir: (projectDir) => path.join(projectDir, ".agent", "workflows"),
         getManifestPath: (projectDir) => path.join(projectDir, ".agent", "superpowers-manifest.json"),
         getWrapperDir: () => path.join(__dirname, "..", "wrapper", "antigravity", "using-superpowers"),
+        getRulePath: (projectDir) => path.join(projectDir, ".agent", "rules", "brief.md"),
     },
     claude: {
         id: "claude",
@@ -24,6 +26,7 @@ const TARGETS = {
         getWorkflowsDir: (projectDir) => path.join(projectDir, ".claude", "commands"),
         getManifestPath: (projectDir) => path.join(projectDir, ".claude", "superpowers-manifest.json"),
         getWrapperDir: () => path.join(__dirname, "..", "wrapper", "claude", "using-superpowers"),
+        getRulePath: (projectDir) => path.join(projectDir, "CLAUDE.md"),
     },
     codex: {
         id: "codex",
@@ -32,6 +35,7 @@ const TARGETS = {
         getWorkflowsDir: (projectDir) => path.join(projectDir, ".codex", "workflows"),
         getManifestPath: (projectDir) => path.join(projectDir, ".codex", "superpowers-manifest.json"),
         getWrapperDir: () => path.join(__dirname, "..", "wrapper", "codex", "using-superpowers"),
+        getRulePath: (projectDir) => path.join(projectDir, "AGENTS.md"),
     },
 };
 

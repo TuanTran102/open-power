@@ -18,6 +18,8 @@ const {
     getOpenSpecSkillsDir,
     getVendorMeta,
     getUpstreamCommit,
+    ensureGitignore,
+    syncTargetRules,
 } = require("../../src/lib/sync");
 
 describe("sync & target lifecycle", () => {
@@ -363,5 +365,84 @@ describe("sync & target lifecycle", () => {
         const removed = removeOpowWorkspace(tempDir);
         assert.strictEqual(removed, true);
         assert.strictEqual(fs.existsSync(path.join(tempDir, ".opow")), false);
+    });
+
+    it("ensureGitignore creates .gitignore with default patterns if missing", () => {
+        const result = ensureGitignore(tempDir);
+        assert.equal(result.created, true);
+        assert.equal(result.updated, false);
+        assert.equal(result.addedPatterns.length, 8);
+        assert.ok(fs.existsSync(result.gitignorePath));
+        const content = fs.readFileSync(result.gitignorePath, "utf8");
+        assert.ok(content.includes("# Open-Power & AI Agents"));
+        assert.ok(content.includes(".opow/"));
+        assert.ok(content.includes(".agent/"));
+        assert.ok(content.includes(".cline/"));
+        assert.ok(content.includes(".clinerules/"));
+        assert.ok(content.includes(".claude/"));
+        assert.ok(content.includes(".codex/"));
+        assert.ok(content.includes(".superpowers/"));
+        assert.ok(content.includes(".worktrees/"));
+    });
+
+    it("ensureGitignore appends only missing patterns and preserves existing content", () => {
+        const gitignorePath = path.join(tempDir, ".gitignore");
+        fs.writeFileSync(gitignorePath, "node_modules/\n.env\n.opow/\n");
+
+        const result = ensureGitignore(tempDir);
+        assert.equal(result.created, false);
+        assert.equal(result.updated, true);
+        assert.equal(result.addedPatterns.includes(".opow/"), false);
+        assert.ok(result.addedPatterns.includes(".agent/"));
+        assert.ok(result.addedPatterns.includes(".worktrees/"));
+
+        const content = fs.readFileSync(gitignorePath, "utf8");
+        assert.ok(content.startsWith("node_modules/\n.env\n.opow/\n"));
+        assert.ok(content.includes(".agent/"));
+        assert.ok(content.includes(".worktrees/"));
+    });
+
+    it("ensureGitignore does nothing when all patterns already exist", () => {
+        ensureGitignore(tempDir);
+        const result = ensureGitignore(tempDir);
+        assert.equal(result.created, false);
+        assert.equal(result.updated, false);
+        assert.deepEqual(result.addedPatterns, []);
+    });
+
+    it("syncTargetRules creates rule file with 'be brief' for each target when file does not exist", () => {
+        for (const target of [TARGETS.cline, TARGETS.antigravity, TARGETS.claude, TARGETS.codex]) {
+            const result = syncTargetRules(target, tempDir);
+            assert.equal(result.created, true);
+            assert.equal(result.updated, false);
+            assert.ok(fs.existsSync(result.rulePath));
+            const content = fs.readFileSync(result.rulePath, "utf8");
+            assert.match(content, /\bbe brief\b/i);
+        }
+    });
+
+    it("syncTargetRules appends 'be brief' to existing rule files preserving prior contents", () => {
+        const claudeRulePath = TARGETS.claude.getRulePath(tempDir);
+        fs.writeFileSync(claudeRulePath, "# Custom Guidelines\n- Always write tests\n");
+
+        const result = syncTargetRules(TARGETS.claude, tempDir);
+        assert.equal(result.created, false);
+        assert.equal(result.updated, true);
+
+        const content = fs.readFileSync(claudeRulePath, "utf8");
+        assert.ok(content.startsWith("# Custom Guidelines\n- Always write tests\n"));
+        assert.match(content, /\bbe brief\b/i);
+    });
+
+    it("syncTargetRules does nothing if 'be brief' rule is already present", () => {
+        syncTargetRules(TARGETS.cline, tempDir);
+        const result = syncTargetRules(TARGETS.cline, tempDir);
+        assert.equal(result.created, false);
+        assert.equal(result.updated, false);
+    });
+
+    it("syncTargetRules handles null/invalid target gracefully", () => {
+        const result = syncTargetRules(null, tempDir);
+        assert.deepEqual(result, { rulePath: null, created: false, updated: false });
     });
 });

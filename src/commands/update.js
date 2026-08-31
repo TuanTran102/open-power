@@ -1,4 +1,4 @@
-const { syncTargetSkills, syncOpenSpec, readManifest, getUpstreamCommit } = require("../lib/sync");
+const { syncTargetSkills, syncOpenSpec, readManifest, getUpstreamCommit, ensureGitignore, syncTargetRules } = require("../lib/sync");
 const { resolveTargets } = require("../lib/targets");
 
 function update(targetArg) {
@@ -11,6 +11,7 @@ function update(targetArg) {
 
     console.log(`\nRe-syncing OpenSpec templates...`);
     syncOpenSpec(projectDir);
+    ensureGitignore(projectDir);
 
     let updatedCount = 0;
     for (const target of targets) {
@@ -18,6 +19,7 @@ function update(targetArg) {
         if (targetArg || manifest) {
             console.log(`\nRe-syncing skills for ${target.name}...`);
             const newManifest = syncTargetSkills(target, projectDir);
+            syncTargetRules(target, projectDir);
             console.log(`✅ Synced ${newManifest.skills.length} skills for ${target.name}.`);
             updatedCount++;
         }

@@ -345,6 +345,116 @@ function removeOpowWorkspace(projectDir = process.cwd()) {
     return !fs.existsSync(opowDir);
 }
 
+/**
+ * Default gitignore patterns for Open-Power and supported AI coding agents.
+ */
+const DEFAULT_GITIGNORE_PATTERNS = [
+    ".opow/",
+    ".agent/",
+    ".cline/",
+    ".clinerules/",
+    ".claude/",
+    ".codex/",
+    ".superpowers/",
+    ".worktrees/",
+];
+
+/**
+ * Ensure default Open-Power & AI agent folders are present in .gitignore.
+ *
+ * @param {string} [projectDir] - Target project directory (default: process.cwd())
+ * @returns {object} { created: boolean, updated: boolean, addedPatterns: string[], gitignorePath: string }
+ */
+function ensureGitignore(projectDir = process.cwd()) {
+    const gitignorePath = path.join(projectDir, ".gitignore");
+    let existingContent = "";
+    let exists = false;
+
+    if (fs.existsSync(gitignorePath)) {
+        exists = true;
+        try {
+            existingContent = fs.readFileSync(gitignorePath, "utf8");
+        } catch (e) {
+            existingContent = "";
+        }
+    }
+
+    const lines = existingContent.split(/\r?\n/).map((l) => l.trim());
+    const addedPatterns = DEFAULT_GITIGNORE_PATTERNS.filter(
+        (pattern) => !lines.includes(pattern) && !lines.includes(pattern.replace(/\/$/, ""))
+    );
+
+    if (addedPatterns.length === 0) {
+        return { created: false, updated: false, addedPatterns: [], gitignorePath };
+    }
+
+    let newContent = existingContent;
+    if (!exists) {
+        newContent = `# Open-Power & AI Agents\n` + addedPatterns.join("\n") + "\n";
+    } else {
+        const prefix = newContent.length > 0 && !newContent.endsWith("\n") ? "\n" : "";
+        newContent += prefix + `\n# Open-Power & AI Agents\n` + addedPatterns.join("\n") + "\n";
+    }
+
+    fs.writeFileSync(gitignorePath, newContent);
+
+    return {
+        created: !exists,
+        updated: exists,
+        addedPatterns,
+        gitignorePath,
+    };
+}
+
+/**
+ * Ensure 'be brief' rule is present in the target's rule file.
+ *
+ * @param {object} target - Target platform object
+ * @param {string} [projectDir] - Target project directory (default: process.cwd())
+ * @returns {object} { rulePath: string|null, created: boolean, updated: boolean }
+ */
+function syncTargetRules(target, projectDir = process.cwd()) {
+    if (!target || typeof target.getRulePath !== "function") {
+        return { rulePath: null, created: false, updated: false };
+    }
+
+    let rulePath = target.getRulePath(projectDir);
+    if (fs.existsSync(rulePath) && fs.statSync(rulePath).isDirectory()) {
+        rulePath = path.join(rulePath, "brief.md");
+    }
+
+    let exists = false;
+    let existingContent = "";
+
+    if (fs.existsSync(rulePath)) {
+        exists = true;
+        try {
+            existingContent = fs.readFileSync(rulePath, "utf8");
+        } catch (e) {
+            existingContent = "";
+        }
+    }
+
+    const hasBrief = /\bbe brief\b/i.test(existingContent);
+    if (hasBrief) {
+        return { rulePath, created: false, updated: false };
+    }
+
+    fs.mkdirSync(path.dirname(rulePath), { recursive: true });
+
+    if (!exists) {
+        const header = (target.id === "antigravity" || (target.id === "cline" && rulePath.endsWith("brief.md")))
+            ? "# Brief Response Rule\n\n"
+            : "# Instructions\n\n";
+        fs.writeFileSync(rulePath, header + "be brief\n");
+        return { rulePath, created: true, updated: false };
+    } else {
+        const prefix = existingContent.length > 0 && !existingContent.endsWith("\n") ? "\n" : "";
+        fs.writeFileSync(rulePath, existingContent + prefix + "\nbe brief\n");
+        return { rulePath, created: false, updated: true };
+    }
+}
+
 module.exports = {
     copyDir,
     removeDir,
@@ -363,4 +473,7 @@ module.exports = {
     uninstallTargetSkills,
     hasUserOpowContent,
     removeOpowWorkspace,
+    DEFAULT_GITIGNORE_PATTERNS,
+    ensureGitignore,
+    syncTargetRules,
 };
