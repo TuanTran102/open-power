@@ -86,11 +86,30 @@ Capabilities or endpoints being deprecated or deleted.
 
 ---
 
-## 3. The 6-Step Development Loop
+## 3. UI & Visual Specifications (Pencil MCP)
 
-1. **`brainstorming`**: Clarify product intent, requirements, and edge cases.
+For frontend or UI/UX features, text specifications alone can leave ambiguity in layout, component structure, and responsiveness.
+
+1. **Pencil MCP Integration**:
+   - Use the Pencil MCP server (`pencil`) tools (`open_document`, `batch_design`, `snapshot_layout`, `get_screenshot`) to create or update visual UI designs in `.pen` files.
+   - Design files are stored under `.opow/changes/<change-id>/designs/` or project design folders.
+
+2. **Embedding Visual Assets in OpenSpec**:
+   - Capture snapshots or screenshots of the `.pen` designs using `get_screenshot` / `snapshot_layout`.
+   - Embed visual links and images in `design.md` under `## UI / UX Wireframes & Mockups`.
+   - Map visual elements directly to Acceptance Criteria scenarios in delta specs.
+
+3. **Developer Verification Gate**:
+   - Reviewers and developers inspect both the Given-When-Then scenarios and rendered Pencil mockups to verify visual precision before code implementation.
+
+---
+
+## 4. The 6-Step Development Loop
+
+1. **`brainstorming`**: Clarify product intent, requirements, and edge cases (with Pencil MCP for UI features).
 2. **`openspec-explore` (`/explore`)**: Audit codebase, dependencies, and breaking changes.
-3. **`/spec`**: Create `.opow/changes/<change-id>/` with `proposal.md`, `design.md`, `tasks.md`, and delta `specs/`.
+3. **`/spec`**: Create `.opow/changes/<change-id>/` with `proposal.md`, `design.md` (including `.pen` mockups), `tasks.md`, and delta `specs/`.
 4. **`writing-plans` (`/plan`)**: Break down `tasks.md` into atomic TDD steps in `.opow/plans/<change-id>.plan.md`.
 5. **`test-driven-development` (`/implement`)**: Implement each task using Red-Green-Refactor + subagents.
 6. **`/verify` & `/archive`**: Verify 100% Acceptance Criteria, then merge delta specs into `.opow/specs/` and move the change folder to `.opow/archive/<change-id>/`.
+

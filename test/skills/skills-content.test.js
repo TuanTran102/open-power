@@ -22,4 +22,11 @@ describe("skills / content validation", () => {
         assert.ok(content.includes("MODIFIED"));
         assert.ok(content.includes("REMOVED"));
     });
+
+    it("validates spec-driven-development skill includes UI visual design with Pencil MCP", () => {
+        const skillPath = path.join(__dirname, "../../src/skills/openspec/spec-driven-development/SKILL.md");
+        const content = fs.readFileSync(skillPath, "utf8");
+        assert.ok(content.toLowerCase().includes("pencil"));
+        assert.ok(content.includes(".pen"));
+    });
 });

@@ -34,4 +34,11 @@ describe("workflows / slash commands", () => {
         assert.ok(content.includes("proposal.md"));
         assert.ok(content.includes("tasks.md"));
     });
+
+    it("spec workflow guides using Pencil MCP for UI-related changes", () => {
+        const content = fs.readFileSync(path.join(workflowsDir, "spec.md"), "utf8");
+        assert.ok(content.toLowerCase().includes("pencil"));
+        assert.ok(content.includes(".pen"));
+    });
 });
+

@@ -28,4 +28,10 @@ describe("templates / openspec", () => {
         assert.ok(content.includes("### MODIFIED Requirements"));
         assert.ok(content.includes("### REMOVED Requirements"));
     });
+
+    it("design.md template contains UI Wireframes and .pen design section", () => {
+        const content = fs.readFileSync(path.join(templatesDir, "design.md"), "utf8");
+        assert.ok(content.includes("UI"));
+        assert.ok(content.includes(".pen"));
+    });
 });

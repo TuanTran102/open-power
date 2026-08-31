@@ -39,6 +39,12 @@
 }
 ```
 
+### 2.3 UI / UX Wireframes (.pen)
+*(Applicable for features with frontend/UI components)*
+- **Pencil (.pen) Design File**: `[path/to/design.pen]`
+- **Visual Artifacts**: `![UI Mockup](path/to/screenshot.png)`
+
+
 ---
 
 ## 3. Acceptance Criteria (Given - When - Then)

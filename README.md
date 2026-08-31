@@ -36,7 +36,7 @@ CLI to install and auto-update **Superpowers skills** and **OpenSpec standards**
 - **Dedicated Skills**:
   - `openspec-explore`: Technical thinking partner for auditing codebase, checking dependencies, and preparing Delta Spec inputs.
   - `openspec-sync`: Audits codebase modifications or Git diff to detect spec drift and reverse-sync changes into OpenSpec.
-  - `spec-driven-development`: Guides drafting delta specs and managing the Propose ➔ Apply ➔ Archive lifecycle.
+  - `spec-driven-development`: Guides drafting delta specs, managing the Propose ➔ Apply ➔ Archive lifecycle, and designing UI mockups via Pencil (pen.dev) MCP.
 - **Offline & Deterministic (Vendored Bundled Skills)**:
   - 100% offline installation & updates directly from bundled skills package (`src/skills/upstream/` and `src/skills/openspec/`).
   - Zero runtime network calls, git cache dependencies, or transient upstream breakage.
@@ -135,12 +135,13 @@ opow uninstall cline
 | Slash Command | Purpose | Underlying Skills |
 |---|---|---|
 | **`/explore`** | Audit codebase, dependencies, and evaluate feasibility before proposing changes | `openspec-explore` |
-| **`/spec [name]`** | Interview, brainstorm, and create `.opow/changes/<name>/` (`proposal`, `design`, `tasks`, delta `specs/`) | `brainstorming`, `spec-driven-development` |
+| **`/spec [name]`** | Interview, brainstorm, draw UI mockups via Pencil MCP, and create `.opow/changes/<name>/` (`proposal`, `design`, `tasks`, delta `specs/`) | `brainstorming`, `spec-driven-development` |
 | **`/plan [name]`** | Transform change proposal into atomic TDD implementation plan in `.opow/plans/<name>.plan.md` | `writing-plans` |
 | **`/implement`** | Execute tasks using strict Test-Driven Development (Red-Green-Refactor) and Subagents | `test-driven-development`, `subagent-driven-development` |
 | **`/verify`** | Run test suite and check off 100% of Acceptance Criteria against Delta Specs | `verification-before-completion` |
 | **`/archive`** | Merge delta specs into Living Specs (`.opow/specs/`) and move change to `.opow/archive/` | `spec-driven-development` |
 | **`/sync-spec`** | Audit code drift or Git diff and reverse-sync into OpenSpec living specs or proposals | `openspec-sync` |
+
 
 ---
 
