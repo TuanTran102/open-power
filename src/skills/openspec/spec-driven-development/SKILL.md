@@ -12,7 +12,7 @@ Use this skill whenever you are defining, designing, or implementing a new featu
 **No code without a spec. No spec without unambiguous Acceptance Criteria.**
 
 OpenSpec treats specifications as living system documentation with an explicit lifecycle:
-$$\text{Propose (Active Changes)} \longrightarrow \text{Apply (TDD Execution)} \longrightarrow \text{Verify} \longrightarrow \text{Archive (Merge into Living Specs)}$$
+$$\text{Propose (Explore \& Spec)} \longrightarrow \text{Plan} \longrightarrow \text{Apply (TDD Execution)} \longrightarrow \text{Verify} \longrightarrow \text{Archive (Merge into Living Specs)}$$
 
 ---
 
@@ -104,12 +104,12 @@ For frontend or UI/UX features, text specifications alone can leave ambiguity in
 
 ---
 
-## 4. The 6-Step Development Loop
+## 4. The 5-Step Development Loop
 
-1. **`brainstorming`**: Clarify product intent, requirements, and edge cases (with Pencil MCP for UI features).
-2. **`openspec-explore` (`/explore`)**: Audit codebase, dependencies, and breaking changes.
-3. **`/spec`**: Create `.opow/changes/<change-id>/` with `proposal.md`, `design.md` (including `.pen` mockups), `tasks.md`, and delta `specs/`.
-4. **`writing-plans` (`/plan`)**: Break down `tasks.md` into atomic TDD steps in `.opow/plans/<change-id>.plan.md`.
-5. **`test-driven-development` (`/implement`)**: Implement each task using Red-Green-Refactor + subagents.
-6. **`/verify` & `/archive`**: Verify 100% Acceptance Criteria, then merge delta specs into `.opow/specs/` and move the change folder to `.opow/archive/<change-id>/`.
+1. **`/spec` (Explore & Spec)**: Brainstorm requirements (`brainstorming`), audit codebase and dependencies (`openspec-explore`), design visual UI mockups (`pencil` MCP), and author `.opow/changes/<change-id>/` (`proposal.md`, `design.md`, `tasks.md`, delta `specs/`).
+2. **`writing-plans` (`/plan`)**: Break down `tasks.md` into atomic TDD steps in `.opow/plans/<change-id>.plan.md`.
+3. **`test-driven-development` (`/implement`)**: Implement each task using Red-Green-Refactor + subagents.
+4. **`/verify` (`verification-before-completion`)**: Validate 100% Acceptance Criteria and automated test suites.
+5. **`/archive`**: Merge delta specs into living specs (`.opow/specs/`) and move the change folder to `.opow/archive/<change-id>/`.
 
+*(Note: `/explore` remains available as an optional standalone spike command for lightweight investigations without scaffolding files).*

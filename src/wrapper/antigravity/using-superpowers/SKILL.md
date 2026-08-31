@@ -59,7 +59,7 @@ These thoughts mean STOP—you're rationalizing:
 You are running inside **Google Antigravity**. Antigravity discovers skills in workspace (`.agent/skills/`) and global roots, presenting their names and descriptions in the system prompt. To use Superpowers and OpenSpec effectively in Antigravity:
 
 - **Skill Activation & Progressive Disclosure:** Antigravity lists available skills in your prompt. When a task or workflow matches a skill, activate it immediately by viewing its `SKILL.md` file using `view_file` (with `IsSkillFile: true` when applicable) before proceeding.
-- **OpenSpec & Workflows:** Specifications and plans reside in `.opow/` (`.opow/specs/`, `.opow/changes/`, `.opow/archive/`, and `.opow/plans/`). Refer to the `spec-driven-development` skill for the unified 6-step lifecycle.
+- **OpenSpec & Workflows:** Specifications and plans reside in `.opow/` (`.opow/specs/`, `.opow/changes/`, `.opow/archive/`, and `.opow/plans/`). Refer to the `spec-driven-development` skill for the unified 5-step lifecycle.
 - **Subagents & Delegation:** Antigravity provides subagent mechanisms. For skills requiring subagent execution — `subagent-driven-development`, `dispatching-parallel-agents`, `requesting-code-review` — formulate clear, focused prompts for each subagent with their specific OpenSpec slice.
 - **Rules & Hierarchies:** Hierarchical rules (`AGENTS.md`, `GEMINI.md`, `.agent/rules/*.md`) complement skills. Superpowers process skills guide the execution lifecycle.
 - **Execution & Verification:** Execute commands via `run_command` and verify all OpenSpec Acceptance Criteria before marking tasks complete.

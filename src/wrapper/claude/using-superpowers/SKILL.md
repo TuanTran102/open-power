@@ -60,7 +60,7 @@ You are running inside **Claude Code** (Anthropic CLI). To use Superpowers and O
 
 - **Skills Discovery:** Claude Code accesses project skills in `.claude/skills/`. When a skill is relevant, view its `SKILL.md` file using your file viewing tool before proceeding.
 - **Commands & Slash Workflows:** Slash commands and workflows are stored in `.claude/commands/` (`/explore`, `/spec`, `/plan`, `/implement`, `/verify`, `/archive`, `/sync-spec`). You can reference or execute these workflow instructions when prompted.
-- **OpenSpec & Workflows:** Specifications and plans reside in `.opow/` (`.opow/specs/`, `.opow/changes/`, `.opow/archive/`, and `.opow/plans/`). Refer to the `spec-driven-development` skill for the unified 6-step lifecycle.
+- **OpenSpec & Workflows:** Specifications and plans reside in `.opow/` (`.opow/specs/`, `.opow/changes/`, `.opow/archive/`, and `.opow/plans/`). Refer to the `spec-driven-development` skill for the unified 5-step lifecycle.
 - **Subagents & Tool Execution:** For skills requiring subagent execution — `subagent-driven-development`, `dispatching-parallel-agents`, `requesting-code-review` — formulate clear, focused task boundaries for any delegated workers with their specific OpenSpec slice.
 - **Verification:** Run test commands and verify 100% of Acceptance Criteria before reporting completion.
 

@@ -127,19 +127,21 @@ opow uninstall cline
 ### Slash Commands & Workflows
 
 ```
-/explore ──▶ /spec ──▶ /plan ──▶ /implement ──▶ /verify ──▶ /archive
-     ▲                                                         │
-     └────────────────────── /sync-spec ───────────────────────┘
+/spec ──▶ /plan ──▶ /implement ──▶ /verify ──▶ /archive
+  │                                                │
+  └────────────────── /sync-spec ──────────────────┘
+
+(Optional standalone spike/probe: /explore)
 ```
 
 | Slash Command | Purpose | Underlying Skills |
 |---|---|---|
-| **`/explore`** | Audit codebase, dependencies, and evaluate feasibility before proposing changes | `openspec-explore` |
-| **`/spec [name]`** | Interview, brainstorm, draw UI mockups via Pencil MCP, and create `.opow/changes/<name>/` (`proposal`, `design`, `tasks`, delta `specs/`) | `brainstorming`, `spec-driven-development` |
+| **`/spec [name]`** | Audit codebase (`openspec-explore`), brainstorm, draw UI mockups via Pencil MCP, and create `.opow/changes/<name>/` (`proposal`, `design`, `tasks`, delta `specs/`) | `brainstorming`, `openspec-explore`, `spec-driven-development` |
 | **`/plan [name]`** | Transform change proposal into atomic TDD implementation plan in `.opow/plans/<name>.plan.md` | `writing-plans` |
 | **`/implement`** | Execute tasks using strict Test-Driven Development (Red-Green-Refactor) and Subagents | `test-driven-development`, `subagent-driven-development` |
 | **`/verify`** | Run test suite and check off 100% of Acceptance Criteria against Delta Specs | `verification-before-completion` |
 | **`/archive`** | Merge delta specs into Living Specs (`.opow/specs/`) and move change to `.opow/archive/` | `spec-driven-development` |
+| **`/explore`** *(Optional)* | Standalone fast spike to audit codebase, dependencies, and evaluate feasibility without scaffolding files | `openspec-explore` |
 | **`/sync-spec`** | Audit code drift or Git diff and reverse-sync into OpenSpec living specs or proposals | `openspec-sync` |
 
 
@@ -147,22 +149,19 @@ opow uninstall cline
 
 ### Step-by-Step Example
 
-1. **Investigate Codebase**: Type `/explore user-auth`
-   > Agent inspects existing authentication routes, databases, and dependencies, and outlines affected areas.
+1. **Explore & Author Change Proposal**: Type `/spec user-auth`
+   > Agent investigates existing auth flows/schemas (`openspec-explore`), brainstorms requirements, and drafts `proposal.md`, `design.md`, `tasks.md`, and delta specs (`specs/auth.spec.md`) with `ADDED` / `MODIFIED` / `REMOVED` criteria in `.opow/changes/user-auth/`.
 
-2. **Author the Change Proposal**: Type `/spec user-auth`
-   > Agent drafts `proposal.md`, `design.md`, `tasks.md`, and delta specs (`specs/auth.spec.md`) with `ADDED` / `MODIFIED` / `REMOVED` criteria in `.opow/changes/user-auth/`.
-
-3. **Generate the Plan**: Type `/plan user-auth`
+2. **Generate the Plan**: Type `/plan user-auth`
    > Agent breaks the spec into atomic tasks linked to each Acceptance Criterion and saves to `.opow/plans/user-auth.plan.md`.
 
-4. **Develop with TDD**: Type `/implement`
+3. **Develop with TDD**: Type `/implement`
    > Agent authors failing tests (Red), writes minimal code to pass (Green), refactors, and ticks off `tasks.md`.
 
-5. **Verify**: Type `/verify`
+4. **Verify**: Type `/verify`
    > Agent runs the entire test suite and confirms 100% of Acceptance Criteria in `.opow/changes/user-auth/specs/` are fulfilled.
 
-6. **Archive & Update Living Specs**: Type `/archive`
+5. **Archive & Update Living Specs**: Type `/archive`
    > Agent merges delta specs into `.opow/specs/auth/spec.md` (Living Specs) and moves the change to `.opow/archive/user-auth/`.
 
 ---

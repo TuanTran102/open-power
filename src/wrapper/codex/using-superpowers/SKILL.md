@@ -60,7 +60,7 @@ You are running inside **Codex** (OpenAI agent workflows). To use Superpowers an
 
 - **Skills Discovery:** Codex discovers project skills in `.codex/skills/`. When a skill is needed, read its `SKILL.md` instructions before taking action.
 - **Workflows:** Slash commands and workflows are located in `.codex/workflows/` (`/explore`, `/spec`, `/plan`, `/implement`, `/verify`, `/archive`, `/sync-spec`).
-- **OpenSpec & Workflows:** Specifications and plans reside in `.opow/` (`.opow/specs/`, `.opow/changes/`, `.opow/archive/`, and `.opow/plans/`). Refer to the `spec-driven-development` skill for the unified 6-step lifecycle.
+- **OpenSpec & Workflows:** Specifications and plans reside in `.opow/` (`.opow/specs/`, `.opow/changes/`, `.opow/archive/`, and `.opow/plans/`). Refer to the `spec-driven-development` skill for the unified 5-step lifecycle.
 - **Subagents & Delegation:** When orchestrating subagents (`subagent-driven-development`, `dispatching-parallel-agents`, `requesting-code-review`), provide isolated task boundaries and explicit acceptance criteria.
 - **Rules & Precedence:** Hierarchical instructions (`AGENTS.md`, `CODEX.md`, direct user prompt) guide high-level constraints.
 - **Verification:** Execute commands and verify all OpenSpec Acceptance Criteria before marking tasks complete.

@@ -40,5 +40,16 @@ describe("workflows / slash commands", () => {
         assert.ok(content.toLowerCase().includes("pencil"));
         assert.ok(content.includes(".pen"));
     });
+
+    it("spec workflow guides codebase exploration and openspec-explore", () => {
+        const content = fs.readFileSync(path.join(workflowsDir, "spec.md"), "utf8");
+        assert.ok(content.includes("openspec-explore"));
+        assert.ok(content.toLowerCase().includes("codebase"));
+    });
+
+    it("explore workflow describes optional spike and feasibility investigation", () => {
+        const content = fs.readFileSync(path.join(workflowsDir, "explore.md"), "utf8");
+        assert.ok(content.toLowerCase().includes("spike") || content.toLowerCase().includes("optional"));
+    });
 });
 

@@ -59,7 +59,7 @@ These thoughts mean STOP—you're rationalizing:
 You are running inside **Cline**. Cline loads skills on-demand and activates them automatically when your request matches a skill's description. To use Superpowers and OpenSpec effectively in Cline:
 
 - **Automatic triggering:** Cline sees the list of available skills at startup. When a request matches a skill's description, Cline activates it via the `use_skill` tool, which loads the full SKILL.md instructions. Trust this mechanism — it is your primary way to invoke skills.
-- **OpenSpec & Workflows:** Specifications and plans reside in `.opow/` (`.opow/specs/`, `.opow/changes/`, `.opow/archive/`, and `.opow/plans/`). Refer to the `spec-driven-development` skill for the unified 6-step lifecycle.
+- **OpenSpec & Workflows:** Specifications and plans reside in `.opow/` (`.opow/specs/`, `.opow/changes/`, `.opow/archive/`, and `.opow/plans/`). Refer to the `spec-driven-development` skill for the unified 5-step lifecycle.
 - **Subagents:** Cline provides a `use_subagents` tool (up to 5 in parallel). Skills that dispatch subagents — `subagent-driven-development`, `dispatching-parallel-agents`, `requesting-code-review` — rely on this. Pass focused prompts with their specific OpenSpec slice.
 - **Running scripts:** Skills may reference helper scripts. Cline executes these via `execute_command`.
 - **Todo tracking & Verification:** Use Cline's task_progress tracking to check off all OpenSpec Acceptance Criteria before finishing.
