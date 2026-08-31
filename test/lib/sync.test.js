@@ -103,6 +103,7 @@ describe("sync & target lifecycle", () => {
         assert.ok(fs.existsSync(opowInfo.templatesDir));
         assert.ok(fs.existsSync(path.join(opowInfo.templatesDir, "proposal.md")));
         assert.ok(fs.existsSync(path.join(opowInfo.templatesDir, "delta.spec.md")));
+        assert.equal(fs.existsSync(path.join(opowInfo.specsDir, "templates")), false);
     });
 
     it("syncOpenSpec handles non-existent templates source gracefully", () => {

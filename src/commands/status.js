@@ -21,7 +21,7 @@ function status(targetArg) {
     const opowDir = path.join(projectDir, ".opow");
     const specsDir = path.join(opowDir, "specs");
     const plansDir = path.join(opowDir, "plans");
-    const templatesDir = path.join(specsDir, "templates");
+    const templatesDir = path.join(opowDir, "templates");
     console.log(`\n------------------------------------`);
     console.log(`Open-Power Workspace (.opow):`);
     console.log(`  Directory: ${opowDir}`);

@@ -85,7 +85,7 @@ function getWorkflowsSourceDir() {
 
 /**
  * Initialize / update the .opow/ directory in the target project.
- * - Installs .opow/specs/templates/
+ * - Installs .opow/templates/
  * - Ensures .opow/plans/ directory exists
  *
  * @param {string} [projectDir] - Target project root
@@ -109,7 +109,6 @@ function syncOpenSpec(projectDir = process.cwd()) {
     if (fs.existsSync(openSpecSrc)) {
         const srcTemplates = path.join(openSpecSrc, "templates");
         copyDir(srcTemplates, targetTemplatesDir);
-        copyDir(srcTemplates, path.join(targetSpecsDir, "templates"));
     }
 
     return {
