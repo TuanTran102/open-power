@@ -90,17 +90,18 @@ Capabilities or endpoints being deprecated or deleted.
 
 For frontend or UI/UX features, text specifications alone can leave ambiguity in layout, component structure, and responsiveness.
 
-1. **Pencil MCP Integration**:
-   - Use the Pencil MCP server (`pencil`) tools (`open_document`, `batch_design`, `snapshot_layout`, `get_screenshot`) to create or update visual UI designs in `.pen` files.
-   - Design files are stored under `.opow/changes/<change-id>/designs/` or project design folders.
+1. **Pencil MCP Integration & Skill**:
+   - Invoke `designing-with-pencil` skill.
+   - Store design files under `.opow/changes/<change-id>/designs/<feature>.pen` or project design directories.
+   - Automatically open and focus the canvas tab via CLI: `antigravity-ide <path/to/design.pen>`.
+   - Use Pencil MCP tools (`get_app_state`, `execute`, `get_style`, `read_skill`) to construct UI components, frames, and layouts.
 
 2. **Embedding Visual Assets in OpenSpec**:
-   - Capture snapshots or screenshots of the `.pen` designs using `get_screenshot` / `snapshot_layout`.
-   - Embed visual links and images in `design.md` under `## UI / UX Wireframes & Mockups`.
-   - Map visual elements directly to Acceptance Criteria scenarios in delta specs.
+   - Embed `.pen` file links and UI descriptions in `design.md` under `## UI / UX Wireframes & Mockups`.
+   - Map visual components and flows directly to Acceptance Criteria scenarios in delta specs.
 
 3. **Developer Verification Gate**:
-   - Reviewers and developers inspect both the Given-When-Then scenarios and rendered Pencil mockups to verify visual precision before code implementation.
+   - Reviewers and developers inspect both the Given-When-Then scenarios and rendered Pencil mockups on the canvas to verify visual precision before code implementation.
 
 4. **Pencil MCP Availability Guard & Halting**:
    - If the Pencil MCP server is unavailable, fails to connect, or returns an error during UI visual spec creation, notify the user immediately.
@@ -110,7 +111,7 @@ For frontend or UI/UX features, text specifications alone can leave ambiguity in
 
 ## 4. The 5-Step Development Loop
 
-1. **`/spec` (Explore & Spec)**: Brainstorm requirements (`brainstorming`), audit codebase and dependencies (`openspec-explore`), design visual UI mockups (`pencil` MCP - halt and alert user if unavailable), and author `.opow/changes/<change-id>/` (`proposal.md`, `design.md`, `tasks.md`, delta `specs/`).
+1. **`/spec` (Explore & Spec)**: Brainstorm requirements (`brainstorming`), audit codebase and dependencies (`openspec-explore`), design visual UI mockups (`designing-with-pencil` - halt and alert user if unavailable), and author `.opow/changes/<change-id>/` (`proposal.md`, `design.md`, `tasks.md`, delta `specs/`).
 2. **`writing-plans` (`/plan`)**: Break down `tasks.md` into atomic TDD steps in `.opow/plans/<change-id>.plan.md`.
 3. **`test-driven-development` (`/implement`)**: Set up an isolated workspace via `using-git-worktrees` (`.worktrees/<change-id>`), then implement each task using Red-Green-Refactor + subagents.
 4. **`/verify` (`verification-before-completion`)**: Validate 100% Acceptance Criteria and automated test suites.

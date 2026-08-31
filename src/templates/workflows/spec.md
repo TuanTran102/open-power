@@ -12,7 +12,7 @@ description: Author a structured OpenSpec change proposal (proposal.md, design.m
    - Invoke `brainstorming`, `openspec-explore`, and `spec-driven-development`.
    - **Audit Codebase**: Trace existing control flows, schemas, APIs, and identify affected files/modules or potential breaking changes.
    - **Product Intent & Edge Cases**: Discuss requirements, constraints, and scope with the user.
-   - **UI & Frontend Changes**: If the feature involves UI/UX, invoke the Pencil MCP server (`pencil`) tools (`open_document`, `batch_design`, `snapshot_layout`, `get_screenshot`) to draw or update UI mockups in `.pen` design files. If the Pencil MCP server is unavailable or fails to connect, notify the user immediately and halt (wait for user to complete setup) without proceeding further.
+   - **UI & Frontend Changes**: If the feature involves UI/UX, invoke the `designing-with-pencil` skill. Create the design file under `.opow/changes/<change-name>/designs/<feature>.pen`, open it automatically in the IDE (`antigravity-ide <file.pen>`), and use Pencil MCP (`execute`, `get_app_state`) to render visual mockups on canvas. If the Pencil MCP server is unavailable or fails to connect, notify the user immediately and halt without proceeding further.
 
 2. **Initialize Change Workspace**:
    - Create `.opow/changes/<change-name>/` with subfolder `specs/`.

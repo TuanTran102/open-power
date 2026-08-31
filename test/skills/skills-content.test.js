@@ -37,11 +37,15 @@ describe("skills / content validation", () => {
         assert.ok(content.includes("openspec-explore"));
     });
 
-    it("validates spec-driven-development skill includes Pencil MCP availability guard and halting", () => {
-        const skillPath = path.join(__dirname, "../../src/skills/openspec/spec-driven-development/SKILL.md");
+    it("validates designing-with-pencil skill exists and has correct metadata", () => {
+        const skillPath = path.join(__dirname, "../../src/skills/openspec/designing-with-pencil/SKILL.md");
+        assert.ok(fs.existsSync(skillPath), "Missing designing-with-pencil/SKILL.md");
         const content = fs.readFileSync(skillPath, "utf8");
-        assert.ok(content.toLowerCase().includes("pencil"));
-        assert.ok(content.toLowerCase().includes("unavailable") || content.toLowerCase().includes("fails"));
-        assert.ok(content.toLowerCase().includes("halt") || content.toLowerCase().includes("wait"));
+        assert.ok(content.includes("name: designing-with-pencil"));
+        assert.ok(content.includes(".pen"));
+        assert.ok(content.includes("Pencil MCP"));
+        assert.ok(content.includes("antigravity-ide"));
+        assert.ok(content.includes("execute"));
     });
 });
+
