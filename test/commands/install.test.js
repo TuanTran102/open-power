@@ -32,6 +32,7 @@ describe("commands / install", () => {
             assert.ok(logs.some((l) => l.includes("Installing Superpowers + OpenSpec for Cline")));
             assert.ok(logs.some((l) => l.includes("Installing Superpowers + OpenSpec for Antigravity")));
             assert.ok(logs.some((l) => l.includes("⚡ Installed")));
+            assert.ok(logs.some((l) => l.includes("/sync-spec")));
             assert.ok(fs.existsSync(path.join(tempDir, ".opow", "specs")));
             assert.ok(fs.existsSync(path.join(tempDir, ".opow", "changes")));
             assert.ok(fs.existsSync(path.join(tempDir, ".opow", "archive")));

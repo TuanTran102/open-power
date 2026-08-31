@@ -35,6 +35,7 @@ CLI to install and auto-update **Superpowers skills** and **OpenSpec standards**
   - **Codex**: OpenAI agent workflows, slash commands (`.codex/workflows/`), and hierarchical instructions (`AGENTS.md` / `CODEX.md`).
 - **Dedicated Skills**:
   - `openspec-explore`: Technical thinking partner for auditing codebase, checking dependencies, and preparing Delta Spec inputs.
+  - `openspec-sync`: Audits codebase modifications or Git diff to detect spec drift and reverse-sync changes into OpenSpec.
   - `spec-driven-development`: Guides drafting delta specs and managing the Propose ➔ Apply ➔ Archive lifecycle.
 - **Safe Sync & Updates**: Uses manifests to only touch managed files, leaving custom skills and specs intact.
 - **Upstream Cache**: Cached upstream in `~/.open-power/repo` for ultra-fast multi-project setups.
@@ -119,10 +120,12 @@ opow uninstall cline
 
 `opow install` registers native **Slash Commands** across all platforms (`.agent/workflows/` for Antigravity, `.clinerules/workflows/` for Cline, `.claude/commands/` for Claude Code, `.codex/workflows/` for Codex). You can trigger each phase simply by typing `/` in the chat!
 
-### 6-Step End-to-End Development Loop
+### Slash Commands & Workflows
 
 ```
 /explore ──▶ /spec ──▶ /plan ──▶ /implement ──▶ /verify ──▶ /archive
+     ▲                                                         │
+     └────────────────────── /sync-spec ───────────────────────┘
 ```
 
 | Slash Command | Purpose | Underlying Skills |
@@ -133,6 +136,7 @@ opow uninstall cline
 | **`/implement`** | Execute tasks using strict Test-Driven Development (Red-Green-Refactor) and Subagents | `test-driven-development`, `subagent-driven-development` |
 | **`/verify`** | Run test suite and check off 100% of Acceptance Criteria against Delta Specs | `verification-before-completion` |
 | **`/archive`** | Merge delta specs into Living Specs (`.opow/specs/`) and move change to `.opow/archive/` | `spec-driven-development` |
+| **`/sync-spec`** | Audit code drift or Git diff and reverse-sync into OpenSpec living specs or proposals | `openspec-sync` |
 
 ---
 

@@ -17,8 +17,13 @@ description: Validate 100% of Delta Acceptance Criteria and verify automated tes
    - Open `.opow/changes/<change-name>/specs/*.spec.md`.
    - Walk through every single scenario (*Given - When - Then*) in the `ADDED` and `MODIFIED` sections.
 
-3. **Verify Living Spec Ready**:
+3. **Audit User Documentation & README**:
+   - Check if the change introduces new user-facing features, CLI commands, parameters, or behaviors.
+   - Ensure `README.md` and user guides are fully updated and consistent with the new implementation.
+
+4. **Verify Living Spec Ready**:
    - Confirm all delta requirements are implemented and ready to merge into `.opow/specs/`.
 
-4. **Handoff**:
+5. **Handoff**:
    - Prompt the user or automatically transition to `/archive` to finalize the change.
+

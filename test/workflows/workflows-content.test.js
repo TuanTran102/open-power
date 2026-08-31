@@ -6,7 +6,7 @@ const path = require("path");
 describe("workflows / slash commands", () => {
     const workflowsDir = path.join(__dirname, "../../src/templates/workflows");
 
-    it("contains all 6 standard workflows", () => {
+    it("contains all 7 standard workflows", () => {
         const requiredWorkflows = [
             "explore.md",
             "spec.md",
@@ -14,6 +14,7 @@ describe("workflows / slash commands", () => {
             "implement.md",
             "verify.md",
             "archive.md",
+            "sync-spec.md",
         ];
         for (const wf of requiredWorkflows) {
             const wfPath = path.join(workflowsDir, wf);

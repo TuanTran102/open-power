@@ -10,6 +10,8 @@
 - [ ] 2.1: Implement [Feature Part A] (Write failing test ➔ Implement ➔ Verify pass).
 - [ ] 2.2: Implement [Feature Part B] (Write failing test ➔ Implement ➔ Verify pass).
 
-## Phase 3: Integration & Verification
+## Phase 3: Integration, Documentation & Verification
 - [ ] 3.1: Run integration test suite across modules.
 - [ ] 3.2: Verify 100% of Acceptance Criteria in Delta Specs.
+- [ ] 3.3: Update user-facing documentation (README.md, CLI help, guides).
+

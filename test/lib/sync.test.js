@@ -148,7 +148,9 @@ describe("sync & target lifecycle", () => {
 
         assert.equal(manifest.target, "cline");
         assert.ok(manifest.skills.includes("using-superpowers"));
+        assert.ok(manifest.skills.includes("openspec-sync"));
         assert.ok(manifest.workflows.includes("spec"));
+        assert.ok(manifest.workflows.includes("sync-spec"));
 
         const skillsDir = TARGETS.cline.getSkillsDir(tempDir);
         const workflowsDir = TARGETS.cline.getWorkflowsDir(tempDir);
@@ -157,6 +159,7 @@ describe("sync & target lifecycle", () => {
         assert.ok(fs.existsSync(skillsDir));
         assert.ok(fs.existsSync(workflowsDir));
         assert.ok(fs.existsSync(manifestPath));
+        assert.ok(fs.existsSync(path.join(workflowsDir, "sync-spec.md")));
 
         const wrapperContent = fs.readFileSync(path.join(skillsDir, "using-superpowers", "SKILL.md"), "utf8");
         assert.ok(wrapperContent.includes("Platform Adaptation: Cline"));
@@ -173,7 +176,9 @@ describe("sync & target lifecycle", () => {
 
         assert.equal(manifest.target, "antigravity");
         assert.ok(manifest.skills.includes("using-superpowers"));
+        assert.ok(manifest.skills.includes("openspec-sync"));
         assert.ok(manifest.workflows.includes("spec"));
+        assert.ok(manifest.workflows.includes("sync-spec"));
 
         const skillsDir = TARGETS.antigravity.getSkillsDir(tempDir);
         const workflowsDir = TARGETS.antigravity.getWorkflowsDir(tempDir);
@@ -182,6 +187,7 @@ describe("sync & target lifecycle", () => {
         assert.ok(fs.existsSync(skillsDir));
         assert.ok(fs.existsSync(workflowsDir));
         assert.ok(fs.existsSync(manifestPath));
+        assert.ok(fs.existsSync(path.join(workflowsDir, "sync-spec.md")));
 
         const wrapperContent = fs.readFileSync(path.join(skillsDir, "using-superpowers", "SKILL.md"), "utf8");
         assert.ok(wrapperContent.includes("Platform Adaptation: Antigravity"));
@@ -200,10 +206,12 @@ describe("sync & target lifecycle", () => {
         assert.ok(manifest.skills.includes("using-superpowers"));
         assert.ok(manifest.skills.includes("test-driven-development"));
         assert.ok(manifest.skills.includes("spec-driven-development"));
+        assert.ok(manifest.skills.includes("openspec-sync"));
         assert.ok(manifest.workflows.includes("spec"));
         assert.ok(manifest.workflows.includes("plan"));
         assert.ok(manifest.workflows.includes("implement"));
         assert.ok(manifest.workflows.includes("verify"));
+        assert.ok(manifest.workflows.includes("sync-spec"));
 
         // Verify filesystem
         const skillsDir = TARGETS.claude.getSkillsDir(tempDir);
@@ -215,6 +223,7 @@ describe("sync & target lifecycle", () => {
         assert.ok(fs.existsSync(manifestPath));
         assert.ok(fs.existsSync(path.join(commandsDir, "spec.md")));
         assert.ok(fs.existsSync(path.join(commandsDir, "plan.md")));
+        assert.ok(fs.existsSync(path.join(commandsDir, "sync-spec.md")));
 
         // Verify Claude wrapper content was copied
         const wrapperContent = fs.readFileSync(path.join(skillsDir, "using-superpowers", "SKILL.md"), "utf8");
@@ -233,7 +242,9 @@ describe("sync & target lifecycle", () => {
 
         assert.equal(manifest.target, "codex");
         assert.ok(manifest.skills.includes("using-superpowers"));
+        assert.ok(manifest.skills.includes("openspec-sync"));
         assert.ok(manifest.workflows.includes("spec"));
+        assert.ok(manifest.workflows.includes("sync-spec"));
 
         // Verify filesystem
         const skillsDir = TARGETS.codex.getSkillsDir(tempDir);
@@ -244,6 +255,7 @@ describe("sync & target lifecycle", () => {
         assert.ok(fs.existsSync(workflowsDir));
         assert.ok(fs.existsSync(manifestPath));
         assert.ok(fs.existsSync(path.join(workflowsDir, "spec.md")));
+        assert.ok(fs.existsSync(path.join(workflowsDir, "sync-spec.md")));
 
         // Verify Codex wrapper content was copied
         const wrapperContent = fs.readFileSync(path.join(skillsDir, "using-superpowers", "SKILL.md"), "utf8");
