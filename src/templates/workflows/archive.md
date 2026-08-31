@@ -4,7 +4,7 @@ description: Merge verified delta specs into living specs (.opow/specs/) and mov
 
 # Archive Workflow (/archive)
 
-**Purpose**: Finalize a completed change by updating the system's Living Specs, merging isolated worktree code into main, cleaning up the worktree, and archiving change artifacts.
+**Purpose**: Finalize a completed change by updating the system's Living Specs and Changelog, merging isolated worktree code into main, cleaning up the worktree, and archiving change artifacts.
 
 ## Prerequisites
 
@@ -13,14 +13,15 @@ description: Merge verified delta specs into living specs (.opow/specs/) and mov
 ## Steps
 
 1. **Locate Change Artifacts**:
-   - Open `.opow/changes/<change-id>/`.
-   - Read delta specs in `.opow/changes/<change-id>/specs/`.
+   - Open `.opow/changes/YYYY-MM-DD-<slug>/`.
+   - Read delta specs in `.opow/changes/YYYY-MM-DD-<slug>/specs/`.
 
-2. **Merge into Living Specs (`.opow/specs/`)**:
+2. **Merge into Living Specs (`.opow/specs/`) & Record Changelog**:
    - For each modified domain, update or create `.opow/specs/<domain>/spec.md`:
      - Apply `ADDED` requirements to the living spec.
      - Update `MODIFIED` requirements in the living spec.
      - Deprecate or remove `REMOVED` requirements from the living spec.
+     - Append entry to the `## Changelog & Audit History` section with date, `change_id`, summary, and author.
 
 3. **Merge Code & Clean up Worktree**:
    - Switch to the main branch on the primary workspace and merge `feat/<change-id>`:
@@ -36,8 +37,7 @@ description: Merge verified delta specs into living specs (.opow/specs/) and mov
      ```
 
 4. **Move to Archive**:
-   - Move the entire folder `.opow/changes/<change-id>/` to `.opow/archive/<change-id>/`.
+   - Move the entire folder `.opow/changes/YYYY-MM-DD-<slug>/` to `.opow/archive/YYYY-MM-DD-<slug>/`.
 
 5. **Sign-off**:
-   - Inform the user that the change has been successfully integrated into the system's Living Specs and main branch.
-
+   - Inform the user that the change has been successfully integrated into the system's Living Specs, Changelog, and main branch.

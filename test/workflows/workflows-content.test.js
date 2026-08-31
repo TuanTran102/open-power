@@ -65,6 +65,20 @@ describe("workflows / slash commands", () => {
         assert.ok(content.toLowerCase().includes("unavailable") || content.toLowerCase().includes("fails"));
         assert.ok(content.toLowerCase().includes("halt") || content.toLowerCase().includes("wait"));
     });
+
+    it("workflows enforce date-prefixed naming convention YYYY-MM-DD-<slug> and audit trail", () => {
+        const specContent = fs.readFileSync(path.join(workflowsDir, "spec.md"), "utf8");
+        assert.ok(specContent.includes("YYYY-MM-DD"), "spec.md should guide YYYY-MM-DD date-prefixed change IDs");
+
+        const planContent = fs.readFileSync(path.join(workflowsDir, "plan.md"), "utf8");
+        assert.ok(planContent.includes("YYYY-MM-DD"), "plan.md should reference YYYY-MM-DD plan naming");
+
+        const archiveContent = fs.readFileSync(path.join(workflowsDir, "archive.md"), "utf8");
+        assert.ok(
+            archiveContent.includes("Changelog") || archiveContent.includes("changelog"),
+            "archive.md should guide updating living spec changelog"
+        );
+    });
 });
 
 
