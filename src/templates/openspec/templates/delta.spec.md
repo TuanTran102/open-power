@@ -1,3 +1,11 @@
+---
+change_id: YYYY-MM-DD-[change-slug]
+domain: [domain-name]
+type: delta
+status: draft
+created_at: YYYY-MM-DDTHH:mm:ssZ
+---
+
 # Delta Spec: [Domain/Feature Name]
 
 ## Overview

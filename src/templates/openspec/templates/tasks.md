@@ -1,3 +1,10 @@
+---
+change_id: YYYY-MM-DD-[change-slug]
+title: Implementation Tasks for [Change Title]
+created_at: YYYY-MM-DDTHH:mm:ssZ
+status: in_progress
+---
+
 # Implementation Tasks: [Change Name]
 
 > Each task is executed following strict Test-Driven Development (TDD: Red-Green-Refactor).
@@ -14,4 +21,3 @@
 - [ ] 3.1: Run integration test suite across modules.
 - [ ] 3.2: Verify 100% of Acceptance Criteria in Delta Specs.
 - [ ] 3.3: Update user-facing documentation (README.md, CLI help, guides).
-

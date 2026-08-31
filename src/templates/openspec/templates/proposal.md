@@ -1,3 +1,13 @@
+---
+change_id: YYYY-MM-DD-[change-slug]
+title: [Change Title]
+created_at: YYYY-MM-DDTHH:mm:ssZ
+status: proposed
+author: [Author Name or Subagent]
+domains:
+  - [domain-name]
+---
+
 # Proposal: [Change Name]
 
 ## 1. Context & Motivation

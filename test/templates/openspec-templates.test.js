@@ -34,4 +34,18 @@ describe("templates / openspec", () => {
         assert.ok(content.includes("UI"));
         assert.ok(content.includes(".pen"));
     });
+
+    it("templates contain standardized YAML frontmatter metadata", () => {
+        const changeTemplates = ["proposal.md", "design.md", "tasks.md", "delta.spec.md"];
+        for (const file of changeTemplates) {
+            const content = fs.readFileSync(path.join(templatesDir, file), "utf8");
+            assert.match(content, /^---\n[\s\S]*?change_id:/, `${file} missing change_id in YAML frontmatter`);
+            assert.match(content, /created_at:/, `${file} missing created_at in YAML frontmatter`);
+            assert.match(content, /status:/, `${file} missing status in YAML frontmatter`);
+        }
+
+        const livingSpecContent = fs.readFileSync(path.join(templatesDir, "living.spec.md"), "utf8");
+        assert.match(livingSpecContent, /^---\n[\s\S]*?domain:/, "living.spec.md missing domain in YAML frontmatter");
+        assert.match(livingSpecContent, /Changelog|History/, "living.spec.md missing Changelog section for auditability");
+    });
 });

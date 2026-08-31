@@ -1,3 +1,10 @@
+---
+change_id: YYYY-MM-DD-[change-slug]
+title: Technical Design for [Change Title]
+created_at: YYYY-MM-DDTHH:mm:ssZ
+status: proposed
+---
+
 # Technical Design: [Change Name]
 
 ## 1. Architecture Overview
@@ -20,4 +27,3 @@
 ## 5. Risks & Mitigations
 - **Breaking Changes**: Impact on existing consumers and migration path.
 - **Performance & Security Considerations**: Edge cases, rate limits, latency.
-

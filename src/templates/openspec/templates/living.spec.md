@@ -1,3 +1,9 @@
+---
+domain: [Domain Name]
+status: active
+last_updated: YYYY-MM-DDTHH:mm:ssZ
+---
+
 # Living Spec: [Domain Name]
 
 ## 1. Domain Overview
@@ -18,3 +24,8 @@
 
 ## 3. Data Contracts & Schemas
 - Input/output schemas and definitions for this domain.
+
+## 4. Changelog & Audit History
+| Date | Change ID | Summary | Author |
+| :--- | :--- | :--- | :--- |
+| YYYY-MM-DD | `YYYY-MM-DD-[change-slug]` | Initial living spec baseline | Core Team |
