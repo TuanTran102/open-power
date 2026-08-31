@@ -21,6 +21,8 @@ describe("skills / content validation", () => {
         assert.ok(content.includes("ADDED"));
         assert.ok(content.includes("MODIFIED"));
         assert.ok(content.includes("REMOVED"));
+        assert.ok(content.includes("YYYY-MM-DD"), "spec-driven-development should document YYYY-MM-DD-<slug> naming");
+        assert.ok(content.includes("frontmatter") || content.includes("change_id:"), "spec-driven-development should document YAML frontmatter");
     });
 
     it("validates spec-driven-development skill includes UI visual design with Pencil MCP", () => {
