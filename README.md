@@ -19,10 +19,10 @@ CLI to install and auto-update **Superpowers skills** and **OpenSpec standards**
 
 - **Living Spec & Change Workspace (`.opow/`)**:
   - `.opow/specs/<domain>/spec.md`: Living specifications representing current system behavior & changelog history.
-  - `.opow/changes/YYYY-MM-DD-<slug>/`: Active in-flight changes (`proposal.md`, `design.md`, `tasks.md`, delta `specs/` with YAML frontmatter).
-  - `.opow/archive/YYYY-MM-DD-<slug>/`: Audit history of completed changes.
+  - `.opow/changes/YYYYMMDDHHmmss-<slug>/`: Active in-flight changes (`proposal.md`, `design.md`, `tasks.md`, delta `specs/` with YAML frontmatter).
+  - `.opow/archive/YYYYMMDDHHmmss-<slug>/`: Audit history of completed changes.
   - `.opow/templates/`: Reusable templates (`proposal.md`, `design.md`, `tasks.md`, `delta.spec.md`, `living.spec.md`) with standardized YAML frontmatter.
-  - `.opow/plans/YYYY-MM-DD-<slug>.plan.md`: Actionable atomic TDD implementation plans.
+  - `.opow/plans/YYYYMMDDHHmmss-<slug>.plan.md`: Actionable atomic TDD implementation plans.
 - **Multi-Platform Agent Integration**:
   - **Antigravity**: `<project>/.agent/skills/` + workflows at `<project>/.agent/workflows/` + manifest at `<project>/.agent/superpowers-manifest.json`
   - **Cline**: `<project>/.cline/skills/` + workflows at `<project>/.clinerules/workflows/` + manifest at `<project>/.cline/superpowers-manifest.json`
@@ -182,16 +182,16 @@ opow uninstall -a
 ├── .opow/                                # Open-Power specifications & plans
 │   ├── specs/                            # Living Specs (Source of Truth by domain)
 │   │   └── auth/spec.md
-│   ├── changes/                          # Active change proposals (YYYY-MM-DD-<slug>)
-│   │   └── 2026-09-01-user-auth/
+│   ├── changes/                          # Active change proposals (YYYYMMDDHHmmss-<slug>)
+│   │   └── 20260901143000-user-auth/
 │   │       ├── proposal.md
 │   │       ├── design.md
 │   │       ├── tasks.md
 │   │       └── specs/
 │   │           └── auth.spec.md          # Delta spec (ADDED / MODIFIED / REMOVED)
-│   ├── archive/                          # Completed history archive (YYYY-MM-DD-<slug>)
+│   ├── archive/                          # Completed history archive (YYYYMMDDHHmmss-<slug>)
 │   ├── templates/                        # Reusable OpenSpec templates with YAML frontmatter
-│   └── plans/                            # Implementation plans (YYYY-MM-DD-<slug>.plan.md)
+│   └── plans/                            # Implementation plans (YYYYMMDDHHmmss-<slug>.plan.md)
 ├── .claude/                              # Claude Code target (.claude/skills/, .claude/commands/)
 ├── .codex/                               # Codex target (.codex/skills/, .codex/workflows/)
 ├── .agent/                               # Antigravity target (.agent/skills/, .agent/workflows/)

@@ -1,5 +1,5 @@
 ---
-change_id: YYYY-MM-DD-[change-slug]
+change_id: YYYYMMDDHHmmss-[change-slug]
 domain: [domain-name]
 type: delta
 status: draft

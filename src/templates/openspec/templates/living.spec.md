@@ -28,4 +28,4 @@ last_updated: YYYY-MM-DDTHH:mm:ssZ
 ## 4. Changelog & Audit History
 | Date | Change ID | Summary | Author |
 | :--- | :--- | :--- | :--- |
-| YYYY-MM-DD | `YYYY-MM-DD-[change-slug]` | Initial living spec baseline | Core Team |
+| YYYY-MM-DD | `YYYYMMDDHHmmss-[change-slug]` | Initial living spec baseline | Core Team |

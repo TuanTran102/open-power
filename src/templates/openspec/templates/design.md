@@ -1,5 +1,5 @@
 ---
-change_id: YYYY-MM-DD-[change-slug]
+change_id: YYYYMMDDHHmmss-[change-slug]
 title: Technical Design for [Change Title]
 created_at: YYYY-MM-DDTHH:mm:ssZ
 status: proposed

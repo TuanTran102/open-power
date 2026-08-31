@@ -66,12 +66,12 @@ describe("workflows / slash commands", () => {
         assert.ok(content.toLowerCase().includes("halt") || content.toLowerCase().includes("wait"));
     });
 
-    it("workflows enforce date-prefixed naming convention YYYY-MM-DD-<slug> and audit trail", () => {
+    it("workflows enforce timestamp-prefixed naming convention YYYYMMDDHHmmss-<slug> and audit trail", () => {
         const specContent = fs.readFileSync(path.join(workflowsDir, "spec.md"), "utf8");
-        assert.ok(specContent.includes("YYYY-MM-DD"), "spec.md should guide YYYY-MM-DD date-prefixed change IDs");
+        assert.ok(specContent.includes("YYYYMMDDHHmmss"), "spec.md should guide YYYYMMDDHHmmss timestamp-prefixed change IDs");
 
         const planContent = fs.readFileSync(path.join(workflowsDir, "plan.md"), "utf8");
-        assert.ok(planContent.includes("YYYY-MM-DD"), "plan.md should reference YYYY-MM-DD plan naming");
+        assert.ok(planContent.includes("YYYYMMDDHHmmss"), "plan.md should reference YYYYMMDDHHmmss plan naming");
 
         const archiveContent = fs.readFileSync(path.join(workflowsDir, "archive.md"), "utf8");
         assert.ok(

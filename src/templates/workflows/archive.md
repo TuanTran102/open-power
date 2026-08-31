@@ -13,8 +13,8 @@ description: Merge verified delta specs into living specs (.opow/specs/) and mov
 ## Steps
 
 1. **Locate Change Artifacts**:
-   - Open `.opow/changes/YYYY-MM-DD-<slug>/`.
-   - Read delta specs in `.opow/changes/YYYY-MM-DD-<slug>/specs/`.
+   - Open `.opow/changes/YYYYMMDDHHmmss-<slug>/`.
+   - Read delta specs in `.opow/changes/YYYYMMDDHHmmss-<slug>/specs/`.
 
 2. **Merge into Living Specs (`.opow/specs/`) & Record Changelog**:
    - For each modified domain, update or create `.opow/specs/<domain>/spec.md`:
@@ -37,7 +37,7 @@ description: Merge verified delta specs into living specs (.opow/specs/) and mov
      ```
 
 4. **Move to Archive**:
-   - Move the entire folder `.opow/changes/YYYY-MM-DD-<slug>/` to `.opow/archive/YYYY-MM-DD-<slug>/`.
+   - Move the entire folder `.opow/changes/YYYYMMDDHHmmss-<slug>/` to `.opow/archive/YYYYMMDDHHmmss-<slug>/`.
 
 5. **Sign-off**:
    - Inform the user that the change has been successfully integrated into the system's Living Specs, Changelog, and main branch.

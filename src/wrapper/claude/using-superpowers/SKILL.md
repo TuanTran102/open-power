@@ -21,9 +21,9 @@ This is not negotiable. You cannot rationalize your way out of this.
 
 **Before entering plan mode or writing code:**
 1. If exploring ideas or auditing the codebase: invoke `brainstorming` and `openspec-explore`.
-2. If designing a feature/API: invoke `spec-driven-development` to create/update the change proposal in `.opow/changes/YYYY-MM-DD-<slug>/`.
+2. If designing a feature/API: invoke `spec-driven-development` to create/update the change proposal in `.opow/changes/YYYYMMDDHHmmss-<slug>/`.
 3. Ensure Acceptance Criteria (*Given - When - Then*) and Delta Specs are defined.
-4. Then invoke `writing-plans` (saving plan to `.opow/plans/YYYY-MM-DD-<slug>.plan.md`) and `test-driven-development`.
+4. Then invoke `writing-plans` (saving plan to `.opow/plans/YYYYMMDDHHmmss-<slug>.plan.md`) and `test-driven-development`.
 
 Then announce "Using [skill] to [purpose]" and follow the skill exactly. If it has a checklist, create a todo per item.
 
@@ -31,7 +31,7 @@ Then announce "Using [skill] to [purpose]" and follow the skill exactly. If it h
 
 When multiple skills apply, process and specification skills come first — they set the approach, then implementation skills carry it out.
 
-- "Let's explore/build X" → `brainstorming` + `openspec-explore` → `spec-driven-development` (create proposal in `.opow/changes/YYYY-MM-DD-<slug>/`) → `writing-plans` (plan in `.opow/plans/`) → `test-driven-development`.
+- "Let's explore/build X" → `brainstorming` + `openspec-explore` → `spec-driven-development` (create proposal in `.opow/changes/YYYYMMDDHHmmss-<slug>/`) → `writing-plans` (plan in `.opow/plans/`) → `test-driven-development`.
 - "Fix this bug" → `systematic-debugging` (root cause analysis) → domain skills → verification.
 - "Wrap up feature" → `verification-before-completion` (verify 100% Delta Acceptance Criteria) → `/archive` (merge into `.opow/specs/`).
 

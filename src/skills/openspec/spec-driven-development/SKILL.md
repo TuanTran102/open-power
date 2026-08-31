@@ -18,23 +18,23 @@ $$\text{Propose (Explore \& Spec)} \longrightarrow \text{Plan} \longrightarrow \
 
 ## 1. Directory Structure & Chronological Naming
 
-All change proposals SHALL use the chronological naming format `YYYY-MM-DD-<slug>` (e.g. `2026-09-01-auth-feature`). All proposal, design, tasks, and delta spec markdown files SHALL contain standardized YAML frontmatter metadata (`change_id`, `created_at`, `status`, `author`, `domain`).
+All change proposals SHALL use the chronological naming format `YYYYMMDDHHmmss-<slug>` (e.g. `20260901143000-auth-feature`). All proposal, design, tasks, and delta spec markdown files SHALL contain standardized YAML frontmatter metadata (`change_id`, `created_at`, `status`, `author`, `domain`).
 
 ```text
 .opow/
 ├── specs/                          # LIVING SPECS: Source of truth of current system behavior & changelog
 │   └── <domain>/spec.md
-├── changes/                        # ACTIVE CHANGES: In-flight change proposals (YYYY-MM-DD-<slug>)
-│   └── YYYY-MM-DD-<slug>/
+├── changes/                        # ACTIVE CHANGES: In-flight change proposals (YYYYMMDDHHmmss-<slug>)
+│   └── YYYYMMDDHHmmss-<slug>/
 │       ├── proposal.md             # Why, problem statement, scope + YAML frontmatter
 │       ├── design.md               # Architecture and technical design + YAML frontmatter
 │       ├── tasks.md                # Trackable implementation checklist + YAML frontmatter
 │       └── specs/                  # Delta Specs for this change
 │           └── <domain>.spec.md    # Delta Spec + YAML frontmatter
 ├── plans/
-│   └── YYYY-MM-DD-<slug>.plan.md   # Chronologically prefixed plan matching change ID
-├── archive/                        # COMPLETED HISTORY: Archived changes (YYYY-MM-DD-<slug>)
-│   └── YYYY-MM-DD-<slug>/
+│   └── YYYYMMDDHHmmss-<slug>.plan.md   # Chronologically prefixed plan matching change ID
+├── archive/                        # COMPLETED HISTORY: Archived changes (YYYYMMDDHHmmss-<slug>)
+│   └── YYYYMMDDHHmmss-<slug>/
 └── templates/                      # Standard OpenSpec templates with YAML frontmatter
     ├── proposal.md
     ├── design.md
