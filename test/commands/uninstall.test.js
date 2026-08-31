@@ -53,4 +53,57 @@ describe("commands / uninstall", () => {
             console.log = origLog;
         }
     });
+
+    it("auto-removes pristine .opow workspace when no user content exists", () => {
+        install("claude");
+        assert.ok(fs.existsSync(path.join(tempDir, ".opow")));
+
+        const logs = [];
+        const origLog = console.log;
+        console.log = (...args) => logs.push(args.join(" "));
+
+        try {
+            uninstall("claude");
+            assert.equal(fs.existsSync(path.join(tempDir, ".opow")), false);
+            assert.ok(logs.some((l) => l.includes("Cleaned up pristine .opow/ workspace")));
+        } finally {
+            console.log = origLog;
+        }
+    });
+
+    it("preserves .opow and outputs guidance when user specs exist", () => {
+        install("claude");
+        fs.writeFileSync(path.join(tempDir, ".opow", "specs", "auth.spec.md"), "# Auth Spec");
+
+        const logs = [];
+        const origLog = console.log;
+        console.log = (...args) => logs.push(args.join(" "));
+
+        try {
+            uninstall("claude");
+            assert.equal(fs.existsSync(path.join(tempDir, ".opow")), true);
+            assert.equal(fs.existsSync(path.join(tempDir, ".opow", "specs", "auth.spec.md")), true);
+            assert.ok(logs.some((l) => l.includes("Preserved .opow/ workspace")));
+            assert.ok(logs.some((l) => l.includes("opow uninstall --all (or -a)")));
+        } finally {
+            console.log = origLog;
+        }
+    });
+
+    it("purges .opow when options.all is true even if user specs exist", () => {
+        install("claude");
+        fs.writeFileSync(path.join(tempDir, ".opow", "specs", "auth.spec.md"), "# Auth Spec");
+
+        const logs = [];
+        const origLog = console.log;
+        console.log = (...args) => logs.push(args.join(" "));
+
+        try {
+            uninstall("claude", { all: true });
+            assert.equal(fs.existsSync(path.join(tempDir, ".opow")), false);
+            assert.ok(logs.some((l) => l.includes("Purged .opow/ workspace (--all)")));
+        } finally {
+            console.log = origLog;
+        }
+    });
 });

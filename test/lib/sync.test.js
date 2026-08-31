@@ -12,6 +12,8 @@ const {
     syncTargetSkills,
     syncOpenSpec,
     uninstallTargetSkills,
+    hasUserOpowContent,
+    removeOpowWorkspace,
     getUpstreamSkillsDir,
     getOpenSpecSkillsDir,
     getVendorMeta,
@@ -324,5 +326,42 @@ describe("sync & target lifecycle", () => {
         });
         const removed = uninstallTargetSkills(TARGETS.cline, tempDir);
         assert.deepEqual(removed.workflows, []);
+    });
+
+    it("hasUserOpowContent returns false when .opow is missing, empty, or only contains default templates", () => {
+        assert.strictEqual(hasUserOpowContent(tempDir), false);
+        syncOpenSpec(tempDir);
+        assert.strictEqual(hasUserOpowContent(tempDir), false);
+
+        // Even with ignored files like .DS_Store, .gitkeep, or ._*
+        fs.writeFileSync(path.join(tempDir, ".opow", "specs", ".gitkeep"), "");
+        fs.writeFileSync(path.join(tempDir, ".opow", ".DS_Store"), "");
+        fs.writeFileSync(path.join(tempDir, ".opow", "specs", "._hidden"), "");
+        assert.strictEqual(hasUserOpowContent(tempDir), false);
+    });
+
+    it("hasUserOpowContent returns true when specs, changes, plans, or archive contain files", () => {
+        syncOpenSpec(tempDir);
+        fs.writeFileSync(path.join(tempDir, ".opow", "specs", "auth.spec.md"), "test spec");
+        assert.strictEqual(hasUserOpowContent(tempDir), true);
+
+        // Reset and test changes folder
+        fs.rmSync(path.join(tempDir, ".opow", "specs", "auth.spec.md"));
+        assert.strictEqual(hasUserOpowContent(tempDir), false);
+
+        const changeSubDir = path.join(tempDir, ".opow", "changes", "my-change");
+        fs.mkdirSync(changeSubDir, { recursive: true });
+        fs.writeFileSync(path.join(changeSubDir, "proposal.md"), "my proposal");
+        assert.strictEqual(hasUserOpowContent(tempDir), true);
+    });
+
+    it("removeOpowWorkspace safely removes .opow directory", () => {
+        assert.strictEqual(removeOpowWorkspace(tempDir), false);
+
+        syncOpenSpec(tempDir);
+        assert.strictEqual(fs.existsSync(path.join(tempDir, ".opow")), true);
+        const removed = removeOpowWorkspace(tempDir);
+        assert.strictEqual(removed, true);
+        assert.strictEqual(fs.existsSync(path.join(tempDir, ".opow")), false);
     });
 });

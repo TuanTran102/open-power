@@ -27,6 +27,7 @@ Targets:
 
 Options:
   -t, --target <name>   Specify target (cline | antigravity | agy | claude | cc | codex | cdx | all)
+  -a, --all             Remove all skills and purge the entire .opow/ workspace
   -h, --help            Show this help
 
 Examples:
@@ -59,18 +60,29 @@ Examples:
 
   # Uninstall from Claude Code
   opow uninstall cc
+
+  # Uninstall all skills and purge the entire .opow/ workspace
+  opow uninstall --all
 `;
 
 function parseArgs(argv) {
     const raw = argv.slice(2);
     let command = null;
     let target = null;
+    const flags = {
+        all: false,
+    };
 
     for (let i = 0; i < raw.length; i++) {
         const arg = raw[i];
 
         if (arg === "-h" || arg === "--help" || arg === "help") {
             return { command: "help" };
+        }
+
+        if (arg === "-a" || arg === "--all") {
+            flags.all = true;
+            continue;
         }
 
         if (arg === "-t" || arg === "--target") {
@@ -92,11 +104,11 @@ function parseArgs(argv) {
         }
     }
 
-    return { command, target };
+    return { command, target, flags };
 }
 
 function main() {
-    const { command, target } = parseArgs(process.argv);
+    const { command, target, flags } = parseArgs(process.argv);
 
     if (!command || command === "help") {
         console.log(HELP);
@@ -115,7 +127,7 @@ function main() {
                 statusMod.status(target);
                 break;
             case "uninstall":
-                uninstallMod.uninstall(target);
+                uninstallMod.uninstall(target, flags);
                 break;
             default:
                 console.log(`Unknown command: "${command}"`);

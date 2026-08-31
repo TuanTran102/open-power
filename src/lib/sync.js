@@ -271,6 +271,80 @@ function uninstallTargetSkills(target, projectDir = process.cwd()) {
     };
 }
 
+/**
+ * Check if the project's .opow/ directory contains user-created content (specs, changes, plans, archive, or custom files).
+ * Ignores system/metadata files like .DS_Store, .gitkeep, and AppleDouble files (._*).
+ *
+ * @param {string} [projectDir] - Target project directory (default: process.cwd())
+ * @returns {boolean} true if user content exists, false otherwise
+ */
+function hasUserOpowContent(projectDir = process.cwd()) {
+    const opowDir = path.join(projectDir, ".opow");
+    if (!fs.existsSync(opowDir)) {
+        return false;
+    }
+
+    const ignoredFiles = new Set([".DS_Store", ".gitkeep"]);
+    const isUserFile = (fileName) => !ignoredFiles.has(fileName) && !fileName.startsWith("._");
+
+    function hasFiles(dir) {
+        if (!fs.existsSync(dir)) return false;
+        try {
+            const entries = fs.readdirSync(dir, { withFileTypes: true });
+            for (const entry of entries) {
+                if (isUserFile(entry.name)) {
+                    if (entry.isDirectory()) {
+                        if (hasFiles(path.join(dir, entry.name))) return true;
+                    } else {
+                        return true;
+                    }
+                }
+            }
+        } catch (e) {
+            return false;
+        }
+        return false;
+    }
+
+    const checkDirs = ["specs", "changes", "plans", "archive"];
+    for (const sub of checkDirs) {
+        if (hasFiles(path.join(opowDir, sub))) {
+            return true;
+        }
+    }
+
+    try {
+        const rootEntries = fs.readdirSync(opowDir, { withFileTypes: true });
+        for (const entry of rootEntries) {
+            if (isUserFile(entry.name) && !entry.isDirectory()) {
+                return true;
+            }
+            if (entry.isDirectory() && !["specs", "changes", "plans", "archive", "templates"].includes(entry.name)) {
+                if (hasFiles(path.join(opowDir, entry.name))) return true;
+            }
+        }
+    } catch (e) {
+        return false;
+    }
+
+    return false;
+}
+
+/**
+ * Remove the entire .opow/ workspace directory from the project.
+ *
+ * @param {string} [projectDir] - Target project directory (default: process.cwd())
+ * @returns {boolean} true if directory was removed or didn't exist anymore, false if didn't exist initially
+ */
+function removeOpowWorkspace(projectDir = process.cwd()) {
+    const opowDir = path.join(projectDir, ".opow");
+    if (!fs.existsSync(opowDir)) {
+        return false;
+    }
+    removeDir(opowDir);
+    return !fs.existsSync(opowDir);
+}
+
 module.exports = {
     copyDir,
     removeDir,
@@ -287,4 +361,6 @@ module.exports = {
     syncOpenSpec,
     syncTargetSkills,
     uninstallTargetSkills,
+    hasUserOpowContent,
+    removeOpowWorkspace,
 };

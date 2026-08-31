@@ -9,24 +9,47 @@ const uninstallMod = require("../../src/commands/uninstall");
 describe("bin / cli", () => {
     describe("parseArgs", () => {
         it("parses empty or help flags", () => {
-            assert.deepEqual(parseArgs(["node", "cli.js"]), { command: null, target: null });
+            assert.deepEqual(parseArgs(["node", "cli.js"]), { command: null, target: null, flags: { all: false } });
             assert.deepEqual(parseArgs(["node", "cli.js", "-h"]), { command: "help" });
             assert.deepEqual(parseArgs(["node", "cli.js", "--help"]), { command: "help" });
             assert.deepEqual(parseArgs(["node", "cli.js", "help"]), { command: "help" });
         });
 
         it("parses options and flags with -t, --target, and --target= syntax", () => {
-            assert.deepEqual(parseArgs(["node", "cli.js", "install", "-t", "claude"]), { command: "install", target: "claude" });
-            assert.deepEqual(parseArgs(["node", "cli.js", "install", "--target", "codex"]), { command: "install", target: "codex" });
-            assert.deepEqual(parseArgs(["node", "cli.js", "install", "--target=antigravity"]), { command: "install", target: "antigravity" });
-            assert.deepEqual(parseArgs(["node", "cli.js", "install", "-t"]), { command: "install", target: null });
+            assert.deepEqual(parseArgs(["node", "cli.js", "install", "-t", "claude"]), { command: "install", target: "claude", flags: { all: false } });
+            assert.deepEqual(parseArgs(["node", "cli.js", "install", "--target", "codex"]), { command: "install", target: "codex", flags: { all: false } });
+            assert.deepEqual(parseArgs(["node", "cli.js", "install", "--target=antigravity"]), { command: "install", target: "antigravity", flags: { all: false } });
+            assert.deepEqual(parseArgs(["node", "cli.js", "install", "-t"]), { command: "install", target: null, flags: { all: false } });
         });
 
         it("parses positional command and target arguments", () => {
-            assert.deepEqual(parseArgs(["node", "cli.js", "install", "cc"]), { command: "install", target: "cc" });
-            assert.deepEqual(parseArgs(["node", "cli.js", "update", "all"]), { command: "update", target: "all" });
-            assert.deepEqual(parseArgs(["node", "cli.js", "status"]), { command: "status", target: null });
-            assert.deepEqual(parseArgs(["node", "cli.js", "uninstall", "cline"]), { command: "uninstall", target: "cline" });
+            assert.deepEqual(parseArgs(["node", "cli.js", "install", "cc"]), { command: "install", target: "cc", flags: { all: false } });
+            assert.deepEqual(parseArgs(["node", "cli.js", "update", "all"]), { command: "update", target: "all", flags: { all: false } });
+            assert.deepEqual(parseArgs(["node", "cli.js", "status"]), { command: "status", target: null, flags: { all: false } });
+            assert.deepEqual(parseArgs(["node", "cli.js", "uninstall", "cline"]), { command: "uninstall", target: "cline", flags: { all: false } });
+        });
+
+        it("parses -a and --all flags correctly", () => {
+            assert.deepEqual(parseArgs(["node", "cli.js", "uninstall", "-a"]), {
+                command: "uninstall",
+                target: null,
+                flags: { all: true },
+            });
+            assert.deepEqual(parseArgs(["node", "cli.js", "uninstall", "--all"]), {
+                command: "uninstall",
+                target: null,
+                flags: { all: true },
+            });
+            assert.deepEqual(parseArgs(["node", "cli.js", "uninstall", "cline", "-a"]), {
+                command: "uninstall",
+                target: "cline",
+                flags: { all: true },
+            });
+            assert.deepEqual(parseArgs(["node", "cli.js", "uninstall", "-a", "cline"]), {
+                command: "uninstall",
+                target: "cline",
+                flags: { all: true },
+            });
         });
     });
 
@@ -66,7 +89,7 @@ describe("bin / cli", () => {
                 installMod.install = (t) => calls.push({ cmd: "install", target: t });
                 updateMod.update = (t) => calls.push({ cmd: "update", target: t });
                 statusMod.status = (t) => calls.push({ cmd: "status", target: t });
-                uninstallMod.uninstall = (t) => calls.push({ cmd: "uninstall", target: t });
+                uninstallMod.uninstall = (t, f) => calls.push({ cmd: "uninstall", target: t, flags: f });
 
                 process.argv = ["node", "cli.js", "install", "claude"];
                 main();
@@ -77,14 +100,14 @@ describe("bin / cli", () => {
                 process.argv = ["node", "cli.js", "status", "cdx"];
                 main();
 
-                process.argv = ["node", "cli.js", "uninstall", "agy"];
+                process.argv = ["node", "cli.js", "uninstall", "agy", "-a"];
                 main();
 
                 assert.deepEqual(calls, [
                     { cmd: "install", target: "claude" },
                     { cmd: "update", target: "all" },
                     { cmd: "status", target: "cdx" },
-                    { cmd: "uninstall", target: "agy" },
+                    { cmd: "uninstall", target: "agy", flags: { all: true } },
                 ]);
             } finally {
                 process.argv = origArgv;

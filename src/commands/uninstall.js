@@ -1,7 +1,10 @@
-const { uninstallTargetSkills } = require("../lib/sync");
+const fs = require("fs");
+const path = require("path");
+const { uninstallTargetSkills, hasUserOpowContent, removeOpowWorkspace } = require("../lib/sync");
 const { resolveTargets } = require("../lib/targets");
 
-function uninstall(targetArg) {
+function uninstall(targetArg, options = {}) {
+    const isAllFlag = Boolean(options && options.all);
     const targets = resolveTargets(targetArg);
     const projectDir = process.cwd();
 
@@ -29,6 +32,23 @@ function uninstall(targetArg) {
             }
         } catch (err) {
             console.log(`⚠️  ${err.message}`);
+        }
+    }
+
+    const opowDir = path.join(projectDir, ".opow");
+    if (fs.existsSync(opowDir)) {
+        if (isAllFlag) {
+            removeOpowWorkspace(projectDir);
+            console.log(`\n✅ Purged .opow/ workspace (--all).`);
+        } else {
+            const hasUserContent = hasUserOpowContent(projectDir);
+            if (!hasUserContent) {
+                removeOpowWorkspace(projectDir);
+                console.log(`\n🧹 Cleaned up pristine .opow/ workspace (no user specs or changes found).`);
+            } else {
+                console.log(`\nℹ️  Preserved .opow/ workspace (contains living specs & change history).`);
+                console.log(`   To completely purge .opow/, run: opow uninstall --all (or -a)`);
+            }
         }
     }
 

@@ -116,6 +116,11 @@ opow uninstall claude
 opow uninstall codex
 opow uninstall antigravity
 opow uninstall cline
+
+# Uninstall all skills and purge the entire .opow/ workspace
+opow uninstall --all
+# or:
+opow uninstall -a
 ```
 
 ---
@@ -198,13 +203,14 @@ opow uninstall cline
 | `install [target]` | Initialize OpenSpec workspace and install bundled skills into current project |
 | `update [target]` | Re-sync skills & OpenSpec templates from the bundled package |
 | `status [target]` | Show bundled commit, OpenSpec workspace status, and installed skills |
-| `uninstall [target]` | Safely remove installed skills from current project |
+| `uninstall [target]` | Safely remove installed skills from current project (auto-cleans pristine `.opow/` or preserves user specs) |
 | `help` | Show usage and help information |
 
 **Targets**: `cline`, `antigravity` (or `agy`), `claude` (or `cc`), `codex` (or `cdx`), `all`.
 
 **Options**:
 - `-t, --target <name>`: Specify target platform (`cline`, `antigravity`, `agy`, `claude`, `cc`, `codex`, `cdx`, `all`).
+- `-a, --all`: Purge all skills and remove the entire `.opow/` workspace directory.
 - `-h, --help`: Show help text.
 
 ---
