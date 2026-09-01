@@ -148,7 +148,7 @@ opow uninstall -a
 | **`/plan [name]`** | Transform change proposal into atomic TDD implementation plan in `.opow/plans/<name>.plan.md` | `writing-plans` |
 | **`/implement`** | Set up isolated workspace (`.worktrees/<name>`) and execute tasks using strict TDD (Red-Green-Refactor) and Subagents | `using-git-worktrees`, `test-driven-development`, `subagent-driven-development` |
 | **`/verify`** | Run test suite and check off 100% of Acceptance Criteria against Delta Specs | `verification-before-completion` |
-| **`/archive`** | Merge delta specs into Living Specs (`.opow/specs/`), merge code into main, clean up worktree, and move change to `.opow/archive/` | `spec-driven-development` |
+| **`/archive`** | Merge delta specs into Living Specs (`.opow/specs/`), merge code into main, clean up worktree, and move change + plan to `.opow/archive/` | `spec-driven-development` |
 | **`/explore`** *(Optional)* | Standalone fast spike to audit codebase, dependencies, and evaluate feasibility without scaffolding files | `openspec-explore` |
 | **`/sync-spec`** | Audit code drift or Git diff and reverse-sync into OpenSpec living specs or proposals | `openspec-sync` |
 
@@ -170,7 +170,7 @@ opow uninstall -a
    > Agent runs the entire test suite and confirms 100% of Acceptance Criteria in `.opow/changes/user-auth/specs/` are fulfilled.
 
 5. **Archive, Merge & Clean Up**: Type `/archive`
-   > Agent merges delta specs into `.opow/specs/auth/spec.md` (Living Specs), merges `feat/user-auth` into `main`, removes `.worktrees/user-auth`, and moves the change to `.opow/archive/user-auth/`.
+   > Agent merges delta specs into `.opow/specs/auth/spec.md` (Living Specs), merges `feat/user-auth` into `main`, removes `.worktrees/user-auth`, and moves the change folder and plan to `.opow/archive/user-auth/`.
 
 
 ---

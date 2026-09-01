@@ -36,8 +36,9 @@ description: Merge verified delta specs into living specs (.opow/specs/) and mov
      git branch -d feat/<change-id>
      ```
 
-4. **Move to Archive**:
+4. **Move to Archive & Clean up Plans**:
    - Move the entire folder `.opow/changes/YYYYMMDDHHmmss-<slug>/` to `.opow/archive/YYYYMMDDHHmmss-<slug>/`.
+   - If an implementation plan exists at `.opow/plans/YYYYMMDDHHmmss-<slug>.plan.md`, move it to `.opow/archive/YYYYMMDDHHmmss-<slug>/plan.md`.
 
 5. **Sign-off**:
    - Inform the user that the change has been successfully integrated into the system's Living Specs, Changelog, and main branch.

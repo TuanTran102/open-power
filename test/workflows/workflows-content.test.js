@@ -28,6 +28,14 @@ describe("workflows / slash commands", () => {
         assert.ok(content.includes(".opow/specs/"));
     });
 
+    it("archive workflow guides moving plan from .opow/plans/ to .opow/archive/", () => {
+        const content = fs.readFileSync(path.join(workflowsDir, "archive.md"), "utf8");
+        assert.ok(
+            content.includes(".opow/plans/") && (content.includes(".opow/archive/") || content.includes("plan.md")),
+            "archive.md should instruct moving .opow/plans/ into .opow/archive/"
+        );
+    });
+
     it("spec workflow instructs creating changes folder and delta specs", () => {
         const content = fs.readFileSync(path.join(workflowsDir, "spec.md"), "utf8");
         assert.ok(content.includes(".opow/changes/"));
