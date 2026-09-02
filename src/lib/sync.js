@@ -406,19 +406,88 @@ function ensureGitignore(projectDir = process.cwd()) {
     };
 }
 
+const DEFAULT_RULES_DIR = path.join(__dirname, "..", "rules");
+
 /**
- * Ensure 'be brief' rule is present in the target's rule file.
+ * Get bundled rules directory.
+ * @returns {string}
+ */
+function getRulesDir() {
+    return DEFAULT_RULES_DIR;
+}
+
+/**
+ * Load all markdown rule templates from directory.
+ * @param {string} [rulesDir]
+ * @returns {Array<{ filename: string, name: string, content: string }>}
+ */
+function loadRuleTemplates(rulesDir = DEFAULT_RULES_DIR) {
+    if (!fs.existsSync(rulesDir)) {
+        return [];
+    }
+    const entries = fs.readdirSync(rulesDir, { withFileTypes: true });
+    const templates = [];
+    for (const entry of entries) {
+        if (entry.isFile() && entry.name.endsWith(".md") && !entry.name.startsWith("._")) {
+            const filePath = path.join(rulesDir, entry.name);
+            const content = fs.readFileSync(filePath, "utf8");
+            templates.push({
+                filename: entry.name,
+                name: path.basename(entry.name, ".md"),
+                content,
+            });
+        }
+    }
+    return templates;
+}
+
+/**
+ * Ensure template rules are synchronized into the target's rule file or directory.
  *
  * @param {object} target - Target platform object
  * @param {string} [projectDir] - Target project directory (default: process.cwd())
- * @returns {object} { rulePath: string|null, created: boolean, updated: boolean }
+ * @param {object} [options] - Optional settings { rulesDir }
+ * @returns {object} { rulePath: string|null, created: boolean, updated: boolean, syncedRules: string[] }
  */
-function syncTargetRules(target, projectDir = process.cwd()) {
+function syncTargetRules(target, projectDir = process.cwd(), options = {}) {
     if (!target || typeof target.getRulePath !== "function") {
-        return { rulePath: null, created: false, updated: false };
+        return { rulePath: null, created: false, updated: false, syncedRules: [] };
+    }
+
+    const templates = loadRuleTemplates(options.rulesDir);
+    if (templates.length === 0) {
+        return { rulePath: null, created: false, updated: false, syncedRules: [] };
     }
 
     let rulePath = target.getRulePath(projectDir);
+    const isAntigravity = target.id === "antigravity";
+
+    if (isAntigravity) {
+        const rulesDir = path.dirname(rulePath);
+        fs.mkdirSync(rulesDir, { recursive: true });
+        let anyCreated = false;
+        let anyUpdated = false;
+        const syncedRules = [];
+
+        for (const t of templates) {
+            const destPath = path.join(rulesDir, t.filename);
+            if (!fs.existsSync(destPath)) {
+                fs.writeFileSync(destPath, t.content.endsWith("\n") ? t.content : t.content + "\n");
+                anyCreated = true;
+                syncedRules.push(t.name);
+            } else {
+                const existing = fs.readFileSync(destPath, "utf8");
+                if (existing.trim() !== t.content.trim()) {
+                    fs.writeFileSync(destPath, t.content.endsWith("\n") ? t.content : t.content + "\n");
+                    anyUpdated = true;
+                    syncedRules.push(t.name);
+                }
+            }
+        }
+        return { rulePath, created: anyCreated, updated: anyUpdated, syncedRules };
+    }
+
+    // Single-file targets (Claude Code, Codex, Cline)
     if (fs.existsSync(rulePath) && fs.statSync(rulePath).isDirectory()) {
         rulePath = path.join(rulePath, "brief.md");
     }
@@ -435,23 +504,35 @@ function syncTargetRules(target, projectDir = process.cwd()) {
         }
     }
 
-    const hasBrief = /\bbe brief\b/i.test(existingContent);
-    if (hasBrief) {
-        return { rulePath, created: false, updated: false };
+    const syncedRules = [];
+    const missingContents = [];
+
+    for (const t of templates) {
+        const pattern = new RegExp(`\\b${t.name}\\b`, "i");
+        const hasRule = pattern.test(existingContent) || (t.name === "brief" && /\bbe brief\b/i.test(existingContent)) || existingContent.includes(t.content.trim());
+        if (!hasRule) {
+            syncedRules.push(t.name);
+            missingContents.push(t.content.trim());
+        }
+    }
+
+    if (syncedRules.length === 0) {
+        return { rulePath, created: false, updated: false, syncedRules: [] };
     }
 
     fs.mkdirSync(path.dirname(rulePath), { recursive: true });
+    const appendedBlock = missingContents.join("\n\n");
 
     if (!exists) {
-        const header = (target.id === "antigravity" || (target.id === "cline" && rulePath.endsWith("brief.md")))
-            ? "# Brief Response Rule\n\n"
+        const header = (target.id === "cline" && rulePath.endsWith("brief.md"))
+            ? ""
             : "# Instructions\n\n";
-        fs.writeFileSync(rulePath, header + "be brief\n");
-        return { rulePath, created: true, updated: false };
+        fs.writeFileSync(rulePath, header + appendedBlock + "\n");
+        return { rulePath, created: true, updated: false, syncedRules };
     } else {
-        const prefix = existingContent.length > 0 && !existingContent.endsWith("\n") ? "\n" : "";
-        fs.writeFileSync(rulePath, existingContent + prefix + "\nbe brief\n");
-        return { rulePath, created: false, updated: true };
+        const prefix = existingContent.length > 0 && !existingContent.endsWith("\n") ? "\n\n" : (existingContent.endsWith("\n\n") ? "" : "\n");
+        fs.writeFileSync(rulePath, existingContent + prefix + appendedBlock + "\n");
+        return { rulePath, created: false, updated: true, syncedRules };
     }
 }
 
@@ -475,5 +556,7 @@ module.exports = {
     removeOpowWorkspace,
     DEFAULT_GITIGNORE_PATTERNS,
     ensureGitignore,
+    getRulesDir,
+    loadRuleTemplates,
     syncTargetRules,
 };

@@ -20,6 +20,7 @@ const {
     getUpstreamCommit,
     ensureGitignore,
     syncTargetRules,
+    loadRuleTemplates,
 } = require("../../src/lib/sync");
 
 describe("sync & target lifecycle", () => {
@@ -443,6 +444,57 @@ describe("sync & target lifecycle", () => {
 
     it("syncTargetRules handles null/invalid target gracefully", () => {
         const result = syncTargetRules(null, tempDir);
-        assert.deepEqual(result, { rulePath: null, created: false, updated: false });
+        assert.deepEqual(result, { rulePath: null, created: false, updated: false, syncedRules: [] });
+    });
+
+    it("loadRuleTemplates loads all markdown templates from default rules directory", () => {
+        const templates = loadRuleTemplates();
+        assert.ok(Array.isArray(templates));
+        assert.ok(templates.length >= 1);
+        const brief = templates.find((t) => t.name === "brief" || t.filename === "brief.md");
+        assert.ok(brief, "brief.md template must be found");
+        assert.match(brief.content, /\bbe brief\b/i);
+    });
+
+    it("loadRuleTemplates returns empty array when directory does not exist", () => {
+        const templates = loadRuleTemplates(path.join(tempDir, "non-existent"));
+        assert.deepEqual(templates, []);
+    });
+
+    it("syncTargetRules syncs multiple templates to Antigravity directory as individual files", () => {
+        const customRulesDir = path.join(tempDir, "custom-rules");
+        fs.mkdirSync(customRulesDir, { recursive: true });
+        fs.writeFileSync(path.join(customRulesDir, "brief.md"), "# Brief\nbe brief\n");
+        fs.writeFileSync(path.join(customRulesDir, "tdd.md"), "# TDD\nalways test first\n");
+
+        const targetDir = path.join(tempDir, "target-project");
+        const result = syncTargetRules(TARGETS.antigravity, targetDir, { rulesDir: customRulesDir });
+        assert.ok(result.created);
+        assert.deepEqual(result.syncedRules.sort(), ["brief", "tdd"]);
+
+        assert.ok(fs.existsSync(path.join(targetDir, ".agent", "rules", "brief.md")));
+        assert.ok(fs.existsSync(path.join(targetDir, ".agent", "rules", "tdd.md")));
+        assert.match(fs.readFileSync(path.join(targetDir, ".agent", "rules", "tdd.md"), "utf8"), /always test first/);
+    });
+
+    it("syncTargetRules appends multiple missing templates to single-file target", () => {
+        const customRulesDir = path.join(tempDir, "custom-rules");
+        fs.mkdirSync(customRulesDir, { recursive: true });
+        fs.writeFileSync(path.join(customRulesDir, "brief.md"), "# Brief\nbe brief\n");
+        fs.writeFileSync(path.join(customRulesDir, "tdd.md"), "# TDD\nalways test first\n");
+
+        const targetDir = path.join(tempDir, "target-project");
+        fs.mkdirSync(targetDir, { recursive: true });
+        const codexPath = TARGETS.codex.getRulePath(targetDir);
+        fs.writeFileSync(codexPath, "# Existing Guidelines\n");
+
+        const result = syncTargetRules(TARGETS.codex, targetDir, { rulesDir: customRulesDir });
+        assert.ok(result.updated);
+        assert.deepEqual(result.syncedRules.sort(), ["brief", "tdd"]);
+
+        const content = fs.readFileSync(codexPath, "utf8");
+        assert.ok(content.startsWith("# Existing Guidelines\n"));
+        assert.match(content, /be brief/);
+        assert.match(content, /always test first/);
     });
 });

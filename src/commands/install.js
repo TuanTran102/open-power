@@ -48,10 +48,13 @@ function install(targetArg) {
         }
 
         if (ruleInfo && ruleInfo.rulePath) {
+            const rulesLabel = ruleInfo.syncedRules && ruleInfo.syncedRules.length > 0
+                ? ruleInfo.syncedRules.map((r) => `"${r}"`).join(", ")
+                : '"be brief"';
             if (ruleInfo.created || ruleInfo.updated) {
-                console.log(`\n📝 Rules:     ✅ Configured "be brief" rule for ${target.name}`);
+                console.log(`\n📝 Rules:     ✅ Configured ${rulesLabel} rule for ${target.name}`);
             } else {
-                console.log(`\n📝 Rules:     ✅ "be brief" rule already active for ${target.name}`);
+                console.log(`\n📝 Rules:     ✅ ${rulesLabel} rule already active for ${target.name}`);
             }
         }
 
