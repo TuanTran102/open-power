@@ -1,6 +1,6 @@
 ---
-description: Always respond concisely
-globs: "*"
-alwaysApply: true
+trigger: always_on
+glob:
+description:
 ---
-be brief
+be brief 
