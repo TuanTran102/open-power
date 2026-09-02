@@ -13,6 +13,19 @@ description: Use when implementation is complete, all tests pass, and you need t
 
 **Announce at start:** "I'm using the finishing-a-development-branch skill to complete this work."
 
+## Step 0: OpenSpec Lifecycle Guard (Hard-Gate)
+
+**Check if this task is part of an active OpenSpec change:**
+- Does `.opow/changes/` have an active proposal or worktree `.worktrees/<change-name>`?
+- Are you currently following an OpenSpec lifecycle (`/spec`, `/plan`, `/implement`, `/verify`, `/archive`)?
+
+**If YES:**
+- **STOP IMMEDIATELY.** Do NOT display the finishing menu, do NOT merge, and do NOT delete the worktree.
+- Inform the user: "Active OpenSpec change detected. Worktrees must be preserved for verification. Transitioning to `/verify` (cleanup will happen during `/archive`)."
+- Transition to `/verify`.
+
+**If NO (Standalone task):** Proceed to Step 1.
+
 ## Step 1: Verify Tests
 
 Run the project's full test suite (`npm test` / `cargo test` / `pytest` / `go test ./...`).

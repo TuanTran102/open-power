@@ -30,10 +30,16 @@ description: Execute the implementation plan using strict Test-Driven Developmen
    - **Red**: Author unit / integration test verifying the Delta Acceptance Criteria. Confirm test fails.
    - **Green**: Write minimal code to make the test pass.
    - **Refactor**: Clean up the code while keeping all tests green.
+   - **Commit**: Commit changes using the spec timestamp prefix: `git commit -m "[<timestamp>] <type>: <message>"` (e.g. `[20260902171500] feat: handle restart focus`).
 
 4. **Subagent Delegation (Optional)**:
-   - For isolated tasks, invoke `subagent-driven-development` to dispatch independent workers.
+   - For isolated tasks, invoke `subagent-driven-development` to dispatch independent workers. Ensure commit messages adhere to the `[<timestamp>]` prefix.
 
 5. **Task Completion**:
    - Check off `- [x]` in `.opow/changes/<change-name>/tasks.md` and repeat until all tasks are complete.
+
+6. **Handoff to Verify (DO NOT CLOSE WORKTREE)**:
+   - **CRITICAL**: DO NOT merge branches, delete, or clean up `.worktrees/<change-name>`.
+   - **CRITICAL**: DO NOT invoke `finishing-a-development-branch`. Worktrees are managed solely by `/archive`.
+   - Keep the worktree intact and transition immediately to `/verify`.
 
