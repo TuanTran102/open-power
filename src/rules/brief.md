@@ -1,3 +1,6 @@
-# Brief Response Rule
-
+---
+description: Always respond concisely
+globs: "*"
+alwaysApply: true
+---
 be brief

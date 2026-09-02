@@ -508,11 +508,12 @@ function syncTargetRules(target, projectDir = process.cwd(), options = {}) {
     const missingContents = [];
 
     for (const t of templates) {
+        const body = t.content.replace(/^---[\s\S]*?---\s*/, "").trim();
         const pattern = new RegExp(`\\b${t.name}\\b`, "i");
-        const hasRule = pattern.test(existingContent) || (t.name === "brief" && /\bbe brief\b/i.test(existingContent)) || existingContent.includes(t.content.trim());
+        const hasRule = pattern.test(existingContent) || (t.name === "brief" && /\bbe brief\b/i.test(existingContent)) || (body.length > 0 && existingContent.includes(body));
         if (!hasRule) {
             syncedRules.push(t.name);
-            missingContents.push(t.content.trim());
+            missingContents.push(body);
         }
     }
 

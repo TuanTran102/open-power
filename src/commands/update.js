@@ -19,8 +19,16 @@ function update(targetArg) {
         if (targetArg || manifest) {
             console.log(`\nRe-syncing skills for ${target.name}...`);
             const newManifest = syncTargetSkills(target, projectDir);
-            syncTargetRules(target, projectDir);
+            const ruleInfo = syncTargetRules(target, projectDir);
             console.log(`✅ Synced ${newManifest.skills.length} skills for ${target.name}.`);
+            if (ruleInfo && ruleInfo.rulePath) {
+                const rulesLabel = ruleInfo.syncedRules && ruleInfo.syncedRules.length > 0
+                    ? ruleInfo.syncedRules.map((r) => `"${r}"`).join(", ")
+                    : '"be brief"';
+                if (ruleInfo.created || ruleInfo.updated) {
+                    console.log(`📝 Rules:     ✅ Configured ${rulesLabel} rule for ${target.name}`);
+                }
+            }
             updatedCount++;
         }
     }

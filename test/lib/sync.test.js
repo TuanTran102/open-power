@@ -419,6 +419,12 @@ describe("sync & target lifecycle", () => {
             assert.ok(fs.existsSync(result.rulePath));
             const content = fs.readFileSync(result.rulePath, "utf8");
             assert.match(content, /\bbe brief\b/i);
+            if (target.id === "antigravity") {
+                assert.ok(content.includes("alwaysApply: true"));
+                assert.ok(content.includes("globs:"));
+            } else {
+                assert.ok(!content.includes("alwaysApply: true"));
+            }
         }
     });
 
