@@ -8,13 +8,19 @@ description: Execute the implementation plan using strict Test-Driven Developmen
 
 ## Steps
 
-1. **Set up Isolated Workspace (Git Worktree)**:
-   - Invoke `using-git-worktrees`.
-   - Create or switch to an isolated worktree at `.worktrees/<change-name>` on branch `feat/<change-name>` to prevent multi-tasking conflicts:
+1. **MANDATORY HARD-GATE: Isolated Workspace (Git Worktree)**:
+   - Invoke `using-git-worktrees` with automatic enforcement.
+   - **DO NOT ASK FOR CONSENT**: Worktree isolation is mandatory for all implementation tasks.
+   - Check if currently running inside the isolated worktree:
      ```bash
-     git worktree add .worktrees/<change-name> -b feat/<change-name>
+     GIT_DIR=$(cd "$(git rev-parse --git-dir 2>/dev/null)" && pwd -P)
+     GIT_COMMON=$(cd "$(git rev-parse --git-common-dir 2>/dev/null)" && pwd -P)
      ```
-   - Verify baseline tests pass inside the worktree workspace before starting implementation.
+   - If not isolated (`GIT_DIR == GIT_COMMON`), immediately create and switch:
+     1. Verify `.worktrees` is ignored: `git check-ignore -q .worktrees || (echo ".worktrees/" >> .gitignore && git commit -am "chore: ignore .worktrees")`
+     2. Create worktree: `git worktree add .worktrees/<change-name> -b feat/<change-name>`
+   - **CRITICAL CONSTRAINT**: ALL subsequent file edits, tool calls, and test executions MUST target the `.worktrees/<change-name>/` directory. NEVER touch the root workspace during implementation.
+   - Run baseline tests inside `.worktrees/<change-name>/` to verify clean state before proceeding.
 
 2. **Pick the Next Task**:
    - Select the next item from `.opow/changes/<change-name>/tasks.md` (and `.opow/plans/<change-name>.plan.md`).
