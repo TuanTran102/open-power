@@ -43,12 +43,6 @@ describe("workflows / slash commands", () => {
         assert.ok(content.includes("tasks.md"));
     });
 
-    it("spec workflow guides using Pencil MCP for UI-related changes", () => {
-        const content = fs.readFileSync(path.join(workflowsDir, "spec.md"), "utf8");
-        assert.ok(content.toLowerCase().includes("pencil"));
-        assert.ok(content.includes(".pen"));
-    });
-
     it("spec workflow guides codebase exploration and openspec-explore", () => {
         const content = fs.readFileSync(path.join(workflowsDir, "spec.md"), "utf8");
         assert.ok(content.includes("openspec-explore"));
@@ -65,13 +59,6 @@ describe("workflows / slash commands", () => {
         const content = fs.readFileSync(path.join(workflowsDir, "archive.md"), "utf8");
         assert.ok(content.includes("worktree remove"));
         assert.ok(content.includes(".worktrees/"));
-    });
-
-    it("spec workflow guides halting and notifying user when Pencil MCP is unavailable", () => {
-        const content = fs.readFileSync(path.join(workflowsDir, "spec.md"), "utf8");
-        assert.ok(content.toLowerCase().includes("pencil"));
-        assert.ok(content.toLowerCase().includes("unavailable") || content.toLowerCase().includes("fails"));
-        assert.ok(content.toLowerCase().includes("halt") || content.toLowerCase().includes("wait"));
     });
 
     it("workflows enforce timestamp-prefixed naming convention YYYYMMDDHHmmss-<slug> and audit trail", () => {

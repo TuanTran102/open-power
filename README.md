@@ -144,7 +144,7 @@ opow uninstall -a
 
 | Slash Command | Purpose | Underlying Skills |
 |---|---|---|
-| **`/spec [name]`** | Audit codebase (`openspec-explore`), brainstorm, draw UI mockups via Pencil MCP, and create `.opow/changes/<name>/` (`proposal`, `design`, `tasks`, delta `specs/`) | `brainstorming`, `openspec-explore`, `spec-driven-development` |
+| **`/spec [name]`** | Audit codebase (`openspec-explore`), brainstorm, and create `.opow/changes/<name>/` (`proposal`, `design`, `tasks`, delta `specs/`) | `brainstorming`, `openspec-explore`, `spec-driven-development` |
 | **`/plan [name]`** | Transform change proposal into atomic TDD implementation plan in `.opow/plans/<name>.plan.md` | `writing-plans` |
 | **`/implement`** | Set up isolated workspace (`.worktrees/<name>`) and execute tasks using strict TDD (Red-Green-Refactor) and Subagents | `using-git-worktrees`, `test-driven-development`, `subagent-driven-development` |
 | **`/verify`** | Run test suite and check off 100% of Acceptance Criteria against Delta Specs | `verification-before-completion` |
