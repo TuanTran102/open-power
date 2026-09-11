@@ -17,20 +17,22 @@ Comprehensive guide for creating, inspecting, and modifying `.pen` vector design
 which pen 2>/dev/null
 ```
 
-* **Mode A: Pencil CLI (STRICTLY PREFERRED)**: If `which pen` returns a path, **you MUST use Mode A**. Works 100% headless in RAM, requires zero GUI, no active editor tab, no external AI API keys, and zero disk pollution.
+* **Mode A: Pencil CLI & JSON Native (STRICTLY PREFERRED)**: If `which pen` returns a path, **you MUST use Mode A**. Works 100% headless in RAM, requires zero GUI, no active editor tab, and zero disk pollution.
+  - **New canvases / complex layout generation**: Use `pen interactive` (with helper functions like `FindEmptySpace`, `Insert`).
+  - **Editing existing designs (colors, fills, effects, hierarchy)**: `.pen` files are **100% standard JSON** (`version: "2.17"`). Modifying JSON directly via Node.js script is instantaneous, deterministic, and avoids TTY stdin buffering issues.
 * **Mode B: Pencil MCP (FALLBACK ONLY)**: Use **ONLY** if `pen` CLI is not installed on the system. Requires an active editor tab open in Antigravity IDE / VS Code.
 
 ---
 
-## 2. Mode A: Pencil CLI Execution (Node.js Inline Pattern)
+## 2. Mode A: Execution Patterns
 
-> **Critical Note**: 
+> **Critical Notes**: 
 > 1. Do NOT use `pen --prompt "..."` because it delegates to external Claude Code and requires AI API keys (`Not logged in` error).
-> 2. Always use **`pen interactive`** via the Node.js one-liner below. Node.js natively handles JSON and multi-line JavaScript string escaping without syntax collisions.
+> 2. **Direct JSON Editing for Existing Files**: When modifying styles, fills, glass effects, borders, or text on existing screens, edit the `.pen` file directly as JSON using Node.js. It is 10x faster and eliminates stdin hanging in non-TTY environments.
+> 3. **Piping to `pen interactive`**: When using `pen interactive`, pass all commands at once via piped stdin (e.g. `echo "..." | pen interactive ...`) rather than keeping an unbuffered stream open.
 
-### Creating a New Design:
+### Pattern 1: Creating a New Canvas via `pen interactive`
 ```bash
-# Execute design snippet directly in RAM via Node.js (safe stringification & streaming)
 node -e '
 const cp = require("child_process");
 const fs = require("fs");
@@ -52,36 +54,52 @@ Update(screen, { placeholder: false });
 
 fs.mkdirSync(".design", { recursive: true });
 
-const proc = cp.spawn("pen", ["interactive", "-o", ".design/screen.pen"], { stdio: ["pipe", "inherit", "inherit"] });
-proc.stdin.write(`execute({ input: ${JSON.stringify(designCode)} })\nsave()\nexit()\n`);
+// Pipe entire session in one flush to avoid stdin hang
+const script = `execute({ input: ${JSON.stringify(designCode)} })\nsave()\nexit()\n`;
+cp.execSync("pen interactive -o .design/screen.pen", { input: script, stdio: ["pipe", "inherit", "inherit"] });
 '
-
-# Auto-export PNG and visually inspect
-pen --in .design/screen.pen --export .design/screen.png
 ```
 
-> **Visual Self-Verification**: Always call `view_file` on the exported `.png` to evaluate contrast, visual balance, blur realism, and focus states.
-
-### Editing / Appending to Existing Files:
-To edit or add screens side-by-side without recreating from scratch:
+### Pattern 2: Fast Editing Existing Files via JSON
+Because `.pen` is standard JSON, modifying node properties directly is the fastest, most reliable method:
 ```bash
 node -e '
-const cp = require("child_process");
+const fs = require("fs");
+const data = JSON.parse(fs.readFileSync(".design/screen.pen", "utf8"));
 
-const editCode = `
-// Add adjacent screen to the right
-const pos = FindEmptySpace({ width: 1440, height: 900, padding: 80, direction: "right" });
-const detailScreen = Insert(document, { type: "frame", name: "Detail View", x: pos.x, y: pos.y, width: 1440, height: 900, fill: "#0F172A", placeholder: true });
-Update(detailScreen, { placeholder: false });
-`;
+function findNode(node, id) {
+  if (node.id === id) return node;
+  if (node.children) {
+    for (const c of node.children) {
+      const res = findNode(c, id);
+      if (res) return res;
+    }
+  }
+  return null;
+}
 
-const proc = cp.spawn("pen", ["interactive", "-i", ".design/screen.pen", "-o", ".design/screen.pen"], { stdio: ["pipe", "inherit", "inherit"] });
-proc.stdin.write(`execute({ input: ${JSON.stringify(editCode)} })\nsave()\nexit()\n`);
+// Modify node properties directly (fills, corner radius, stroke, effects)
+const target = findNode(data, "targetNodeId");
+if (target) {
+  target.fill = "#ffffff14";
+  target.cornerRadius = 24;
+}
+
+fs.writeFileSync(".design/screen.pen", JSON.stringify(data, null, 2));
+console.log("Updated design JSON successfully");
 '
+```
 
-# Auto-export PNG after editing
+### Pattern 3: Visual Export & Self-Verification
+To render and inspect the visual output:
+```bash
 pen --in .design/screen.pen --export .design/screen.png
 ```
+
+> **Export Behavior & Timing**:
+> - `pen --in ... --export ...` internally boots the Pencil editor runtime (`[INFO] Agent: claude, Model: claude-opus-5, Initializing editor...`), taking ~5–8 seconds to render and exit with code 0.
+> - When running via `run_command`, set `WaitMsBeforeAsync: 8000` (or wait for the command task to complete) before attempting to read the exported PNG.
+> - **Visual Self-Verification**: Always call `view_file` on the exported `.png` to evaluate contrast, visual balance, blur realism, and focus states.
 
 ---
 
@@ -162,6 +180,8 @@ execute({
 | Error | Root Cause | Solution |
 | :--- | :--- | :--- |
 | `Failed to access file "undefined"` | MCP tab is inactive in IDE | Switch to Mode A (Pencil CLI) or re-run `antigravity-ide <file.pen>` |
+| Interactive shell hangs on stdin | Non-TTY child process buffers stdin stream | Use direct JSON script modification (Pattern 2) or single-flush `cp.execSync` with `input` |
+| Export times out / takes 5–8s | `pen --export` boots internal editor agent session | Use `WaitMsBeforeAsync: 8000+` and wait for code 0 before reading PNG |
 | `Invalid properties: /iconFont, /fontSize` | Using invalid Icon properties | Use `library: "lucide"`, `icon: "name"`, `width`, `height`, `fill` |
 | Icon not showing | Outdated icon name in Lucide | Use standard Lucide names (e.g., `house` instead of `home`, `history` instead of `clock`) |
 | Geometric circles look harsh | Missing blur on background glows | Add `effect: [{ type: "blur", radius: 90 }]` to glowing ellipses |
