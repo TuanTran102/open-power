@@ -9,49 +9,52 @@ Comprehensive guide for creating, inspecting, and modifying `.pen` vector design
 
 ---
 
-## 1. Runtime Selection (Dual-Mode)
+## 1. Runtime Selection (Dual-Mode: CLI First)
 
-Always check CLI availability first:
+**MANDATORY CHECK**: You MUST always check CLI availability first before touching any `.pen` files:
 
 ```bash
 which pen 2>/dev/null
 ```
 
-* **Mode A: Pencil CLI (Preferred)**: Run if `pen` is found. Works 100% headless, zero GUI required, no external AI API key needed, zero disk pollution.
-* **Mode B: Pencil MCP (Fallback)**: Use only if `pen` is not installed. Requires an active editor tab open in Antigravity IDE / VS Code.
+* **Mode A: Pencil CLI (STRICTLY PREFERRED)**: If `which pen` returns a path, **you MUST use Mode A**. Works 100% headless in RAM, requires zero GUI, no active editor tab, no external AI API keys, and zero disk pollution.
+* **Mode B: Pencil MCP (FALLBACK ONLY)**: Use **ONLY** if `pen` CLI is not installed on the system. Requires an active editor tab open in Antigravity IDE / VS Code.
 
 ---
 
-## 2. Mode A: Pencil CLI Execution (Zero-File Inline Pattern)
+## 2. Mode A: Pencil CLI Execution (Node.js Inline Pattern)
 
-> **Critical Note**: Do NOT use `pen --prompt "..."` because it delegates to Claude Code and requires extra AI API keys (`Not logged in` error). Always use **`pen interactive`** via the Python one-liner below to run directly on the local vector engine in RAM.
+> **Critical Note**: 
+> 1. Do NOT use `pen --prompt "..."` because it delegates to external Claude Code and requires AI API keys (`Not logged in` error).
+> 2. Always use **`pen interactive`** via the Node.js one-liner below. Node.js natively handles JSON and multi-line JavaScript string escaping without syntax collisions.
 
+### Creating a New Design:
 ```bash
-# Execute design snippet directly in RAM (handles multi-line JS & escaping safely)
-python3 -c "
-import subprocess, json
+# Execute design snippet directly in RAM via Node.js (safe stringification & streaming)
+node -e '
+const cp = require("child_process");
+const fs = require("fs");
 
-design_code = '''
+const designCode = `
 const pos = FindEmptySpace({ width: 1440, height: 900, padding: 40 });
 const screen = Insert(document, {
-  type: 'frame', name: 'App Canvas', x: pos.x, y: pos.y, width: 1440, height: 900,
-  fill: '#0B0F19', layout: 'vertical', padding: 32, gap: 24, placeholder: true
+  type: "frame", name: "App Canvas", x: pos.x, y: pos.y, width: 1440, height: 900,
+  fill: "#0B0F19", layout: "vertical", padding: 32, gap: 24, placeholder: true
 });
 
 Insert(screen, {
-  type: 'text', name: 'Title', fontFamily: 'Inter', fontSize: 32, fontWeight: 'bold',
-  fill: '#FFFFFF', content: 'Design Title'
+  type: "text", name: "Title", fontFamily: "Inter", fontSize: 32, fontWeight: "bold",
+  fill: "#FFFFFF", content: "Design Title"
 });
 
 Update(screen, { placeholder: false });
-'''
+`;
 
-# Ensure .design directory exists
-import os; os.makedirs('.design', exist_ok=True)
+fs.mkdirSync(".design", { recursive: true });
 
-p = subprocess.Popen(['pen', 'interactive', '-o', '.design/screen.pen'], stdin=subprocess.PIPE, text=True)
-p.communicate('execute({ input: ' + json.dumps(design_code) + ' })\\nsave()\\nexit()\\n')
-"
+const proc = cp.spawn("pen", ["interactive", "-o", ".design/screen.pen"], { stdio: ["pipe", "inherit", "inherit"] });
+proc.stdin.write(`execute({ input: ${JSON.stringify(designCode)} })\nsave()\nexit()\n`);
+'
 
 # Auto-export PNG and visually inspect
 pen --in .design/screen.pen --export .design/screen.png
@@ -62,29 +65,36 @@ pen --in .design/screen.pen --export .design/screen.png
 ### Editing / Appending to Existing Files:
 To edit or add screens side-by-side without recreating from scratch:
 ```bash
-python3 -c "
-import subprocess, json
-edit_code = '''
+node -e '
+const cp = require("child_process");
+
+const editCode = `
 // Add adjacent screen to the right
-const pos = FindEmptySpace({ width: 1440, height: 900, padding: 80, direction: 'right' });
-const detailScreen = Insert(document, { type: 'frame', name: 'Detail View', x: pos.x, y: pos.y, width: 1440, height: 900, fill: '#0F172A', placeholder: true });
+const pos = FindEmptySpace({ width: 1440, height: 900, padding: 80, direction: "right" });
+const detailScreen = Insert(document, { type: "frame", name: "Detail View", x: pos.x, y: pos.y, width: 1440, height: 900, fill: "#0F172A", placeholder: true });
 Update(detailScreen, { placeholder: false });
-'''
-p = subprocess.Popen(['pen', 'interactive', '-i', '.design/screen.pen', '-o', '.design/screen.pen'], stdin=subprocess.PIPE, text=True)
-p.communicate('execute({ input: ' + json.dumps(edit_code) + ' })\\nsave()\\nexit()\\n')
-"
+`;
+
+const proc = cp.spawn("pen", ["interactive", "-i", ".design/screen.pen", "-o", ".design/screen.pen"], { stdio: ["pipe", "inherit", "inherit"] });
+proc.stdin.write(`execute({ input: ${JSON.stringify(editCode)} })\nsave()\nexit()\n`);
+'
+
+# Auto-export PNG after editing
+pen --in .design/screen.pen --export .design/screen.png
 ```
 
 ---
 
-## 3. Mode B: Pencil MCP Execution (Fallback)
+## 3. Mode B: Pencil MCP Execution (FALLBACK ONLY)
+
+> Use **ONLY** when `which pen` returns nothing (CLI is not installed).
 
 ```bash
 mkdir -p .design
 touch .design/screen.pen
 "/Applications/Antigravity IDE.app/Contents/Resources/app/bin/antigravity-ide" .design/screen.pen
 ```
-Call MCP tool `execute`:
+Call MCP tool `execute` (or connect via stdio JSON-RPC if server is disabled in `mcp_config.json`):
 ```javascript
 execute({
   filePath: ".design/screen.pen",
