@@ -357,6 +357,7 @@ const DEFAULT_GITIGNORE_PATTERNS = [
     ".codex/",
     ".superpowers/",
     ".worktrees/",
+    ".design/",
 ];
 
 /**

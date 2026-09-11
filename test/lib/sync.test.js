@@ -372,7 +372,7 @@ describe("sync & target lifecycle", () => {
         const result = ensureGitignore(tempDir);
         assert.equal(result.created, true);
         assert.equal(result.updated, false);
-        assert.equal(result.addedPatterns.length, 8);
+        assert.equal(result.addedPatterns.length, 9);
         assert.ok(fs.existsSync(result.gitignorePath));
         const content = fs.readFileSync(result.gitignorePath, "utf8");
         assert.ok(content.includes("# Open-Power & AI Agents"));
@@ -384,6 +384,7 @@ describe("sync & target lifecycle", () => {
         assert.ok(content.includes(".codex/"));
         assert.ok(content.includes(".superpowers/"));
         assert.ok(content.includes(".worktrees/"));
+        assert.ok(content.includes(".design/"));
     });
 
     it("ensureGitignore appends only missing patterns and preserves existing content", () => {

@@ -1,119 +1,173 @@
 ---
 name: designing-with-pencil
-description: Use when creating, viewing, or modifying .pen design files and UI mockups on the canvas via Pencil MCP
+description: Use when creating, viewing, or modifying .pen design files and UI mockups via Pencil CLI (preferred) or Pencil MCP
 ---
 
 # Designing with Pencil
 
-## Overview
+Comprehensive guide for creating, inspecting, and modifying `.pen` vector design files for Web and Mobile interfaces without trial-and-error.
 
-The Pencil MCP allows automated creation, inspection, and modification of `.pen` design files (web/mobile apps, design systems, and components).
+---
 
-`.pen` files are encrypted and managed by the Pencil IDE extension. Interacting with them requires an active editor tab on the canvas.
+## 1. Runtime Selection (Dual-Mode)
 
-## Automated Workflow
-
-To create or modify designs automatically:
-
-```dot
-digraph pencil_workflow {
-    "Need to design UI / .pen file" [shape=box];
-    "File exists?" [shape=diamond];
-    "touch /path/to/file.pen" [shape=box];
-    "Launch in IDE: antigravity-ide <file.pen>" [shape=box];
-    "Inspect state: get_app_state" [shape=box];
-    "Execute design snippet: execute" [shape=box];
-    "Verify visual layout on Canvas" [shape=box];
-
-    "Need to design UI / .pen file" -> "File exists?";
-    "File exists?" -> "touch /path/to/file.pen" [label="no"];
-    "File exists?" -> "Launch in IDE: antigravity-ide <file.pen>" [label="yes"];
-    "touch /path/to/file.pen" -> "Launch in IDE: antigravity-ide <file.pen>";
-    "Launch in IDE: antigravity-ide <file.pen>" -> "Inspect state: get_app_state";
-    "Inspect state: get_app_state" -> "Execute design snippet: execute";
-    "Execute design snippet: execute" -> "Verify visual layout on Canvas";
-}
-```
-
-### Step 1: Ensure File Exists & Active in Editor
-
-The Pencil extension requires the `.pen` file to be open in an active tab:
+Always check CLI availability first:
 
 ```bash
-# 1. Create file if not existing
-touch /Volumes/KIOXIA/Projects/open-power/designs/my-screen.pen
-
-# 2. Automatically open & focus the canvas tab in Antigravity IDE
-"/Applications/Antigravity IDE.app/Contents/Resources/app/bin/antigravity-ide" /Volumes/KIOXIA/Projects/open-power/designs/my-screen.pen
+which pen 2>/dev/null
 ```
 
-### Step 2: Execute Design Code
+* **Mode A: Pencil CLI (Preferred)**: Run if `pen` is found. Works 100% headless, zero GUI required, no external AI API key needed, zero disk pollution.
+* **Mode B: Pencil MCP (Fallback)**: Use only if `pen` is not installed. Requires an active editor tab open in Antigravity IDE / VS Code.
 
-Execute JavaScript snippets using the `execute` tool against the active `.pen` file.
+---
 
-#### Example Execution via stdio JSON-RPC:
+## 2. Mode A: Pencil CLI Execution (Zero-File Inline Pattern)
 
-```javascript
-node -e '
-const cp = require("child_process");
-const proc = cp.spawn("/Users/alex/.pencil/mcp/antigravity_ide/out/mcp-server-darwin-arm64", ["--app", "antigravity_ide"]);
+> **Critical Note**: Do NOT use `pen --prompt "..."` because it delegates to Claude Code and requires extra AI API keys (`Not logged in` error). Always use **`pen interactive`** via the Python one-liner below to run directly on the local vector engine in RAM.
 
-const initMsg = JSON.stringify({jsonrpc: "2.0", id: 1, method: "initialize", params: {protocolVersion: "2024-11-05", capabilities: {}, clientInfo: {name: "agent", version: "1.0"}}});
-const execMsg = JSON.stringify({
-  jsonrpc: "2.0",
-  id: 2,
-  method: "tools/call",
-  params: {
-    name: "execute",
-    arguments: {
-      filePath: "/Volumes/KIOXIA/Projects/open-power/designs/my-screen.pen",
-      input: `
-const pos = FindEmptySpace({width: 800, height: 600, padding: 40});
-const screenId = Insert(document, {type: "frame", name: "App Screen", x: pos.x, y: pos.y, width: 800, height: 600, fill: "#0F172A", cornerRadius: 16, layout: "vertical", padding: 24, gap: 16, placeholder: true});
+```bash
+# Execute design snippet directly in RAM (handles multi-line JS & escaping safely)
+python3 -c "
+import subprocess, json
 
-// Header
-const header = Insert(screenId, {type: "frame", name: "Header", width: "fill_container", layout: "horizontal", justifyContent: "space-between", alignItems: "center"});
-Insert(header, {type: "text", name: "Title", fontFamily: "Inter", fontSize: 22, fontWeight: "bold", fill: "#FFFFFF", content: "Dashboard Overview"});
-
-Update(screenId, {placeholder: false});
-`
-    }
-  }
+design_code = '''
+const pos = FindEmptySpace({ width: 1440, height: 900, padding: 40 });
+const screen = Insert(document, {
+  type: 'frame', name: 'App Canvas', x: pos.x, y: pos.y, width: 1440, height: 900,
+  fill: '#0B0F19', layout: 'vertical', padding: 32, gap: 24, placeholder: true
 });
 
-proc.stdin.write(initMsg + "\n");
-setTimeout(() => proc.stdin.write(execMsg + "\n"), 400);
-setTimeout(() => proc.kill(), 2500);
-'
+Insert(screen, {
+  type: 'text', name: 'Title', fontFamily: 'Inter', fontSize: 32, fontWeight: 'bold',
+  fill: '#FFFFFF', content: 'Design Title'
+});
+
+Update(screen, { placeholder: false });
+'''
+
+# Ensure .design directory exists
+import os; os.makedirs('.design', exist_ok=True)
+
+p = subprocess.Popen(['pen', 'interactive', '-o', '.design/screen.pen'], stdin=subprocess.PIPE, text=True)
+p.communicate('execute({ input: ' + json.dumps(design_code) + ' })\\nsave()\\nexit()\\n')
+"
+
+# Auto-export PNG and visually inspect
+pen --in .design/screen.pen --export .design/screen.png
 ```
 
-## DSL & Schema Reference
+> **Visual Self-Verification**: Always call `view_file` on the exported `.png` to evaluate contrast, visual balance, blur realism, and focus states.
 
-### 1. Operations
+### Editing / Appending to Existing Files:
+To edit or add screens side-by-side without recreating from scratch:
+```bash
+python3 -c "
+import subprocess, json
+edit_code = '''
+// Add adjacent screen to the right
+const pos = FindEmptySpace({ width: 1440, height: 900, padding: 80, direction: 'right' });
+const detailScreen = Insert(document, { type: 'frame', name: 'Detail View', x: pos.x, y: pos.y, width: 1440, height: 900, fill: '#0F172A', placeholder: true });
+Update(detailScreen, { placeholder: false });
+'''
+p = subprocess.Popen(['pen', 'interactive', '-i', '.design/screen.pen', '-o', '.design/screen.pen'], stdin=subprocess.PIPE, text=True)
+p.communicate('execute({ input: ' + json.dumps(edit_code) + ' })\\nsave()\\nexit()\\n')
+"
+```
 
-| Function | Description | Example |
-|----------|-------------|---------|
-| `FindEmptySpace({width, height, padding, direction})` | Finds empty canvas space | `const pos = FindEmptySpace({width: 800, height: 600, padding: 40});` |
-| `Insert(parent, nodeData)` | Inserts a new node | `const card = Insert(parent, {type: "frame", layout: "vertical"});` |
-| `Update(nodeId, updateData)` | Updates existing node properties | `Update(card, {placeholder: false});` |
-| `Copy(nodeId, parent, options)` | Duplicates existing node | `const clone = Copy(cardId, document, {x: pos.x, y: pos.y});` |
-| `Delete(nodeId)` | Deletes a node | `Delete(oldCardId);` |
-| `SetVariables(vars)` | Defines design token variables | `SetVariables({"primary": {type: "color", value: "#3B82F6"}});` |
+---
 
-### 2. Layout & Styling Rules
+## 3. Mode B: Pencil MCP Execution (Fallback)
 
-* **Flexbox Layout**: Use `layout: "horizontal"` or `"vertical"` on frames.
-* **Dynamic Sizing**: Prefer `width: "fill_container"` or `"fit_content"` instead of hardcoded numbers.
-* **Alignment values**: `alignItems` and `justifyContent` accept `"start"`, `"center"`, `"end"`, `"space-between"`. (Do **NOT** use `"baseline"`).
-* **Text Visibility**: Text nodes **must** define `fill` (e.g. `fill: "#FFFFFF"`), otherwise they are invisible.
-* **Multi-line Text**: Set `textGrowth: "fixed-width"` and `width: "fill_container"` when text should wrap.
-* **Placeholder Pattern**: Root containers **must** be created with `placeholder: true`, and unset with `Update(screenId, {placeholder: false})` once children are inserted.
+```bash
+mkdir -p .design
+touch .design/screen.pen
+"/Applications/Antigravity IDE.app/Contents/Resources/app/bin/antigravity-ide" .design/screen.pen
+```
+Call MCP tool `execute`:
+```javascript
+execute({
+  filePath: ".design/screen.pen",
+  input: `
+    const pos = FindEmptySpace({ width: 1440, height: 900, padding: 40 });
+    const screen = Insert(document, { type: "frame", x: pos.x, y: pos.y, width: 1440, height: 900, fill: "#0B0F19", placeholder: true });
+    Update(screen, { placeholder: false });
+  `
+});
+```
 
-## Common Mistakes & Solutions
+---
 
-| Issue | Cause | Fix |
-|-------|-------|-----|
-| `Failed to access file "undefined"` | No `.pen` canvas tab is active in IDE | Run `antigravity-ide <path/to/file.pen>` to focus tab |
-| `alignItems expected one of: "start", "center", "end"` | Used invalid CSS value like `"baseline"` | Use `"center"` or `"start"` |
-| Text is not visible on canvas | Missing `fill` attribute on text node | Always supply `fill: "#HEX"` on text |
-| Duplicate ID conflicts | Re-running snippet with hardcoded IDs | Rely on returned IDs from `Insert()` / variables |
+## 4. Complete DSL & Schema Reference
+
+### Essential Operations
+
+| Function | Purpose | Example |
+| :--- | :--- | :--- |
+| `FindEmptySpace({width, height, padding, direction})` | Finds vacant canvas space | `const pos = FindEmptySpace({ width: 1440, height: 900, padding: 40 });` |
+| `Insert(parent, nodeData)` | Inserts a new node | `const card = Insert(parent, { type: "frame", layout: "vertical" });` |
+| `Update(nodeId, updateData)` | Modifies node properties | `Update(card, { placeholder: false });` |
+| `Delete(nodeId)` | Removes a node | `Delete(oldNodeId);` |
+| `Generate(nodeId, "stock", query)` | Fetches real Unsplash photo | `Generate(posterFrame, "stock", "desert dune cinematic");` |
+
+### Node Properties & Layout Rules
+
+1. **Root Screens & Placeholder Pattern**:
+   * Root frames **must** be created with `placeholder: true`, and unset via `Update(screenId, { placeholder: false })` after inserting child elements.
+
+2. **Frames & Flexbox Layout**:
+   * Direction: `layout: "horizontal"` or `"vertical"`.
+   * Sizing: Use `width: "fill_container"`, `height: "fill_container"`, or numeric pixels.
+   * Alignment: `alignItems` and `justifyContent` accept `"start"`, `"center"`, `"end"`, `"space-between"` (do **NOT** use `"baseline"`).
+   * Absolute Positioning: To place floating glows or badges inside a flex frame, use `layoutPosition: "absolute"`, `x: ..., y: ...`.
+
+3. **Text Nodes**:
+   * Text nodes **must** declare `fill: "#HEX"`, otherwise they are invisible.
+   * Multi-line text wrapping: `textGrowth: "fixed-width"` with `width: "fill_container"`.
+
+4. **Icons (Exact Schema)**:
+   * Do **NOT** use `iconFont`, `iconName`, or `fontSize`.
+   * Use Lucide icons:
+     ```javascript
+     Insert(parent, {
+       type: "icon",
+       library: "lucide",
+       icon: "play",      // Valid Lucide name (e.g., 'house' not 'home', 'history' not 'clock')
+       width: 18,
+       height: 18,
+       fill: "#FFFFFF"
+     });
+     ```
+
+5. **Effects (Blur & Drop Shadows)**:
+   * Ambient light / Ambilight: Always apply Gaussian blur to avoid harsh geometric edges:
+     `effect: [{ type: "blur", radius: 90 }]`
+   * Drop shadow / Glows:
+     `effect: [{ type: "shadow", enabled: true, shadowType: "outer", offset: { x: 0, y: 16 }, blur: 40, color: "rgba(245, 158, 11, 0.65)" }]`
+
+---
+
+## 5. Troubleshooting & Common Errors
+
+| Error | Root Cause | Solution |
+| :--- | :--- | :--- |
+| `Failed to access file "undefined"` | MCP tab is inactive in IDE | Switch to Mode A (Pencil CLI) or re-run `antigravity-ide <file.pen>` |
+| `Invalid properties: /iconFont, /fontSize` | Using invalid Icon properties | Use `library: "lucide"`, `icon: "name"`, `width`, `height`, `fill` |
+| Icon not showing | Outdated icon name in Lucide | Use standard Lucide names (e.g., `house` instead of `home`, `history` instead of `clock`) |
+| Geometric circles look harsh | Missing blur on background glows | Add `effect: [{ type: "blur", radius: 90 }]` to glowing ellipses |
+
+---
+
+## 6. On-Demand Debugging & Unknown Schema Lookup
+
+> **CRITICAL GUARDRAIL FOR AGENTS**:
+> * **DO NOT** execute the commands below during standard design work. The cheatsheet in Section 4 is completely self-contained for 99% of UI tasks.
+> * **ONLY** run these lookup commands if:
+>   1. An `execute` call throws an unexpected `Invalid properties` or syntax error that cannot be resolved.
+>   2. The user specifically asks for advanced, unlisted vector node types (e.g. `mesh_gradient`, `polygon`, `script`).
+
+| When to Run | Lookup Command (Runs in RAM, zero files) |
+| :--- | :--- |
+| Inspect complete TypeScript types | `echo 'read_skill({ path: "pen-schema.md" })' \| pen interactive -o /tmp/ref.pen` |
+| Deep dive into functions / edge cases | `echo 'read_skill({ path: "execute.md" })' \| pen interactive -o /tmp/ref.pen` |
+| Query pre-built styles and palettes | `echo 'get_style()' \| pen interactive -o /tmp/ref.pen` |
