@@ -17,50 +17,97 @@ Comprehensive guide for creating, inspecting, and modifying `.pen` vector design
 which pen 2>/dev/null
 ```
 
-* **Mode A: Pencil CLI & JSON Native (STRICTLY PREFERRED)**: If `which pen` returns a path, **you MUST use Mode A**. Works 100% headless in RAM, requires zero GUI, no active editor tab, and zero disk pollution.
-  - **New canvases / complex layout generation**: Use `pen interactive` (with helper functions like `FindEmptySpace`, `Insert`).
-  - **Editing existing designs (colors, fills, effects, hierarchy)**: `.pen` files are **100% standard JSON** (`version: "2.17"`). Modifying JSON directly via Node.js script is instantaneous, deterministic, and avoids TTY stdin buffering issues.
+* **Mode A: JSON-Native First & Pencil CLI (STRICTLY PREFERRED)**: If `which pen` returns a path, **you MUST use Mode A**. Works 100% headless in RAM, requires zero GUI, no active editor tab, and zero disk pollution.
+  - **Default Workflow (95% of tasks)**: **Direct JSON**. Create new screens and edit existing designs directly as standard JSON files (`version: "2.17"`). It runs in ~1ms, produces zero I/O buffer hangs, and grants full control over design tokens.
+  - **Specialized `pen interactive` (Only 2 exceptions)**: Use `pen interactive` strictly when you need backend services: (1) Cloning a live website into vector layers via `browser({ action: "import-to-canvas" })`, or (2) Fetching real Unsplash stock photos via `Generate(nodeId, "stock", query)`.
 * **Mode B: Pencil MCP (FALLBACK ONLY)**: Use **ONLY** if `pen` CLI is not installed on the system. Requires an active editor tab open in Antigravity IDE / VS Code.
 
 ---
 
 ## 2. Mode A: Execution Patterns
 
-> **Critical Notes**: 
+> **Critical Rules**: 
 > 1. Do NOT use `pen --prompt "..."` because it delegates to external Claude Code and requires AI API keys (`Not logged in` error).
-> 2. **Direct JSON Editing for Existing Files**: When modifying styles, fills, glass effects, borders, or text on existing screens, edit the `.pen` file directly as JSON using Node.js. It is 10x faster and eliminates stdin hanging in non-TTY environments.
-> 3. **Piping to `pen interactive`**: When using `pen interactive`, pass all commands at once via piped stdin (e.g. `echo "..." | pen interactive ...`) rather than keeping an unbuffered stream open.
+> 2. **JSON-Native by Default**: Whether creating a new design or editing an existing file, generate/modify the `.pen` file directly as JSON. It is 100x faster than booting interactive shells and eliminates all stdin/TTY buffering risks.
+> 3. **Interactive Mode Reserved For**: Web cloning (`browser: import-to-canvas`) and stock image fetching (`Generate stock`). Always pipe input all at once via `cp.execSync` when using it.
 
-### Pattern 1: Creating a New Canvas via `pen interactive`
+### Pattern 1: Creating a New Design via JSON-Native (Recommended Default)
+Write the complete `.pen` JSON directly from your agent script or file tools:
 ```bash
 node -e '
-const cp = require("child_process");
 const fs = require("fs");
-
-const designCode = `
-const pos = FindEmptySpace({ width: 1440, height: 900, padding: 40 });
-const screen = Insert(document, {
-  type: "frame", name: "App Canvas", x: pos.x, y: pos.y, width: 1440, height: 900,
-  fill: "#0B0F19", layout: "vertical", padding: 32, gap: 24, placeholder: true
-});
-
-Insert(screen, {
-  type: "text", name: "Title", fontFamily: "Inter", fontSize: 32, fontWeight: "bold",
-  fill: "#FFFFFF", content: "Design Title"
-});
-
-Update(screen, { placeholder: false });
-`;
-
 fs.mkdirSync(".design", { recursive: true });
 
-// Pipe entire session in one flush to avoid stdin hang
-const script = `execute({ input: ${JSON.stringify(designCode)} })\nsave()\nexit()\n`;
-cp.execSync("pen interactive -o .design/screen.pen", { input: script, stdio: ["pipe", "inherit", "inherit"] });
+const randId = () => Math.random().toString(36).substring(2, 7);
+
+const doc = {
+  version: "2.17",
+  variables: {
+    "color/bg": { type: "color", value: "#0B0F19" },
+    "color/primary": { type: "color", value: "#FFFFFF" }
+  },
+  children: [
+    {
+      type: "frame",
+      id: randId(),
+      name: "App Canvas",
+      x: 0,
+      y: 0,
+      width: 1440,
+      height: 900,
+      fill: "#0B0F19",
+      layout: "vertical",
+      padding: 32,
+      gap: 24,
+      children: [
+        {
+          type: "text",
+          id: randId(),
+          name: "Title",
+          fontFamily: "Inter",
+          fontSize: 32,
+          fontWeight: "bold",
+          fill: "#FFFFFF",
+          content: "Design Title"
+        }
+      ]
+    }
+  ]
+};
+
+fs.writeFileSync(".design/screen.pen", JSON.stringify(doc, null, 2));
+console.log("Created .design/screen.pen directly via JSON");
 '
 ```
 
-### Pattern 2: Fast Editing Existing Files via JSON
+### Pattern 2: When to Use `pen interactive` (Web Clone & Stock Fetching Only)
+Use `pen interactive` ONLY when delegating to backend services:
+```bash
+# Example A: Clone a real web page to editable canvas layers
+node -e '
+const cp = require("child_process");
+const script = `
+browser({ action: "load-page", url: "https://example.com" })
+browser({ action: "import-to-canvas", target: "full-page" })
+save()
+exit()
+`;
+cp.execSync("pen interactive -o .design/imported.pen", { input: script, stdio: ["pipe", "inherit", "inherit"] });
+'
+
+# Example B: Generate dynamic stock photo from Unsplash
+node -e '
+const cp = require("child_process");
+const script = `
+Generate("targetCardId", "stock", "cinematic desert dunes")
+save()
+exit()
+`;
+cp.execSync("pen interactive -i .design/screen.pen -o .design/screen.pen", { input: script, stdio: ["pipe", "inherit", "inherit"] });
+'
+```
+
+### Pattern 3: Fast Editing Existing Files via JSON
 Because `.pen` is standard JSON, modifying node properties directly is the fastest, most reliable method:
 ```bash
 node -e '
@@ -90,7 +137,7 @@ console.log("Updated design JSON successfully");
 '
 ```
 
-### Pattern 3: Pre-flight Style & Token Inspection (Reading Existing Files)
+### Pattern 4: Pre-flight Style & Token Inspection (Reading Existing Files)
 Before modifying an existing design, inspect established design tokens and style recipes:
 ```bash
 node -e '
@@ -113,7 +160,7 @@ console.log("Sample existing styles:", JSON.stringify(styles.slice(0, 5), null, 
 '
 ```
 
-### Pattern 4: Best Practices When Creating New Designs
+### Pattern 5: Best Practices When Creating New Designs
 To make files effortless to inspect, maintain, and extend:
 1. **Declare Root `variables`**: Store primary palette and radius tokens at the document root:
    ```json
@@ -126,7 +173,7 @@ To make files effortless to inspect, maintain, and extend:
 2. **Flag Reusable Components**: Mark primary interactive components (buttons, cards, navigation items) with `"reusable": true`. Future agents can find them instantly with `Get(n => n.reusable)`.
 3. **Semantic Naming**: Include state or role in node names (e.g. `"Nav Item - Home [Focused]"`, `"Floating Glass Nav Dock"`).
 
-### Pattern 5: Visual Export & Self-Verification
+### Pattern 6: Visual Export & Self-Verification
 To render and inspect the visual output:
 ```bash
 pen --in .design/screen.pen --export .design/screen.png
