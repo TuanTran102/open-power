@@ -90,7 +90,43 @@ console.log("Updated design JSON successfully");
 '
 ```
 
-### Pattern 3: Visual Export & Self-Verification
+### Pattern 3: Pre-flight Style & Token Inspection (Reading Existing Files)
+Before modifying an existing design, inspect established design tokens and style recipes:
+```bash
+node -e '
+const fs = require("fs");
+const doc = JSON.parse(fs.readFileSync(".design/screen.pen", "utf8"));
+
+// 1. Check root design tokens if present
+if (doc.variables) console.log("Root Variables:", JSON.stringify(doc.variables, null, 2));
+
+// 2. Scan unique glass / card styles across nodes
+const styles = [];
+function scan(n) {
+  if (n.fill || n.stroke || n.effect) {
+    styles.push({ id: n.id, name: n.name, fill: n.fill, stroke: n.stroke, effect: n.effect, radius: n.cornerRadius });
+  }
+  if (n.children) n.children.forEach(scan);
+}
+scan(doc);
+console.log("Sample existing styles:", JSON.stringify(styles.slice(0, 5), null, 2));
+'
+```
+
+### Pattern 4: Best Practices When Creating New Designs
+To make files effortless to inspect, maintain, and extend:
+1. **Declare Root `variables`**: Store primary palette and radius tokens at the document root:
+   ```json
+   "variables": {
+     "glass/surface": { "type": "color", "value": "#ffffff14" },
+     "glass/stroke": { "type": "color", "value": "#ffffff4d" },
+     "radius/pill": { "type": "number", "value": 22 }
+   }
+   ```
+2. **Flag Reusable Components**: Mark primary interactive components (buttons, cards, navigation items) with `"reusable": true`. Future agents can find them instantly with `Get(n => n.reusable)`.
+3. **Semantic Naming**: Include state or role in node names (e.g. `"Nav Item - Home [Focused]"`, `"Floating Glass Nav Dock"`).
+
+### Pattern 5: Visual Export & Self-Verification
 To render and inspect the visual output:
 ```bash
 pen --in .design/screen.pen --export .design/screen.png
@@ -167,11 +203,52 @@ execute({
      });
      ```
 
-5. **Effects (Blur & Drop Shadows)**:
-   * Ambient light / Ambilight: Always apply Gaussian blur to avoid harsh geometric edges:
+5. **Effects & Visual Style Recipes**:
+   * **Liquid Glass / Frosted Glass Material**:
+     Combines translucent gradient, specular rim stroke, background blur, and dual shadows (inner specular edge + outer diffused drop shadow):
+     ```javascript
+     fill: {
+       type: "gradient",
+       gradientType: "linear",
+       rotation: 180,
+       colors: [
+         { color: "#ffffff2b", position: 0 },
+         { color: "#0a11224d", position: 0.5 },
+         { color: "#ffffff14", position: 1 }
+       ]
+     },
+     stroke: "#ffffff4d",
+     strokeWidth: 1.5,
+     cornerRadius: 36, // generous curve for organic glass feeling
+     effect: [
+       { type: "background_blur", radius: 50 },
+       { type: "shadow", shadowType: "inner", color: "#ffffff38", offset: { x: 0, y: 1.5 }, blur: 2 },
+       { type: "shadow", shadowType: "outer", color: "#0000008c", offset: { x: 0, y: 20 }, blur: 44 }
+     ]
+     ```
+   * **Active / 10-Foot Focus State (Apple TV / visionOS)**:
+     Capsule pill with glowing bloom shadow and high contrast:
+     ```javascript
+     cornerRadius: 22, // full capsule for height 44
+     fill: {
+       type: "gradient",
+       gradientType: "linear",
+       rotation: 180,
+       colors: [{ color: "#ffffff47", position: 0 }, { color: "#ffffff26", position: 1 }]
+     },
+     stroke: "#ffffff8c",
+     strokeWidth: 1.5,
+     effect: {
+       type: "shadow",
+       shadowType: "outer",
+       color: "#38bdf84d", // cyan/amber focus bloom
+       offset: { x: 0, y: 4 },
+       blur: 16
+     }
+     ```
+   * **Ambient Ambilight / Glows**:
+     Always apply Gaussian blur to avoid harsh geometric edges:
      `effect: [{ type: "blur", radius: 90 }]`
-   * Drop shadow / Glows:
-     `effect: [{ type: "shadow", enabled: true, shadowType: "outer", offset: { x: 0, y: 16 }, blur: 40, color: "rgba(245, 158, 11, 0.65)" }]`
 
 ---
 
