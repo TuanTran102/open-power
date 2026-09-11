@@ -61,6 +61,12 @@ describe("workflows / slash commands", () => {
         assert.ok(content.includes(".worktrees/"));
     });
 
+    it("archive workflow guides updating user documentation and README", () => {
+        const content = fs.readFileSync(path.join(workflowsDir, "archive.md"), "utf8");
+        assert.ok(content.includes("README.md"));
+        assert.ok(content.includes("user guides") || content.includes("User Documentation"));
+    });
+
     it("workflows enforce timestamp-prefixed naming convention YYYYMMDDHHmmss-<slug> and audit trail", () => {
         const specContent = fs.readFileSync(path.join(workflowsDir, "spec.md"), "utf8");
         assert.ok(specContent.includes("YYYYMMDDHHmmss"), "spec.md should guide YYYYMMDDHHmmss timestamp-prefixed change IDs");
