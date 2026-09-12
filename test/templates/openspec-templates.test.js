@@ -35,6 +35,18 @@ describe("templates / openspec", () => {
         assert.ok(content.includes(".pen"));
     });
 
+    it("design.md template contains Affected Files & Context Manifest section", () => {
+        const content = fs.readFileSync(path.join(templatesDir, "design.md"), "utf8");
+        assert.ok(content.includes("Affected Files & Context Manifest"), "design.md should contain Affected Files & Context Manifest");
+        assert.ok(content.includes("Target Files to Modify") || content.includes("Target Files"), "design.md should list target files");
+        assert.ok(content.includes("Test Files") || content.includes("Test"), "design.md should list test files");
+    });
+
+    it("tasks.md template requires target file and test file link syntax", () => {
+        const content = fs.readFileSync(path.join(templatesDir, "tasks.md"), "utf8");
+        assert.ok(content.includes("[target/file]") || content.includes("[Target File]") || content.includes("Test: [test/file]"), "tasks.md should mandate target and test file syntax");
+    });
+
     it("templates contain standardized YAML frontmatter metadata", () => {
         const changeTemplates = ["proposal.md", "design.md", "tasks.md", "delta.spec.md"];
         for (const file of changeTemplates) {

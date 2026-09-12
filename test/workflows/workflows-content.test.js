@@ -55,6 +55,46 @@ describe("workflows / slash commands", () => {
         assert.ok(content.includes(".worktrees/"));
     });
 
+    it("spec workflow guides capturing concrete file paths into design.md and tasks.md", () => {
+        const content = fs.readFileSync(path.join(workflowsDir, "spec.md"), "utf8");
+        assert.ok(
+            content.includes("Affected Files & Context Manifest") || content.includes("concrete file paths"),
+            "spec.md should guide capturing concrete file paths into design.md"
+        );
+        assert.ok(
+            content.includes("tasks.md") && (content.includes("concrete file") || content.includes("target file") || content.includes("file link")),
+            "spec.md should guide binding tasks.md to concrete files"
+        );
+    });
+
+    it("plan workflow mandates inheriting explicit file links from tasks.md", () => {
+        const content = fs.readFileSync(path.join(workflowsDir, "plan.md"), "utf8");
+        assert.ok(
+            content.includes("file link") || content.includes("concrete file") || content.includes("file path"),
+            "plan.md should mandate inheriting explicit file links from tasks.md"
+        );
+    });
+
+    it("implement workflow enforces bounded context handoff for subagents", () => {
+        const content = fs.readFileSync(path.join(workflowsDir, "implement.md"), "utf8");
+        assert.ok(
+            content.includes("target file") || content.includes("Target File"),
+            "implement.md should specify providing target file to subagents"
+        );
+        assert.ok(
+            content.includes("test file") || content.includes("Test File"),
+            "implement.md should specify providing test file to subagents"
+        );
+        assert.ok(
+            content.includes("forbid") || content.includes("prohibit") || content.includes("DO NOT") || content.includes("never"),
+            "implement.md should forbid unconstrained repo grepping"
+        );
+        assert.ok(
+            content.includes("grep") || content.includes("unconstrained") || content.includes("repo search"),
+            "implement.md should explicitly call out unconstrained searching/grepping"
+        );
+    });
+
     it("archive workflow guides merging branch and cleaning up worktree", () => {
         const content = fs.readFileSync(path.join(workflowsDir, "archive.md"), "utf8");
         assert.ok(content.includes("worktree remove"));
