@@ -30,11 +30,12 @@ Bridge the gap between product intent and codebase reality:
    - Will existing endpoints or function signatures change?
    - Will database schemas or configuration files require migration?
 
-4. **Map to OpenSpec Artifacts**:
+4. **Map to OpenSpec Artifacts & Context Manifest**:
    - Summarize findings into:
      - **Proposal context**: What modules need changes and why.
+     - **Affected Files & Context Manifest**: Compile concrete file paths for Target Files to Modify, Target Files to Create, Reference/Dependency Files, and Test Files to eliminate downstream repo searches.
      - **Delta Specs**: Specific requirements to add/modify/remove.
-     - **Tasks list**: High-level technical checklist.
+     - **Tasks list**: High-level technical checklist linking directly to target files and test files.
 
 ---
 

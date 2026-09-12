@@ -115,11 +115,20 @@ For frontend or UI/UX features, text specifications alone can leave ambiguity in
 
 ## 4. The 5-Step Development Loop
 
-1. **`/spec` (Explore & Spec)**: Brainstorm requirements (`brainstorming`), audit codebase and dependencies (`openspec-explore`), and author `.opow/changes/<change-id>/` (`proposal.md`, `design.md`, `tasks.md`, delta `specs/`).
-2. **`writing-plans` (`/plan`)**: Break down `tasks.md` into atomic TDD steps in `.opow/plans/<change-id>.plan.md`.
+1. **`/spec` (Explore & Spec)**: Brainstorm requirements (`brainstorming`), audit codebase and dependencies (`openspec-explore`), and author `.opow/changes/<change-id>/` (`proposal.md`, `design.md`, `tasks.md`, delta `specs/`). Populate `Affected Files & Context Manifest` in `design.md` and link all tasks in `tasks.md` directly to concrete file paths.
+2. **`writing-plans` (`/plan`)**: Break down `tasks.md` into atomic TDD steps in `.opow/plans/<change-id>.plan.md`, inheriting explicit file manifests and test targets.
 3. **`test-driven-development` (`/implement`)**: Set up an isolated workspace via `using-git-worktrees` (`.worktrees/<change-id>`), then implement each task using Red-Green-Refactor + subagents.
 4. **`/verify` (`verification-before-completion`)**: Validate 100% Acceptance Criteria and automated test suites.
 5. **`/archive`**: Merge delta specs into living specs (`.opow/specs/`), merge feature branch into `main`, clean up `.worktrees/<change-id>`, move the change folder to `.opow/archive/<change-id>/`, and move `.opow/plans/<change-id>.plan.md` to `.opow/archive/<change-id>/plan.md`.
 
 *(Note: `/explore` remains available as an optional standalone spike command for lightweight investigations without scaffolding files).*
+
+---
+
+## 5. File Manifest Pipeline & Bounded Subagent Execution
+
+To eliminate token waste and redundant codebase searches across workflows:
+1. **Explicit File Manifest Pipeline**: `/spec` records exact file paths into `design.md` (`Affected Files & Context Manifest`) and `tasks.md`. `/plan` carries these concrete paths forward into atomic plan steps.
+2. **Bounded Subagent Delegation**: When dispatching subagents in `/implement`, provide exact target files, test files, and test commands. Subagents are strictly forbidden from executing unconstrained repo grepping or open-ended workspace exploration when paths are already defined in the plan.
+
 
