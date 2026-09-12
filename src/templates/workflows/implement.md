@@ -32,8 +32,14 @@ description: Execute the implementation plan using strict Test-Driven Developmen
    - **Refactor**: Clean up the code while keeping all tests green.
    - **Commit**: Commit changes using the spec timestamp prefix: `git commit -m "[<timestamp>] <type>: <message>"` (e.g. `[20260902171500] feat: handle restart focus`).
 
-4. **Subagent Delegation (Optional)**:
-   - For isolated tasks, invoke `subagent-driven-development` to dispatch independent workers. Ensure commit messages adhere to the `[<timestamp>]` prefix.
+4. **Bounded Subagent Delegation (Optional)**:
+   - For isolated tasks, invoke `subagent-driven-development` to dispatch independent workers.
+   - **Bounded Context Handoff**: When delegating to a subagent, the prompt MUST provide:
+     1. Exact target file path(s) to modify or create.
+     2. Exact test file path(s) and specific test command.
+     3. The exact delta acceptance criteria and requirements to implement.
+   - **Prohibit Unconstrained Exploration**: Subagents are strictly forbidden from running unconstrained repo searches or repo grepping across the entire workspace; they MUST operate strictly within the provided target files and test files.
+   - Ensure commit messages adhere to the `[<timestamp>]` prefix.
 
 5. **Task Completion**:
    - Check off `- [x]` in `.opow/changes/<change-name>/tasks.md` and repeat until all tasks are complete.

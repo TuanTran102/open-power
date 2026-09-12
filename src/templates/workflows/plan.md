@@ -15,8 +15,9 @@ description: Transform an approved OpenSpec change into an actionable, atomic TD
 2. **Deconstruct into Atomic Tasks & Align `tasks.md`**:
    - Invoke `writing-plans`.
    - Synchronize and detail `.opow/changes/YYYYMMDDHHmmss-<slug>/tasks.md`.
+   - Inherit explicit file links and concrete file paths from `tasks.md` and `design.md` directly into atomic implementation steps without redundant repo grepping.
    - Map every task 1:1 to specific Acceptance Criteria from the Delta Specs.
-   - **Save the plan to `.opow/plans/YYYYMMDDHHmmss-<slug>.plan.md`** matching the change ID.
+   - **Save the plan to `.opow/plans/YYYYMMDDHHmmss-<slug>.plan.md`** matching the change ID. Include explicit file links, target test paths, and test commands in each atomic task.
 
 3. **Plan TDD Test Strategy**:
    - Specify unit/integration tests for each atomic step following Red-Green-Refactor.

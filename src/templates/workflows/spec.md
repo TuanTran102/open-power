@@ -10,15 +10,15 @@ description: Author a structured OpenSpec change proposal (proposal.md, design.m
 
 1. **Clarification, Exploration & Brainstorming**:
    - Invoke `brainstorming`, `openspec-explore`, and `spec-driven-development`.
-   - **Audit Codebase**: Trace existing control flows, schemas, APIs, and identify affected files/modules or potential breaking changes.
+   - **Audit Codebase**: Trace existing control flows, schemas, APIs, and identify affected files/modules or potential breaking changes. Record concrete file paths and test paths.
    - **Product Intent & Edge Cases**: Discuss requirements, constraints, and scope with the user.
 
 2. **Initialize Change Workspace**:
    - Create `.opow/changes/YYYYMMDDHHmmss-<slug>/` (using current timestamp `YYYYMMDDHHmmss` and short descriptive slug, e.g. `20260901143000-auth-feature`) with subfolder `specs/`.
    - Copy and populate standard templates from `.opow/templates/` with YAML frontmatter (`change_id`, `created_at`, `status`):
      - `proposal.md`: Why, Motivation, Scope, Non-Goals.
-     - `design.md`: Architecture overview, codebase audit findings, and technical decisions.
-     - `tasks.md`: Trackable checklist of implementation steps.
+     - `design.md`: Architecture overview, codebase audit findings, and technical decisions. Populate `## 3. Affected Files & Context Manifest` with concrete file paths discovered during exploration (target files to modify/create, reference files, test files) to eliminate redundant exploration downstream.
+     - `tasks.md`: Trackable checklist of implementation steps. Every task item MUST link directly to concrete target files `[target/file]` and corresponding test files `Test: [test/file]` to establish bounded execution.
      - `specs/<domain>.spec.md`: Delta Specs with `ADDED`, `MODIFIED`, `REMOVED` requirements and *Given-When-Then* scenarios.
 
 3. **User Review Gate**:
