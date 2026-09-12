@@ -17,13 +17,21 @@ status: proposed
 - **Screenshots / Visual Artifacts**: `![UI Mockup](path/to/screenshot.png)`
 - **Key Visual Contracts**: Layout hierarchy, responsive breakpoints, interaction states.
 
-## 3. Component Breakdown & Responsibilities
+## 3. Affected Files & Context Manifest
+*(Pre-discovered during exploration to ground downstream /plan and /implement without exploratory search)*
+- **Target Files to Modify**: `[path/to/existing/file]` - Core logic modifications.
+- **Target Files to Create**: `[path/to/new/file]` - New interfaces, modules, or services.
+- **Reference / Dependency Files**: `[path/to/dep]` - Relevant context, contracts, schemas.
+- **Test Files**: `[path/to/test]` - Target test harness and unit/integration test files.
+
+## 4. Component Breakdown & Responsibilities
 - **[Component 1]**: Purpose, interfaces, and dependencies.
 - **[Component 2]**: Purpose, interfaces, and dependencies.
 
-## 4. Data Models & Schemas
+## 5. Data Models & Schemas
 - Input/Output data contracts and JSON Schema definitions.
 
-## 5. Risks & Mitigations
+## 6. Risks & Mitigations
 - **Breaking Changes**: Impact on existing consumers and migration path.
 - **Performance & Security Considerations**: Edge cases, rate limits, latency.
+
