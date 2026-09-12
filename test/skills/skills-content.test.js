@@ -13,6 +13,22 @@ describe("skills / content validation", () => {
         assert.ok(content.includes("Delta Spec"));
     });
 
+    it("validates openspec-explore outputs concrete file paths and test paths for manifests", () => {
+        const skillPath = path.join(__dirname, "../../src/skills/openspec/openspec-explore/SKILL.md");
+        const content = fs.readFileSync(skillPath, "utf8");
+        assert.ok(content.includes("Affected Files") || content.includes("Context Manifest"), "openspec-explore should document mapping to context manifest");
+        assert.ok(content.includes("concrete file paths") || content.includes("Target Files"), "openspec-explore should mandate concrete file paths");
+        assert.ok(content.includes("test") && (content.includes("Test Files") || content.includes("test paths")), "openspec-explore should output test files");
+    });
+
+    it("validates spec-driven-development documents context manifests and bounded subagents", () => {
+        const skillPath = path.join(__dirname, "../../src/skills/openspec/spec-driven-development/SKILL.md");
+        const content = fs.readFileSync(skillPath, "utf8");
+        assert.ok(content.includes("Affected Files & Context Manifest") || content.includes("Context Manifest"), "spec-driven-development should document Affected Files & Context Manifest");
+        assert.ok(content.includes("Bounded") || content.includes("bounded"), "spec-driven-development should document bounded subagents");
+        assert.ok(content.includes("forbidden") || content.includes("prohibit") || content.includes("unconstrained"), "spec-driven-development should prohibit unconstrained repo grepping");
+    });
+
     it("validates spec-driven-development skill includes lifecycle & delta specs", () => {
         const skillPath = path.join(__dirname, "../../src/skills/openspec/spec-driven-development/SKILL.md");
         const content = fs.readFileSync(skillPath, "utf8");
