@@ -66,24 +66,24 @@ describe("skills / content validation", () => {
         assert.ok(content.includes("execute"));
     });
 
-    it("validates subagent-driven-development runs verification before /archive for OpenSpec plans", () => {
+    it("validates subagent-driven-development runs verification before /opow-archive for OpenSpec plans", () => {
         const skillPath = path.join(__dirname, "../../src/skills/upstream/subagent-driven-development/SKILL.md");
         const content = fs.readFileSync(skillPath, "utf8");
-        assert.ok(content.includes("verification-before-completion") && content.includes("/archive"), "subagent-driven-development should reference verification-before-completion and /archive");
+        assert.ok(content.includes("verification-before-completion") && content.includes("/opow-archive"), "subagent-driven-development should reference verification-before-completion and /opow-archive");
         assert.ok(content.includes("OpenSpec") || content.includes(".opow"), "subagent-driven-development should reference OpenSpec/.opow");
     });
 
-    it("validates executing-plans runs verification before /archive for OpenSpec plans", () => {
+    it("validates executing-plans runs verification before /opow-archive for OpenSpec plans", () => {
         const skillPath = path.join(__dirname, "../../src/skills/upstream/executing-plans/SKILL.md");
         const content = fs.readFileSync(skillPath, "utf8");
-        assert.ok(content.includes("verification-before-completion") && content.includes("/archive"), "executing-plans should reference verification-before-completion and /archive");
+        assert.ok(content.includes("verification-before-completion") && content.includes("/opow-archive"), "executing-plans should reference verification-before-completion and /opow-archive");
         assert.ok(content.includes("OpenSpec") || content.includes(".opow"), "executing-plans should reference OpenSpec/.opow");
     });
 
-    it("validates finishing-a-development-branch references OpenSpec /archive deferral", () => {
+    it("validates finishing-a-development-branch references OpenSpec /opow-archive deferral", () => {
         const skillPath = path.join(__dirname, "../../src/skills/upstream/finishing-a-development-branch/SKILL.md");
         const content = fs.readFileSync(skillPath, "utf8");
-        assert.ok(content.includes("/archive"), "finishing-a-development-branch should reference /archive");
+        assert.ok(content.includes("/opow-archive"), "finishing-a-development-branch should reference /opow-archive");
         assert.ok(content.includes("OpenSpec") || content.includes(".opow"), "finishing-a-development-branch should reference OpenSpec/.opow");
     });
 
@@ -110,6 +110,14 @@ describe("skills / content validation", () => {
         const sddPath = path.join(__dirname, "../../src/skills/openspec/spec-driven-development/SKILL.md");
         const sddContent = fs.readFileSync(sddPath, "utf8");
         assert.ok(sddContent.includes("200 lines") && sddContent.includes("progressively"), "spec-driven-development should instruct progressive reading for large specs");
+    });
+
+    it("validates spec-driven-development merges plan into tasks.md and documents /opow-fast fast-track", () => {
+        const sddPath = path.join(__dirname, "../../src/skills/openspec/spec-driven-development/SKILL.md");
+        const sddContent = fs.readFileSync(sddPath, "utf8");
+        assert.ok(!sddContent.includes(".plan.md"), "spec-driven-development should not reference .plan.md");
+        assert.ok(sddContent.includes("in-place") && sddContent.includes("tasks.md"), "spec-driven-development should document in-place tasks.md enrichment");
+        assert.ok(sddContent.includes("/opow-fast"), "spec-driven-development should document /opow-fast fast-track lane");
     });
 
     it("validates distilled upstream skills retain core gates and stay compact", () => {

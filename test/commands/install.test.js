@@ -30,10 +30,13 @@ describe("commands / install", () => {
             assert.ok(logs.some((l) => l.includes("Installing Superpowers + OpenSpec for Cline")));
             assert.ok(logs.some((l) => l.includes("Installing Superpowers + OpenSpec for Antigravity")));
             assert.ok(logs.some((l) => l.includes("⚡ Installed")));
-            assert.ok(logs.some((l) => l.includes("/sync-spec")));
+            assert.ok(logs.some((l) => l.includes("/opow-sync-spec")));
+            assert.ok(logs.some((l) => l.includes("/opow-fast")));
+            assert.ok(!logs.some((l) => l.includes("/fix")));
             assert.ok(fs.existsSync(path.join(tempDir, ".opow", "specs")));
             assert.ok(fs.existsSync(path.join(tempDir, ".opow", "changes")));
             assert.ok(fs.existsSync(path.join(tempDir, ".opow", "archive")));
+            assert.equal(fs.existsSync(path.join(tempDir, ".opow", "plans")), false);
             assert.ok(fs.existsSync(path.join(tempDir, ".cline", "skills")));
             assert.ok(fs.existsSync(path.join(tempDir, ".agent", "skills")));
             assert.ok(fs.existsSync(path.join(tempDir, ".gitignore")));

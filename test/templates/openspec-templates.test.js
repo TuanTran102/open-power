@@ -42,9 +42,11 @@ describe("templates / openspec", () => {
         assert.ok(content.includes("Test Files") || content.includes("Test"), "design.md should list test files");
     });
 
-    it("tasks.md template requires target file and test file link syntax", () => {
+    it("tasks.md template requires target file, test file link syntax, and plan_status", () => {
         const content = fs.readFileSync(path.join(templatesDir, "tasks.md"), "utf8");
         assert.ok(content.includes("[target/file]") || content.includes("[Target File]") || content.includes("Test: [test/file]"), "tasks.md should mandate target and test file syntax");
+        assert.ok(content.includes("plan_status:"), "tasks.md should include plan_status frontmatter");
+        assert.ok(content.includes("AC:"), "tasks.md should include AC mapping");
     });
 
     it("templates contain standardized YAML frontmatter metadata", () => {

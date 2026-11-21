@@ -20,10 +20,10 @@ This is not negotiable. You cannot rationalize your way out of this.
 **Invoke relevant or requested skills BEFORE any response or action** — including clarifying questions, exploring the codebase, or checking files. If it turns out wrong for the situation, you don't have to use it.
 
 **Before entering plan mode or writing code:**
-1. If exploring ideas or auditing the codebase: invoke `brainstorming` and `openspec-explore`.
-2. If designing a feature/API: invoke `spec-driven-development` to create/update the change proposal in `.opow/changes/YYYYMMDDHHmmss-<slug>/`.
+1. If exploring ideas or auditing the codebase: invoke `opow-brainstorming` and `opow-openspec-explore`.
+2. If designing a feature/API: invoke `opow-spec-driven-development` to create/update the change proposal in `.opow/changes/YYYYMMDDHHmmss-<slug>/`.
 3. Ensure Acceptance Criteria (*Given - When - Then*) and Delta Specs are defined.
-4. Then invoke `writing-plans` (saving plan to `.opow/plans/YYYYMMDDHHmmss-<slug>.plan.md`) and `test-driven-development`.
+4. Then invoke `opow-writing-plans` (enriching `.opow/changes/YYYYMMDDHHmmss-<slug>/tasks.md` in-place) and `opow-test-driven-development`.
 
 Then announce "Using [skill] to [purpose]" and follow the skill exactly. If it has a checklist, create a todo per item.
 
@@ -31,9 +31,9 @@ Then announce "Using [skill] to [purpose]" and follow the skill exactly. If it h
 
 When multiple skills apply, process and specification skills come first — they set the approach, then implementation skills carry it out.
 
-- "Let's explore/build X" → `brainstorming` + `openspec-explore` → `spec-driven-development` (create proposal in `.opow/changes/YYYYMMDDHHmmss-<slug>/`) → `writing-plans` (plan in `.opow/plans/`) → `test-driven-development`.
-- "Fix this bug" → `systematic-debugging` (root cause analysis) → domain skills → verification.
-- "Wrap up feature" → `verification-before-completion` (verify 100% Delta Acceptance Criteria) → `/archive` (merge into `.opow/specs/`).
+- "Let's explore/build X" → `opow-brainstorming` + `opow-openspec-explore` → `opow-spec-driven-development` (create proposal in `.opow/changes/YYYYMMDDHHmmss-<slug>/`) → `opow-writing-plans` (enrich `tasks.md` in-place) → `opow-test-driven-development`.
+- "Fix this bug" → `/opow-fast` (`opow-systematic-debugging` → `opow-test-driven-development` → `opow-verification-before-completion`).
+- "Wrap up feature" → `opow-verification-before-completion` (verify 100% Delta Acceptance Criteria) → `/opow-archive` (merge into `.opow/specs/`).
 
 ## Red Flags
 
@@ -59,9 +59,9 @@ These thoughts mean STOP—you're rationalizing:
 You are running inside **Claude Code** (Anthropic CLI). To use Superpowers and OpenSpec effectively in Claude Code:
 
 - **Skills Discovery:** Claude Code accesses project skills in `.claude/skills/`. When a skill is relevant, view its `SKILL.md` file using your file viewing tool before proceeding.
-- **Commands & Slash Workflows:** Slash commands and workflows are stored in `.claude/commands/` (`/explore`, `/spec`, `/plan`, `/implement`, `/archive`, `/sync-spec`). You can reference or execute these workflow instructions when prompted.
-- **OpenSpec & Workflows:** Specifications and plans reside in `.opow/` (`.opow/specs/`, `.opow/changes/`, `.opow/archive/`, and `.opow/plans/`). Refer to the `spec-driven-development` skill for the unified 4-step lifecycle.
-- **Subagents & Tool Execution:** For skills requiring subagent execution — `subagent-driven-development`, `dispatching-parallel-agents`, `requesting-code-review` — formulate clear, focused task boundaries for any delegated workers with their specific OpenSpec slice.
+- **Commands & Slash Workflows:** Slash commands and workflows are stored in `.claude/commands/` (`/opow-explore`, `/opow-spec`, `/opow-plan`, `/opow-implement`, `/opow-archive`, `/opow-fast`, `/opow-sync-spec`). You can reference or execute these workflow instructions when prompted.
+- **OpenSpec & Workflows:** Specifications and plans reside in `.opow/` (`.opow/specs/`, `.opow/changes/`, and `.opow/archive/`). Refer to the `opow-spec-driven-development` skill for the unified 4-step lifecycle.
+- **Subagents & Tool Execution:** For skills requiring subagent execution — `opow-subagent-driven-development`, `opow-dispatching-parallel-agents`, `opow-requesting-code-review` — formulate clear, focused task boundaries for any delegated workers with their specific OpenSpec slice.
 - **Verification:** Run test commands and verify 100% of Acceptance Criteria before reporting completion.
 
 ## User Instructions

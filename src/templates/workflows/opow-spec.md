@@ -2,14 +2,15 @@
 description: Author a structured OpenSpec change proposal (proposal.md, design.md, tasks.md, delta specs) in .opow/changes/.
 ---
 
-# Spec Workflow (/spec)
+# Spec Workflow (/opow-spec)
 
 **Purpose**: Audit the codebase and author a structured OpenSpec change proposal in `.opow/changes/YYYYMMDDHHmmss-<slug>/` before writing any code.
+> **Fast-Track Lane**: For small bugfixes or scoped changes touching < 3 source files with no architectural/contract impact, use `/opow-fast` instead of full `/opow-spec`.
 
 ## Steps
 
 1. **Clarification, Exploration & Brainstorming**:
-   - Invoke `brainstorming`, `openspec-explore`, and `spec-driven-development`.
+   - Invoke `opow-brainstorming`, `opow-openspec-explore`, and `opow-spec-driven-development`.
    - **Read Relevant Living Specs First (Selective & Progressive)**:
      - List domain folders under `.opow/specs/` (do **NOT** read all specs blindly).
      - Select ONLY the relevant `.opow/specs/<domain>/spec.md` file(s) matching the requested feature.
@@ -23,10 +24,10 @@ description: Author a structured OpenSpec change proposal (proposal.md, design.m
    - Copy and populate standard templates from `.opow/templates/` with YAML frontmatter (`change_id`, `created_at`, `status`):
      - `proposal.md`: Why, Motivation, Scope, Non-Goals.
      - `design.md`: Architecture overview, codebase audit findings, and technical decisions. Populate `## 3. Affected Files & Context Manifest` with concrete file paths discovered during exploration (target files to modify/create, reference files, test files) to eliminate redundant exploration downstream.
-     - `tasks.md`: Trackable checklist of implementation steps. Every task item MUST link directly to concrete target files `[target/file]` and corresponding test files `Test: [test/file]` to establish bounded execution.
+     - `tasks.md`: Trackable checklist of implementation steps. Every task item MUST link directly to concrete target files `[target/file]` and corresponding test files `Test: [test/file]` to establish bounded execution (enriched in-place into an atomic TDD plan during `/opow-plan`).
      - `specs/<domain>.spec.md`: Delta Specs with `ADDED`, `MODIFIED`, `REMOVED` requirements and *Given-When-Then* scenarios.
 
 3. **User Review Gate**:
    - Present the proposal and delta specs to the user/developer.
    - Verify architectural and contract accuracy of the specification.
-   - Wait for explicit approval before proceeding to `/plan`.
+   - Wait for explicit approval before proceeding to `/opow-plan`.

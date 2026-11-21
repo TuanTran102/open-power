@@ -32,6 +32,7 @@ describe("commands / status", () => {
             assert.ok(logs.some((l) => l.includes("Bundled upstream commit:") || l.includes("Upstream commit:")));
             assert.ok(logs.some((l) => l.includes("Status: Not installed in this project.")));
             assert.ok(logs.some((l) => l.includes("Specs:     ✗ Missing")));
+            assert.ok(!logs.some((l) => l.includes("Plans:")));
         } finally {
             console.log = origLog;
         }
@@ -41,10 +42,10 @@ describe("commands / status", () => {
         install("claude");
 
         // Intentionally remove one workflow and one skill to test ✗ (missing) markers
-        const missingWf = path.join(tempDir, ".claude", "commands", "spec.md");
+        const missingWf = path.join(tempDir, ".claude", "commands", "opow-spec.md");
         if (fs.existsSync(missingWf)) fs.rmSync(missingWf);
 
-        const missingSkill = path.join(tempDir, ".claude", "skills", "test-driven-development");
+        const missingSkill = path.join(tempDir, ".claude", "skills", "opow-test-driven-development");
         if (fs.existsSync(missingSkill)) fs.rmSync(missingSkill, { recursive: true, force: true });
 
         const logs = [];
@@ -54,9 +55,9 @@ describe("commands / status", () => {
         try {
             status("claude");
             assert.ok(logs.some((l) => l.includes("Target: Claude Code")));
-            assert.ok(logs.some((l) => l.includes("Platform wrapper: using-superpowers")));
-            assert.ok(logs.some((l) => l.includes("✗ (missing) /spec")));
-            assert.ok(logs.some((l) => l.includes("✗ (missing) test-driven-development")));
+            assert.ok(logs.some((l) => l.includes("Platform wrapper: opow-using-superpowers")));
+            assert.ok(logs.some((l) => l.includes("✗ (missing) /opow-spec")));
+            assert.ok(logs.some((l) => l.includes("✗ (missing) opow-test-driven-development")));
         } finally {
             console.log = origLog;
         }

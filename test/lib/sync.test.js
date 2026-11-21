@@ -98,13 +98,14 @@ describe("sync & target lifecycle", () => {
         assert.equal(readManifest(manifestPath), null);
     });
 
-    it("initializes .opow directory with specs, changes, archive, plans, and templates", () => {
+    it("initializes .opow directory with specs, changes, archive, and templates (without plans)", () => {
         const opowInfo = syncOpenSpec(tempDir);
 
         assert.ok(fs.existsSync(opowInfo.specsDir));
         assert.ok(fs.existsSync(opowInfo.changesDir));
         assert.ok(fs.existsSync(opowInfo.archiveDir));
-        assert.ok(fs.existsSync(opowInfo.plansDir));
+        assert.equal(opowInfo.plansDir, undefined);
+        assert.equal(fs.existsSync(path.join(tempDir, ".opow", "plans")), false);
         assert.ok(fs.existsSync(opowInfo.templatesDir));
         assert.ok(fs.existsSync(path.join(opowInfo.templatesDir, "proposal.md")));
         assert.ok(fs.existsSync(path.join(opowInfo.templatesDir, "delta.spec.md")));
@@ -120,7 +121,7 @@ describe("sync & target lifecycle", () => {
             };
             const opowInfo = syncOpenSpec(tempDir);
             assert.ok(fs.existsSync(opowInfo.specsDir));
-            assert.ok(fs.existsSync(opowInfo.plansDir));
+            assert.equal(opowInfo.plansDir, undefined);
             assert.equal(opowInfo.hasTemplates, false);
         } finally {
             fs.existsSync = origExistsSync;
@@ -162,12 +163,14 @@ describe("sync & target lifecycle", () => {
         const manifest = syncTargetSkills(TARGETS.cline, tempDir);
 
         assert.equal(manifest.target, "cline");
-        assert.ok(manifest.skills.includes("using-superpowers"));
-        assert.ok(manifest.skills.includes("openspec-sync"));
-        assert.ok(manifest.skills.includes("openspec-explore"));
-        assert.ok(manifest.skills.includes("brainstorming"));
-        assert.ok(manifest.workflows.includes("spec"));
-        assert.ok(manifest.workflows.includes("sync-spec"));
+        assert.ok(manifest.skills.includes("opow-using-superpowers"));
+        assert.ok(manifest.skills.includes("opow-openspec-sync"));
+        assert.ok(manifest.skills.includes("opow-openspec-explore"));
+        assert.ok(manifest.skills.includes("opow-brainstorming"));
+        assert.ok(manifest.workflows.includes("opow-spec"));
+        assert.ok(manifest.workflows.includes("opow-fast"));
+        assert.ok(!manifest.workflows.includes("fix"));
+        assert.ok(manifest.workflows.includes("opow-sync-spec"));
         assert.equal(manifest.sourceCommit, getUpstreamCommit());
 
         const skillsDir = TARGETS.cline.getSkillsDir(tempDir);
@@ -177,10 +180,15 @@ describe("sync & target lifecycle", () => {
         assert.ok(fs.existsSync(skillsDir));
         assert.ok(fs.existsSync(workflowsDir));
         assert.ok(fs.existsSync(manifestPath));
-        assert.ok(fs.existsSync(path.join(workflowsDir, "sync-spec.md")));
+        assert.ok(fs.existsSync(path.join(workflowsDir, "opow-sync-spec.md")));
+        assert.ok(fs.existsSync(path.join(workflowsDir, "opow-fast.md")));
 
-        const wrapperContent = fs.readFileSync(path.join(skillsDir, "using-superpowers", "SKILL.md"), "utf8");
+        const wrapperContent = fs.readFileSync(path.join(skillsDir, "opow-using-superpowers", "SKILL.md"), "utf8");
+        assert.ok(wrapperContent.includes("name: opow-using-superpowers"));
         assert.ok(wrapperContent.includes("Platform Adaptation: Cline"));
+
+        const brainstormContent = fs.readFileSync(path.join(skillsDir, "opow-brainstorming", "SKILL.md"), "utf8");
+        assert.ok(brainstormContent.includes("name: opow-brainstorming"));
 
         const removed = uninstallTargetSkills(TARGETS.cline, tempDir);
         assert.ok(removed.skills.length > 0);
@@ -193,10 +201,11 @@ describe("sync & target lifecycle", () => {
         const manifest = syncTargetSkills(TARGETS.antigravity, tempDir);
 
         assert.equal(manifest.target, "antigravity");
-        assert.ok(manifest.skills.includes("using-superpowers"));
-        assert.ok(manifest.skills.includes("openspec-sync"));
-        assert.ok(manifest.workflows.includes("spec"));
-        assert.ok(manifest.workflows.includes("sync-spec"));
+        assert.ok(manifest.skills.includes("opow-using-superpowers"));
+        assert.ok(manifest.skills.includes("opow-openspec-sync"));
+        assert.ok(manifest.workflows.includes("opow-spec"));
+        assert.ok(manifest.workflows.includes("opow-fast"));
+        assert.ok(manifest.workflows.includes("opow-sync-spec"));
         assert.equal(manifest.sourceCommit, getUpstreamCommit());
 
         const skillsDir = TARGETS.antigravity.getSkillsDir(tempDir);
@@ -206,9 +215,10 @@ describe("sync & target lifecycle", () => {
         assert.ok(fs.existsSync(skillsDir));
         assert.ok(fs.existsSync(workflowsDir));
         assert.ok(fs.existsSync(manifestPath));
-        assert.ok(fs.existsSync(path.join(workflowsDir, "sync-spec.md")));
+        assert.ok(fs.existsSync(path.join(workflowsDir, "opow-sync-spec.md")));
 
-        const wrapperContent = fs.readFileSync(path.join(skillsDir, "using-superpowers", "SKILL.md"), "utf8");
+        const wrapperContent = fs.readFileSync(path.join(skillsDir, "opow-using-superpowers", "SKILL.md"), "utf8");
+        assert.ok(wrapperContent.includes("name: opow-using-superpowers"));
         assert.ok(wrapperContent.includes("Platform Adaptation: Antigravity"));
 
         const removed = uninstallTargetSkills(TARGETS.antigravity, tempDir);
@@ -222,16 +232,17 @@ describe("sync & target lifecycle", () => {
         const manifest = syncTargetSkills(TARGETS.claude, tempDir);
 
         assert.equal(manifest.target, "claude");
-        assert.ok(manifest.skills.includes("using-superpowers"));
-        assert.ok(manifest.skills.includes("test-driven-development"));
-        assert.ok(manifest.skills.includes("spec-driven-development"));
-        assert.ok(manifest.skills.includes("openspec-sync"));
-        assert.ok(manifest.workflows.includes("spec"));
-        assert.ok(manifest.workflows.includes("plan"));
-        assert.ok(manifest.workflows.includes("implement"));
-        assert.ok(manifest.workflows.includes("archive"));
+        assert.ok(manifest.skills.includes("opow-using-superpowers"));
+        assert.ok(manifest.skills.includes("opow-test-driven-development"));
+        assert.ok(manifest.skills.includes("opow-spec-driven-development"));
+        assert.ok(manifest.skills.includes("opow-openspec-sync"));
+        assert.ok(manifest.workflows.includes("opow-spec"));
+        assert.ok(manifest.workflows.includes("opow-plan"));
+        assert.ok(manifest.workflows.includes("opow-implement"));
+        assert.ok(manifest.workflows.includes("opow-archive"));
+        assert.ok(manifest.workflows.includes("opow-fast"));
         assert.ok(!manifest.workflows.includes("verify"));
-        assert.ok(manifest.workflows.includes("sync-spec"));
+        assert.ok(manifest.workflows.includes("opow-sync-spec"));
         assert.equal(manifest.sourceCommit, getUpstreamCommit());
 
         const skillsDir = TARGETS.claude.getSkillsDir(tempDir);
@@ -241,11 +252,11 @@ describe("sync & target lifecycle", () => {
         assert.ok(fs.existsSync(skillsDir));
         assert.ok(fs.existsSync(commandsDir));
         assert.ok(fs.existsSync(manifestPath));
-        assert.ok(fs.existsSync(path.join(commandsDir, "spec.md")));
-        assert.ok(fs.existsSync(path.join(commandsDir, "plan.md")));
-        assert.ok(fs.existsSync(path.join(commandsDir, "sync-spec.md")));
+        assert.ok(fs.existsSync(path.join(commandsDir, "opow-spec.md")));
+        assert.ok(fs.existsSync(path.join(commandsDir, "opow-plan.md")));
+        assert.ok(fs.existsSync(path.join(commandsDir, "opow-sync-spec.md")));
 
-        const wrapperContent = fs.readFileSync(path.join(skillsDir, "using-superpowers", "SKILL.md"), "utf8");
+        const wrapperContent = fs.readFileSync(path.join(skillsDir, "opow-using-superpowers", "SKILL.md"), "utf8");
         assert.ok(wrapperContent.includes("Platform Adaptation: Claude Code"));
 
         const removed = uninstallTargetSkills(TARGETS.claude, tempDir);
@@ -259,10 +270,11 @@ describe("sync & target lifecycle", () => {
         const manifest = syncTargetSkills(TARGETS.codex, tempDir);
 
         assert.equal(manifest.target, "codex");
-        assert.ok(manifest.skills.includes("using-superpowers"));
-        assert.ok(manifest.skills.includes("openspec-sync"));
-        assert.ok(manifest.workflows.includes("spec"));
-        assert.ok(manifest.workflows.includes("sync-spec"));
+        assert.ok(manifest.skills.includes("opow-using-superpowers"));
+        assert.ok(manifest.skills.includes("opow-openspec-sync"));
+        assert.ok(manifest.workflows.includes("opow-spec"));
+        assert.ok(manifest.workflows.includes("opow-fast"));
+        assert.ok(manifest.workflows.includes("opow-sync-spec"));
         assert.equal(manifest.sourceCommit, getUpstreamCommit());
 
         const skillsDir = TARGETS.codex.getSkillsDir(tempDir);
@@ -272,10 +284,10 @@ describe("sync & target lifecycle", () => {
         assert.ok(fs.existsSync(skillsDir));
         assert.ok(fs.existsSync(workflowsDir));
         assert.ok(fs.existsSync(manifestPath));
-        assert.ok(fs.existsSync(path.join(workflowsDir, "spec.md")));
-        assert.ok(fs.existsSync(path.join(workflowsDir, "sync-spec.md")));
+        assert.ok(fs.existsSync(path.join(workflowsDir, "opow-spec.md")));
+        assert.ok(fs.existsSync(path.join(workflowsDir, "opow-sync-spec.md")));
 
-        const wrapperContent = fs.readFileSync(path.join(skillsDir, "using-superpowers", "SKILL.md"), "utf8");
+        const wrapperContent = fs.readFileSync(path.join(skillsDir, "opow-using-superpowers", "SKILL.md"), "utf8");
         assert.ok(wrapperContent.includes("Platform Adaptation: Codex"));
 
         const removed = uninstallTargetSkills(TARGETS.codex, tempDir);
@@ -283,6 +295,32 @@ describe("sync & target lifecycle", () => {
         assert.ok(!fs.existsSync(manifestPath));
         assert.ok(!fs.existsSync(skillsDir));
         assert.ok(!fs.existsSync(workflowsDir));
+    });
+
+    it("syncTargetSkills cleans up stale skills and workflows from previous manifest", () => {
+        const skillsDir = TARGETS.antigravity.getSkillsDir(tempDir);
+        const workflowsDir = TARGETS.antigravity.getWorkflowsDir(tempDir);
+        const manifestPath = TARGETS.antigravity.getManifestPath(tempDir);
+
+        fs.mkdirSync(path.join(skillsDir, "brainstorming"), { recursive: true });
+        fs.writeFileSync(path.join(skillsDir, "brainstorming", "SKILL.md"), "old");
+        fs.mkdirSync(path.join(skillsDir, "custom-user-skill"), { recursive: true });
+        fs.writeFileSync(path.join(skillsDir, "custom-user-skill", "SKILL.md"), "keep me");
+        fs.mkdirSync(workflowsDir, { recursive: true });
+        fs.writeFileSync(path.join(workflowsDir, "fix.md"), "old fix");
+
+        writeManifest(manifestPath, {
+            target: "antigravity",
+            skills: ["brainstorming"],
+            workflows: ["fix"],
+        });
+
+        const manifest = syncTargetSkills(TARGETS.antigravity, tempDir);
+        assert.ok(!fs.existsSync(path.join(skillsDir, "brainstorming")));
+        assert.ok(!fs.existsSync(path.join(workflowsDir, "fix.md")));
+        assert.ok(fs.existsSync(path.join(skillsDir, "custom-user-skill", "SKILL.md")));
+        assert.ok(fs.existsSync(path.join(skillsDir, "opow-brainstorming", "SKILL.md")));
+        assert.ok(manifest.workflows.includes("opow-fast"));
     });
 
     it("uninstallTargetSkills throws when manifest is missing or invalid", () => {

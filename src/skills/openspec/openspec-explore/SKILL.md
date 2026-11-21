@@ -44,7 +44,7 @@ Bridge the gap between product intent and codebase reality:
 
 ---
 
-## 2. Integration with `/spec` & Standalone Usage
+## 2. Integration with `/opow-spec` & Standalone Usage
 
-- **Within `/spec`**: Executed automatically during Step 1 of the `/spec` workflow to ground requirements in codebase realities before scaffolding.
-- **Standalone `/explore`**: Used as a fast spike and technical probe when testing feasibility without creating proposal files. Once findings are confirmed, transition to `/spec` to formally scaffold the `.opow/changes/<change-name>/` directory.
+- **Within `/opow-spec`**: Executed automatically during Step 1 of the `/opow-spec` workflow to ground requirements in codebase realities before scaffolding.
+- **Standalone `/opow-explore`**: Used as a fast spike and technical probe when testing feasibility without creating proposal files. Once findings are confirmed, transition to `/opow-spec` to formally scaffold the `.opow/changes/<change-name>/` directory.

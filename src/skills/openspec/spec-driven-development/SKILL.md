@@ -28,11 +28,9 @@ All change proposals SHALL use the chronological naming format `YYYYMMDDHHmmss-<
 │   └── YYYYMMDDHHmmss-<slug>/
 │       ├── proposal.md             # Why, problem statement, scope + YAML frontmatter
 │       ├── design.md               # Architecture and technical design + YAML frontmatter
-│       ├── tasks.md                # Trackable implementation checklist + YAML frontmatter
+│       ├── tasks.md                # Trackable checklist & atomic TDD plan (enriched in-place by /plan)
 │       └── specs/                  # Delta Specs for this change
 │           └── <domain>.spec.md    # Delta Spec + YAML frontmatter
-├── plans/
-│   └── YYYYMMDDHHmmss-<slug>.plan.md   # Chronologically prefixed plan matching change ID
 ├── archive/                        # COMPLETED HISTORY: Archived changes (YYYYMMDDHHmmss-<slug>)
 │   └── YYYYMMDDHHmmss-<slug>/
 └── templates/                      # Standard OpenSpec templates with YAML frontmatter
@@ -95,7 +93,7 @@ Capabilities or endpoints being deprecated or deleted.
 For frontend or UI/UX features, text specifications alone can leave ambiguity in layout, component structure, and responsiveness.
 
 1. **Pencil MCP Integration & Skill**:
-   - Invoke `designing-with-pencil` skill.
+   - Invoke `opow-designing-with-pencil` skill.
    - Store design files under `.opow/changes/<change-id>/designs/<feature>.pen` or project design directories.
    - Automatically open and focus the canvas tab via CLI: `antigravity-ide <path/to/design.pen>`.
    - Use Pencil MCP tools (`get_app_state`, `execute`, `get_style`, `read_skill`) to construct UI components, frames, and layouts.
@@ -115,20 +113,20 @@ For frontend or UI/UX features, text specifications alone can leave ambiguity in
 
 ## 4. The 4-Step Development Loop
 
-1. **`/spec` (Explore & Spec)**: List `.opow/specs/` and selectively, progressively read relevant `<domain>/spec.md` files (Overview + `Key Files / Code Map` first; for specs >200 lines, grep and read only matching requirement sections), brainstorm requirements (`brainstorming`), audit codebase and dependencies (`openspec-explore`), and author `.opow/changes/<change-id>/` (`proposal.md`, `design.md`, `tasks.md`, delta `specs/`). Populate `Affected Files & Context Manifest` in `design.md` and link all tasks in `tasks.md` directly to concrete file paths.
-2. **`writing-plans` (`/plan`)**: Break down `tasks.md` into atomic TDD steps in `.opow/plans/<change-id>.plan.md`, inheriting explicit file manifests and test targets.
-3. **`/implement` (`test-driven-development` + `verification-before-completion`)**: Set up an isolated workspace via `using-git-worktrees` (`.worktrees/<change-id>`), implement each task using Red-Green-Refactor + subagents, then validate 100% of Delta Acceptance Criteria and automated test suites before handoff.
-4. **`/archive`**: Merge delta specs into living specs (`.opow/specs/`) and sync `Key Files / Code Map` from `design.md`, merge feature branch into `main`, clean up `.worktrees/<change-id>`, move the change folder to `.opow/archive/<change-id>/`, and move `.opow/plans/<change-id>.plan.md` to `.opow/archive/<change-id>/plan.md`.
+1. **`/opow-spec` (Explore & Spec)**: List `.opow/specs/` and selectively, progressively read relevant `<domain>/spec.md` files (Overview + `Key Files / Code Map` first; for specs >200 lines, grep and read only matching requirement sections), brainstorm requirements (`opow-brainstorming`), audit codebase and dependencies (`opow-openspec-explore`), and author `.opow/changes/<change-id>/` (`proposal.md`, `design.md`, `tasks.md`, delta `specs/`). Populate `Affected Files & Context Manifest` in `design.md` and link all tasks in `tasks.md` directly to concrete file paths.
+2. **`opow-writing-plans` (`/opow-plan`)**: Enrich `.opow/changes/<change-id>/tasks.md` in-place into atomic TDD steps, inheriting explicit file manifests and test targets (no separate `.opow/plans/` file).
+3. **`/opow-implement` (`opow-test-driven-development` + `opow-verification-before-completion`)**: Set up an isolated workspace via `opow-using-git-worktrees` (`.worktrees/<change-id>`), implement each task using Red-Green-Refactor + subagents, then validate 100% of Delta Acceptance Criteria and automated test suites before handoff.
+4. **`/opow-archive`**: Merge delta specs into living specs (`.opow/specs/`) and sync `Key Files / Code Map` from `design.md`, merge feature branch into `main`, clean up `.worktrees/<change-id>`, and move the change folder (including `tasks.md`) to `.opow/archive/<change-id>/`.
 
-*(Note: `/explore` remains available as an optional standalone spike command for lightweight investigations without scaffolding files).*
+*(Note: `/opow-explore` remains available as an optional standalone spike command, and `/opow-fast` provides a fast-track lane for bugfixes or scoped <3-file changes without `proposal.md`/`design.md` ceremony).*
 
 ---
 
 ## 5. File Manifest Pipeline & Bounded Subagent Execution
 
 To eliminate token waste and redundant codebase searches across workflows:
-1. **Selective Living Spec Grounding (Closed Read-Write Loop)**: `/spec` lists `.opow/specs/` and progressively reads only the relevant `<domain>/spec.md` (Overview + `Key Files / Code Map` first, and for specs >200 lines grepping and reading only matching requirement sections instead of loading full spec files into context) before searching code; `/archive` writes updated `Key Files / Code Map` back from `design.md` and keeps Living Specs lean.
-2. **Explicit File Manifest Pipeline**: `/spec` records exact file paths into `design.md` (`Affected Files & Context Manifest`) and `tasks.md`. `/plan` carries these concrete paths forward into atomic plan steps.
-3. **Bounded Subagent Delegation**: When dispatching subagents in `/implement`, provide exact target files, test files, and test commands. Subagents are strictly forbidden from executing unconstrained repo grepping or open-ended workspace exploration when paths are already defined in the plan.
+1. **Selective Living Spec Grounding (Closed Read-Write Loop)**: `/opow-spec` lists `.opow/specs/` and progressively reads only the relevant `<domain>/spec.md` (Overview + `Key Files / Code Map` first, and for specs >200 lines grepping and reading only matching requirement sections instead of loading full spec files into context) before searching code; `/opow-archive` writes updated `Key Files / Code Map` back from `design.md` and keeps Living Specs lean.
+2. **Explicit File Manifest Pipeline**: `/opow-spec` records exact file paths into `design.md` (`Affected Files & Context Manifest`) and `tasks.md`. `/opow-plan` enriches `tasks.md` in-place, carrying these concrete paths forward into atomic plan steps.
+3. **Bounded Subagent Delegation**: When dispatching subagents in `/opow-implement`, provide exact target files, test files, and test commands. Subagents are strictly forbidden from executing unconstrained repo grepping or open-ended workspace exploration when paths are already defined in the plan.
 
 

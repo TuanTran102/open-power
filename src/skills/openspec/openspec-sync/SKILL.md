@@ -45,7 +45,7 @@ Use when code changes need formal review, traceability, or team sign-off before 
    - `design.md`: Reverse-engineered technical architecture and contracts.
    - `tasks.md`: Verification checklist for tests.
    - `specs/<domain>.spec.md`: Delta specifications using `ADDED`, `MODIFIED`, and `REMOVED` sections.
-3. Review the proposal with the user before archiving via `/archive`.
+3. Review the proposal with the user before archiving via `/opow-archive`.
 
 ### Mode B: Direct Living Spec Sync
 Use for immediate updates or when reconciling living documentation directly without an intermediate change package.

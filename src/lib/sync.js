@@ -2,6 +2,24 @@ const fs = require("fs");
 const path = require("path");
 const { loadConfig } = require("./config");
 
+const SKILL_PREFIX = "opow-";
+
+function toPrefixedSkillName(skillName) {
+    return skillName.startsWith(SKILL_PREFIX) ? skillName : `${SKILL_PREFIX}${skillName}`;
+}
+
+function rewriteSkillFrontmatterName(skillDir, prefixedName) {
+    const skillMdPath = path.join(skillDir, "SKILL.md");
+    if (!fs.existsSync(skillMdPath)) return;
+    const content = fs.readFileSync(skillMdPath, "utf8");
+    const updated = content.replace(/^(---\r?\n[\s\S]*?\r?\n---)/, (fm) =>
+        fm.replace(/^name:\s*.+$/m, `name: ${prefixedName}`)
+    );
+    if (updated !== content) {
+        fs.writeFileSync(skillMdPath, updated, "utf8");
+    }
+}
+
 function copyDir(src, dest, overwrite = true) {
     if (!fs.existsSync(src)) return;
     fs.mkdirSync(dest, { recursive: true });
@@ -86,7 +104,6 @@ function getWorkflowsSourceDir() {
 /**
  * Initialize / update the .opow/ directory in the target project.
  * - Installs .opow/templates/
- * - Ensures .opow/plans/ directory exists
  *
  * @param {string} [projectDir] - Target project root
  * @returns {object} opowInfo
@@ -97,13 +114,11 @@ function syncOpenSpec(projectDir = process.cwd()) {
     const targetSpecsDir = path.join(opowDir, "specs");
     const targetChangesDir = path.join(opowDir, "changes");
     const targetArchiveDir = path.join(opowDir, "archive");
-    const targetPlansDir = path.join(opowDir, "plans");
     const targetTemplatesDir = path.join(opowDir, "templates");
 
     fs.mkdirSync(targetSpecsDir, { recursive: true });
     fs.mkdirSync(targetChangesDir, { recursive: true });
     fs.mkdirSync(targetArchiveDir, { recursive: true });
-    fs.mkdirSync(targetPlansDir, { recursive: true });
     fs.mkdirSync(targetTemplatesDir, { recursive: true });
 
     if (fs.existsSync(openSpecSrc)) {
@@ -116,7 +131,6 @@ function syncOpenSpec(projectDir = process.cwd()) {
         specsDir: targetSpecsDir,
         changesDir: targetChangesDir,
         archiveDir: targetArchiveDir,
-        plansDir: targetPlansDir,
         templatesDir: targetTemplatesDir,
         hasTemplates: fs.existsSync(targetTemplatesDir) && fs.readdirSync(targetTemplatesDir).length > 0,
     };
@@ -138,6 +152,7 @@ function syncTargetSkills(target, projectDir = process.cwd()) {
     const targetWorkflowsDir = target.getWorkflowsDir(projectDir);
     const manifestPath = target.getManifestPath(projectDir);
     const wrapperDir = target.getWrapperDir();
+    const previousManifest = readManifest(manifestPath);
 
     if (!fs.existsSync(upstreamDir)) {
         throw new Error(`Skills source not found: ${upstreamDir}`);
@@ -145,18 +160,23 @@ function syncTargetSkills(target, projectDir = process.cwd()) {
 
     fs.mkdirSync(targetSkillsDir, { recursive: true });
 
-    // 1. Copy all bundled upstream skills
+    // 1. Copy all bundled upstream skills (prefixed with opow-)
     const upstreamSkills = fs
         .readdirSync(upstreamDir, { withFileTypes: true })
         .filter((e) => e.isDirectory() && !e.name.startsWith("."))
         .map((e) => e.name);
 
+    const installedUpstream = [];
     for (const skillName of upstreamSkills) {
-        copyDir(path.join(upstreamDir, skillName), path.join(targetSkillsDir, skillName));
+        const installedName = toPrefixedSkillName(skillName);
+        const destDir = path.join(targetSkillsDir, installedName);
+        copyDir(path.join(upstreamDir, skillName), destDir);
+        rewriteSkillFrontmatterName(destDir, installedName);
+        installedUpstream.push(installedName);
     }
 
-    // 2. Copy bundled OpenSpec skills
-    const openspecSkills = [];
+    // 2. Copy bundled OpenSpec skills (prefixed with opow-)
+    const installedOpenSpec = [];
     if (fs.existsSync(openspecDir)) {
         const entries = fs
             .readdirSync(openspecDir, { withFileTypes: true })
@@ -164,14 +184,20 @@ function syncTargetSkills(target, projectDir = process.cwd()) {
             .map((e) => e.name);
 
         for (const skillName of entries) {
-            copyDir(path.join(openspecDir, skillName), path.join(targetSkillsDir, skillName));
-            openspecSkills.push(skillName);
+            const installedName = toPrefixedSkillName(skillName);
+            const destDir = path.join(targetSkillsDir, installedName);
+            copyDir(path.join(openspecDir, skillName), destDir);
+            rewriteSkillFrontmatterName(destDir, installedName);
+            installedOpenSpec.push(installedName);
         }
     }
 
-    // 3. Override using-superpowers with target wrapper if exists
+    // 3. Override using-superpowers with target wrapper if exists (prefixed with opow-)
+    const installedWrapperName = toPrefixedSkillName(config.wrapperSkillName);
     if (fs.existsSync(wrapperDir)) {
-        copyDir(wrapperDir, path.join(targetSkillsDir, config.wrapperSkillName));
+        const destDir = path.join(targetSkillsDir, installedWrapperName);
+        copyDir(wrapperDir, destDir);
+        rewriteSkillFrontmatterName(destDir, installedWrapperName);
     }
 
     // 4. Sync slash command workflows into target platform's workflows directory
@@ -194,11 +220,34 @@ function syncTargetSkills(target, projectDir = process.cwd()) {
 
     // Record manifest
     const allInstalledSkills = [
-        ...upstreamSkills.filter((s) => s !== config.wrapperSkillName),
-        ...openspecSkills.filter((s) => s !== config.wrapperSkillName),
-        config.wrapperSkillName,
+        ...installedUpstream.filter((s) => s !== installedWrapperName),
+        ...installedOpenSpec.filter((s) => s !== installedWrapperName),
+        installedWrapperName,
     ];
     const uniqueSkills = Array.from(new Set(allInstalledSkills));
+
+    // Clean up stale skills and workflows from previous manifest
+    if (previousManifest) {
+        if (Array.isArray(previousManifest.skills)) {
+            const nextSkillSet = new Set(uniqueSkills);
+            for (const oldSkill of previousManifest.skills) {
+                if (!nextSkillSet.has(oldSkill)) {
+                    removeDir(path.join(targetSkillsDir, oldSkill));
+                }
+            }
+        }
+        if (Array.isArray(previousManifest.workflows)) {
+            const nextWfSet = new Set(installedWorkflows);
+            for (const oldWf of previousManifest.workflows) {
+                if (!nextWfSet.has(oldWf)) {
+                    const oldWfPath = path.join(targetWorkflowsDir, `${oldWf}.md`);
+                    if (fs.existsSync(oldWfPath)) {
+                        fs.rmSync(oldWfPath, { force: true });
+                    }
+                }
+            }
+        }
+    }
 
     const manifest = {
         target: target.id,
@@ -206,7 +255,7 @@ function syncTargetSkills(target, projectDir = process.cwd()) {
         sourceCommit: getUpstreamCommit(),
         skills: uniqueSkills,
         workflows: installedWorkflows,
-        wrapperSkill: config.wrapperSkillName,
+        wrapperSkill: installedWrapperName,
         openspec: true,
     };
     writeManifest(manifestPath, manifest);
@@ -539,6 +588,9 @@ function syncTargetRules(target, projectDir = process.cwd(), options = {}) {
 }
 
 module.exports = {
+    SKILL_PREFIX,
+    toPrefixedSkillName,
+    rewriteSkillFrontmatterName,
     copyDir,
     removeDir,
     readManifest,

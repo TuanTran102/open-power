@@ -2,14 +2,14 @@
 description: Execute the implementation plan using strict TDD and Subagents, then verify 100% of Delta Acceptance Criteria and automated tests before archiving.
 ---
 
-# Implement Workflow (/implement)
+# Implement Workflow (/opow-implement)
 
-**Purpose**: Execute the implementation plan using isolated Git Worktrees, strict Test-Driven Development (TDD), and Subagents, and validate 100% of Delta Acceptance Criteria and automated test coverage before handoff to `/archive`.
+**Purpose**: Execute the implementation plan using isolated Git Worktrees, strict Test-Driven Development (TDD), and Subagents, and validate 100% of Delta Acceptance Criteria and automated test coverage before handoff to `/opow-archive`.
 
 ## Steps
 
 1. **MANDATORY HARD-GATE: Isolated Workspace (Git Worktree)**:
-   - Invoke `using-git-worktrees` with automatic enforcement.
+   - Invoke `opow-using-git-worktrees` with automatic enforcement.
    - **DO NOT ASK FOR CONSENT**: Worktree isolation is mandatory for all implementation tasks.
    - Check if currently running inside the isolated worktree:
      ```bash
@@ -23,17 +23,17 @@ description: Execute the implementation plan using strict TDD and Subagents, the
    - Run baseline tests inside `.worktrees/<change-name>/` to verify clean state before proceeding.
 
 2. **Pick the Next Task**:
-   - Select the next item from `.opow/changes/<change-name>/tasks.md` (and `.opow/plans/<change-name>.plan.md`).
+   - Select the next unchecked item from `.opow/changes/<change-name>/tasks.md`.
 
 3. **TDD Cycle (Red - Green - Refactor)**:
-   - Invoke `test-driven-development` inside the isolated worktree.
+   - Invoke `opow-test-driven-development` inside the isolated worktree.
    - **Red**: Author unit / integration test verifying the Delta Acceptance Criteria. Confirm test fails.
    - **Green**: Write minimal code to make the test pass.
    - **Refactor**: Clean up the code while keeping all tests green.
    - **Commit**: Commit changes using the spec timestamp prefix: `git commit -m "[<timestamp>] <type>: <message>"` (e.g. `[20260902171500] feat: handle restart focus`).
 
 4. **Bounded Subagent Delegation (Optional — Lazy-Load)**:
-   - **Lazy-load only**: Do NOT read or invoke `subagent-driven-development` upfront when executing small or sequential tasks directly; invoke it **only when** dispatching 2+ independent tasks to subagents.
+   - **Lazy-load only**: Do NOT read or invoke `opow-subagent-driven-development` upfront when executing small or sequential tasks directly; invoke it **only when** dispatching 2+ independent tasks to subagents.
    - **Bounded Context Handoff**: When delegating to a subagent, the prompt MUST provide:
      1. Exact target file path(s) to modify or create.
      2. Exact test file path(s) and specific test command.
@@ -44,16 +44,16 @@ description: Execute the implementation plan using strict TDD and Subagents, the
 5. **Task Completion**:
    - Check off `- [x]` in `.opow/changes/<change-name>/tasks.md` and repeat until all tasks are complete.
 
-6. **Final Verification Gate (`verification-before-completion`)**:
+6. **Final Verification Gate (`opow-verification-before-completion`)**:
    - **Run Full Automated Test Suite**: Execute all project tests inside `.worktrees/<change-name>/` (e.g. `npm test` or `pytest`) and ensure a 100% pass rate.
    - **Step-by-step Delta Acceptance Criteria Check**:
-     - Invoke `verification-before-completion`.
+     - Invoke `opow-verification-before-completion`.
      - Open `.opow/changes/<change-name>/specs/*.spec.md`.
      - Walk through every single scenario (*Given - When - Then*) in the `ADDED` and `MODIFIED` sections.
    - **Verify Living Spec Ready**: Confirm all delta requirements are implemented and ready to merge into `.opow/specs/`.
 
 7. **Handoff to Archive (DO NOT CLOSE WORKTREE)**:
    - **CRITICAL**: DO NOT merge branches, delete, or clean up `.worktrees/<change-name>`.
-   - **CRITICAL**: DO NOT invoke `finishing-a-development-branch`. Worktrees are managed solely by `/archive`.
-   - Keep the worktree intact for user review/UAT and inform the user that implementation and verification are complete and ready for `/archive`.
+   - **CRITICAL**: DO NOT invoke `opow-finishing-a-development-branch`. Worktrees are managed solely by `/opow-archive`.
+   - Keep the worktree intact for user review/UAT and inform the user that implementation and verification are complete and ready for `/opow-archive`.
 

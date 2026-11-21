@@ -20,13 +20,11 @@ function status(targetArg) {
     // Check .opow Status
     const opowDir = path.join(projectDir, ".opow");
     const specsDir = path.join(opowDir, "specs");
-    const plansDir = path.join(opowDir, "plans");
     const templatesDir = path.join(opowDir, "templates");
     console.log(`\n------------------------------------`);
     console.log(`Open-Power Workspace (.opow):`);
     console.log(`  Directory: ${opowDir}`);
     console.log(`  Specs:     ${fs.existsSync(specsDir) ? "✅ Ready" : "✗ Missing"}`);
-    console.log(`  Plans:     ${fs.existsSync(plansDir) ? "✅ Ready" : "✗ Missing"}`);
     console.log(`  Templates: ${fs.existsSync(templatesDir) ? "✅ Ready" : "✗ Missing"}`);
 
     for (const target of targets) {

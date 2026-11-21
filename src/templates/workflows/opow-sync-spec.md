@@ -2,14 +2,14 @@
 description: Audit codebase modifications or Git diff and synchronize changes into OpenSpec living specs or change proposals.
 ---
 
-# Sync Spec Workflow (/sync-spec)
+# Sync Spec Workflow (/opow-sync-spec)
 
 **Purpose**: Detect spec drift and synchronize undocumented code changes into OpenSpec format.
 
 ## Steps
 
 1. **Invoke Skill**:
-   - Activate `openspec-sync`.
+   - Activate `opow-openspec-sync`.
 
 2. **Audit Codebase Drift**:
    - Inspect uncommitted changes (`git diff`, `git status`) or specified commit range.

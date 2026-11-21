@@ -14,7 +14,6 @@ function install(targetArg) {
     console.log(`  Living Specs: ${opowInfo.specsDir}`);
     console.log(`  Changes:      ${opowInfo.changesDir}`);
     console.log(`  Archive:      ${opowInfo.archiveDir}`);
-    console.log(`  Plans:        ${opowInfo.plansDir}`);
     console.log(`  Templates:    ${opowInfo.hasTemplates ? "✅ Installed" : "⚠️ Missing"}`);
 
     const gitignoreInfo = ensureGitignore(projectDir);
@@ -61,7 +60,7 @@ function install(targetArg) {
         console.log(`\nCommit: ${manifest.sourceCommit}`);
     }
 
-    console.log(`\n🎉 Done! Slash commands (/explore, /spec, /plan, /implement, /archive, /sync-spec) & skills are ready.`);
+    console.log(`\n🎉 Done! Slash commands (/opow-explore, /opow-spec, /opow-plan, /opow-implement, /opow-archive, /opow-fast, /opow-sync-spec) & skills are ready.`);
 }
 
 module.exports = { install };

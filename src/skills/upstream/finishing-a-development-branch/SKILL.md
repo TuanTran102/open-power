@@ -9,7 +9,7 @@ description: Use when implementation is complete, all tests pass, and you need t
 
 **Core principle:** Verify tests → Detect environment → Present options → Execute choice → Clean up.
 
-**OpenSpec / OpenPower Workflows:** When operating in an OpenSpec lifecycle (`.opow/`), branch merge and worktree cleanup are deferred to `/archive`. Use this skill directly only for standalone development tasks outside OpenSpec.
+**OpenSpec / OpenPower Workflows:** When operating in an OpenSpec lifecycle (`.opow/`), branch merge and worktree cleanup are deferred to `/opow-archive`. Use this skill directly only for standalone development tasks outside OpenSpec.
 
 **Announce at start:** "I'm using the finishing-a-development-branch skill to complete this work."
 
@@ -17,12 +17,12 @@ description: Use when implementation is complete, all tests pass, and you need t
 
 **Check if this task is part of an active OpenSpec change:**
 - Does `.opow/changes/` have an active proposal or worktree `.worktrees/<change-name>`?
-- Are you currently following an OpenSpec lifecycle (`/spec`, `/plan`, `/implement`, `/archive`)?
+- Are you currently following an OpenSpec lifecycle (`/opow-spec`, `/opow-plan`, `/opow-implement`, `/opow-archive`)?
 
 **If YES:**
 - **STOP IMMEDIATELY.** Do NOT display the finishing menu, do NOT merge, and do NOT delete the worktree.
-- Inform the user: "Active OpenSpec change detected. Worktrees must be preserved for review and `/archive` (cleanup will happen during `/archive`)."
-- Ensure `verification-before-completion` has passed, then hand off to `/archive`.
+- Inform the user: "Active OpenSpec change detected. Worktrees must be preserved for review and `/opow-archive` (cleanup will happen during `/opow-archive`)."
+- Ensure `verification-before-completion` has passed, then hand off to `/opow-archive`.
 
 **If NO (Standalone task):** Proceed to Step 1.
 

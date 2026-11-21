@@ -88,7 +88,7 @@ Append `Task <N>: complete (commits <base7>..<head7>, review clean | <K> parked)
 4. Collect all `Ruling:` lines from the ledger into your final message under **"Rulings I made"** with cost-if-wrong, then delete `<workspace>` (`rm -rf <workspace>`).
 
 ### Handoff and Lifecycle
-- **OpenSpec / OpenPower Workflows:** If executing a plan in `.opow/plans/` or `.opow/changes/`, do NOT remove the git worktree or merge/delete the feature branch. Keep the worktree intact and run `verification-before-completion` before `/archive`.
+- **OpenSpec / OpenPower Workflows:** If executing a plan in `.opow/changes/` (e.g. `tasks.md`), do NOT remove the git worktree or merge/delete the feature branch. Keep the worktree intact and run `verification-before-completion` before `/opow-archive`.
 - **Standalone Plans:** Outside OpenSpec, use `superpowers:finishing-a-development-branch`.
 
 ## Red Flags — STOP

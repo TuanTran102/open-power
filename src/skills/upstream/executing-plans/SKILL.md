@@ -33,8 +33,8 @@ For each task:
 ### Step 3: Complete Development
 
 After all tasks complete and verified:
-- **OpenSpec / OpenPower Workflows:** If executing a plan within OpenSpec (e.g. plan located in `.opow/plans/` or `.opow/changes/`), do NOT remove the git worktree or merge/delete the feature branch. Keep the worktree intact and announce:
-  `Done! All implementation tasks complete. Run final verification (verification-before-completion) before /archive.`
+- **OpenSpec / OpenPower Workflows:** If executing a plan within OpenSpec (e.g. `.opow/changes/<change-id>/tasks.md`), do NOT remove the git worktree or merge/delete the feature branch. Keep the worktree intact and announce:
+  `Done! All implementation tasks complete. Run final verification (verification-before-completion) before /opow-archive.`
 - **Standalone Plans:** For standalone plans outside OpenSpec:
   - Announce: "I'm using the finishing-a-development-branch skill to complete this work."
   - **REQUIRED SUB-SKILL:** Use superpowers:finishing-a-development-branch

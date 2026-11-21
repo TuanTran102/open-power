@@ -11,7 +11,7 @@ CLI to install and auto-update **Superpowers skills** and **OpenSpec standards**
 | Layer | Component | Focus |
 |---|---|---|
 | **WHAT (Requirements & Living Specs)** | **OpenSpec** | Living Specs (`.opow/specs/`), Active Change Proposals (`.opow/changes/`), Delta Specs (`ADDED`, `MODIFIED`, `REMOVED`), and History Archive (`.opow/archive/`) |
-| **HOW (Execution Discipline)** | **Superpowers** | Engineering discipline: Brainstorming → Codebase Audit (`openspec-explore`) → Atomic TDD Plans (`.opow/plans/`) → Red-Green-Refactor → Verification |
+| **HOW (Execution Discipline)** | **Superpowers** | Engineering discipline: Brainstorming → Codebase Audit (`openspec-explore`) → Atomic TDD Plans (`tasks.md`) → Red-Green-Refactor → Verification |
 
 ---
 
@@ -19,10 +19,9 @@ CLI to install and auto-update **Superpowers skills** and **OpenSpec standards**
 
 - **Living Spec & Change Workspace (`.opow/`)**:
   - `.opow/specs/<domain>/spec.md`: Living specifications representing current system behavior & changelog history.
-  - `.opow/changes/YYYYMMDDHHmmss-<slug>/`: Active in-flight changes (`proposal.md`, `design.md`, `tasks.md`, delta `specs/` with YAML frontmatter).
+  - `.opow/changes/YYYYMMDDHHmmss-<slug>/`: Active in-flight changes (`proposal.md`, `design.md`, `tasks.md` enriched in-place as atomic TDD plan, delta `specs/` with YAML frontmatter).
   - `.opow/archive/YYYYMMDDHHmmss-<slug>/`: Audit history of completed changes.
   - `.opow/templates/`: Reusable templates (`proposal.md`, `design.md`, `tasks.md`, `delta.spec.md`, `living.spec.md`) with standardized YAML frontmatter.
-  - `.opow/plans/YYYYMMDDHHmmss-<slug>.plan.md`: Actionable atomic TDD implementation plans.
 - **Multi-Platform Agent Integration**:
   - **Antigravity**: `<project>/.agent/skills/` + workflows at `<project>/.agent/workflows/` + manifest at `<project>/.agent/superpowers-manifest.json`
   - **Cline**: `<project>/.cline/skills/` + workflows at `<project>/.clinerules/workflows/` + manifest at `<project>/.cline/superpowers-manifest.json`
@@ -135,38 +134,41 @@ opow uninstall -a
 ### Slash Commands & Workflows
 
 ```
-/spec ──▶ /plan ──▶ /implement ──▶ /archive
-  │                                    │
-  └──────────── /sync-spec ────────────┘
+/opow-spec ──▶ /opow-plan ──▶ /opow-implement ──▶ /opow-archive
+  │                                                   │
+  └─────────────────── /opow-sync-spec ───────────────┘
 
-(Optional standalone spike/probe: /explore)
+(Optional standalone spike/probe: /opow-explore | Fast-track bugfix <3 files: /opow-fast)
 ```
 
 | Slash Command | Purpose | Underlying Skills |
 |---|---|---|
-| **`/spec [name]`** | Selectively load `.opow/specs/<domain>/spec.md`, audit codebase (`openspec-explore`), brainstorm, and create `.opow/changes/<name>/` (`proposal`, `design`, `tasks`, delta `specs/`) | `brainstorming`, `openspec-explore`, `spec-driven-development` |
-| **`/plan [name]`** | Transform change proposal into atomic TDD implementation plan in `.opow/plans/<name>.plan.md` | `writing-plans` |
-| **`/implement`** | Set up isolated workspace (`.worktrees/<name>`), execute tasks with strict TDD & Subagents, and verify 100% of Delta Acceptance Criteria & tests | `using-git-worktrees`, `test-driven-development`, `subagent-driven-development`, `verification-before-completion` |
-| **`/archive`** | Merge delta specs & sync `Key Files / Code Map` into Living Specs (`.opow/specs/`), merge code into main, clean up worktree, and move change + plan to `.opow/archive/` | `spec-driven-development` |
-| **`/explore`** *(Optional)* | Standalone fast spike to audit codebase, dependencies, and evaluate feasibility without scaffolding files | `openspec-explore` |
-| **`/sync-spec`** | Audit code drift or Git diff and reverse-sync into OpenSpec living specs or proposals | `openspec-sync` |
+| **`/opow-spec [name]`** | Selectively load `.opow/specs/<domain>/spec.md`, audit codebase (`opow-openspec-explore`), brainstorm, and create `.opow/changes/<name>/` (`proposal`, `design`, `tasks`, delta `specs/`) | `opow-brainstorming`, `opow-openspec-explore`, `opow-spec-driven-development` |
+| **`/opow-plan [name]`** | Enrich `.opow/changes/<name>/tasks.md` in-place into an atomic TDD implementation plan | `opow-writing-plans` |
+| **`/opow-implement`** | Set up isolated workspace (`.worktrees/<name>`), execute tasks with strict TDD & Subagents, and verify 100% of Delta Acceptance Criteria & tests | `opow-using-git-worktrees`, `opow-test-driven-development`, `opow-subagent-driven-development`, `opow-verification-before-completion` |
+| **`/opow-archive`** | Merge delta specs & sync `Key Files / Code Map` into Living Specs (`.opow/specs/`), merge code into main, clean up worktree, and move change folder (with `tasks.md`) to `.opow/archive/` | `opow-spec-driven-development` |
+| **`/opow-fast`** *(Fast-Track)* | Fast-track bugfixes and small changes (<3 source files) using systematic debugging, TDD, and minimal delta tracking without `proposal.md`/`design.md` | `opow-systematic-debugging`, `opow-test-driven-development`, `opow-verification-before-completion` |
+| **`/opow-explore`** *(Optional)* | Standalone fast spike to audit codebase, dependencies, and evaluate feasibility without scaffolding files | `opow-openspec-explore` |
+| **`/opow-sync-spec`** | Audit code drift or Git diff and reverse-sync into OpenSpec living specs or proposals | `opow-openspec-sync` |
+
+*(All installed skills and workflow slash commands are prefixed with `opow-` to prevent collisions with skills/commands from other workflows.)*
 
 
 ---
 
 ### Step-by-Step Example
 
-1. **Explore & Author Change Proposal**: Type `/spec user-auth`
-   > Agent selectively reads `.opow/specs/<domain>/spec.md` (baseline capabilities & `Key Files / Code Map`), investigates existing auth flows/schemas (`openspec-explore`), brainstorms requirements, and drafts `proposal.md`, `design.md`, `tasks.md`, and delta specs (`specs/auth.spec.md`) with `ADDED` / `MODIFIED` / `REMOVED` criteria in `.opow/changes/user-auth/`.
+1. **Explore & Author Change Proposal**: Type `/opow-spec user-auth`
+   > Agent selectively reads `.opow/specs/<domain>/spec.md` (baseline capabilities & `Key Files / Code Map`), investigates existing auth flows/schemas (`opow-openspec-explore`), brainstorms requirements, and drafts `proposal.md`, `design.md`, `tasks.md`, and delta specs (`specs/auth.spec.md`) with `ADDED` / `MODIFIED` / `REMOVED` criteria in `.opow/changes/user-auth/`.
 
-2. **Generate the Plan**: Type `/plan user-auth`
-   > Agent breaks the spec into atomic tasks linked to each Acceptance Criterion and saves to `.opow/plans/user-auth.plan.md`.
+2. **Generate the Plan**: Type `/opow-plan user-auth`
+   > Agent enriches `.opow/changes/user-auth/tasks.md` in-place into atomic TDD steps linked to each Acceptance Criterion.
 
-3. **Develop & Verify in Isolated Worktree with TDD**: Type `/implement`
-   > Agent creates an isolated Git Worktree (`.worktrees/user-auth` on branch `feat/user-auth`) via `using-git-worktrees`, authors failing tests (Red), writes minimal code to pass (Green), refactors, ticks off `tasks.md`, then runs the full test suite and verifies 100% of Acceptance Criteria in `.opow/changes/user-auth/specs/` via `verification-before-completion` (keeping the worktree intact for review).
+3. **Develop & Verify in Isolated Worktree with TDD**: Type `/opow-implement`
+   > Agent creates an isolated Git Worktree (`.worktrees/user-auth` on branch `feat/user-auth`) via `opow-using-git-worktrees`, authors failing tests (Red), writes minimal code to pass (Green), refactors, ticks off `tasks.md`, then runs the full test suite and verifies 100% of Acceptance Criteria in `.opow/changes/user-auth/specs/` via `opow-verification-before-completion` (keeping the worktree intact for review).
 
-4. **Archive, Merge & Clean Up**: Type `/archive`
-   > Agent merges delta specs and syncs `Key Files / Code Map` from `design.md` into `.opow/specs/auth/spec.md` (Living Specs), merges `feat/user-auth` into `main`, removes `.worktrees/user-auth`, and moves the change folder and plan to `.opow/archive/user-auth/`.
+4. **Archive, Merge & Clean Up**: Type `/opow-archive`
+   > Agent merges delta specs and syncs `Key Files / Code Map` from `design.md` into `.opow/specs/auth/spec.md` (Living Specs), merges `feat/user-auth` into `main`, removes `.worktrees/user-auth`, and moves the change folder (including `tasks.md`) to `.opow/archive/user-auth/`.
 
 
 ---
@@ -175,19 +177,18 @@ opow uninstall -a
 
 ```
 <project>/
-├── .opow/                                # Open-Power specifications & plans
+├── .opow/                                # Open-Power specifications & changes
 │   ├── specs/                            # Living Specs (Source of Truth by domain)
 │   │   └── auth/spec.md
 │   ├── changes/                          # Active change proposals (YYYYMMDDHHmmss-<slug>)
 │   │   └── 20260901143000-user-auth/
 │   │       ├── proposal.md
 │   │       ├── design.md
-│   │       ├── tasks.md
+│   │       ├── tasks.md                  # Checklist & atomic TDD plan (enriched by /opow-plan)
 │   │       └── specs/
 │   │           └── auth.spec.md          # Delta spec (ADDED / MODIFIED / REMOVED)
 │   ├── archive/                          # Completed history archive (YYYYMMDDHHmmss-<slug>)
-│   ├── templates/                        # Reusable OpenSpec templates with YAML frontmatter
-│   └── plans/                            # Implementation plans (YYYYMMDDHHmmss-<slug>.plan.md)
+│   └── templates/                        # Reusable OpenSpec templates with YAML frontmatter
 ├── .claude/                              # Claude Code target (.claude/skills/, .claude/commands/)
 ├── .codex/                               # Codex target (.codex/skills/, .codex/workflows/)
 ├── .agent/                               # Antigravity target (.agent/skills/, .agent/workflows/)
@@ -240,6 +241,7 @@ Automated A/B benchmark harness to compare `HEAD` vs uncommitted `WORKTREE` chan
    - `npm run bench -- report --run <dir>`
    - `npm run bench -- clean --run <dir>`
    - `npm run bench:link` — install `bench-ab` skill & `/bench` workflow into `.agent/`
+
 ---
 
 ## License

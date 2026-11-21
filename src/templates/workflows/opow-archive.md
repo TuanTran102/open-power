@@ -2,13 +2,13 @@
 description: Merge verified delta specs into living specs (.opow/specs/) and move completed change to .opow/archive/.
 ---
 
-# Archive Workflow (/archive)
+# Archive Workflow (/opow-archive)
 
 **Purpose**: Finalize a completed change by updating the system's Living Specs and Changelog, merging isolated worktree code into main, cleaning up the worktree, and archiving change artifacts.
 
 ## Prerequisites
 
-- `/implement` workflow (including its `verification-before-completion` gate) has completed with **100% test pass rate** and all Delta Acceptance Criteria verified.
+- `/opow-implement` workflow (including its `opow-verification-before-completion` gate) has completed with **100% test pass rate** and all Delta Acceptance Criteria verified.
 
 ## Steps
 
@@ -22,7 +22,7 @@ description: Merge verified delta specs into living specs (.opow/specs/) and mov
      - Apply `ADDED` requirements to the living spec.
      - Update `MODIFIED` requirements in the living spec.
      - Deprecate or remove `REMOVED` requirements from the living spec.
-     - Sync `Key Files / Code Map` from `design.md`'s `Affected Files & Context Manifest` (add newly created files, keep modified files current, remove deleted files) so future `/spec` runs avoid broad repo searches.
+     - Sync `Key Files / Code Map` from `design.md`'s `Affected Files & Context Manifest` (add newly created files, keep modified files current, remove deleted files) so future `/opow-spec` runs avoid broad repo searches.
      - Keep the living spec lean and focused on current active behavior (remove superseded rules; detailed history stays in `.opow/archive/`).
      - Append entry to the `## Changelog & Audit History` section with date, `change_id`, summary, and author.
 
@@ -43,9 +43,8 @@ description: Merge verified delta specs into living specs (.opow/specs/) and mov
      git branch -d feat/<change-id>
      ```
 
-5. **Move to Archive & Clean up Plans**:
+5. **Move to Archive**:
    - Move the entire folder `.opow/changes/YYYYMMDDHHmmss-<slug>/` to `.opow/archive/YYYYMMDDHHmmss-<slug>/`.
-   - If an implementation plan exists at `.opow/plans/YYYYMMDDHHmmss-<slug>.plan.md`, move it to `.opow/archive/YYYYMMDDHHmmss-<slug>/plan.md`.
 
 6. **Sign-off**:
    - Inform the user that the change has been successfully integrated into the system's Living Specs, Changelog, and main branch.
