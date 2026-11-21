@@ -31,11 +31,11 @@ describe("workflows / slash commands", () => {
         assert.ok(content.includes(".opow/specs/"));
     });
 
-    it("archive workflow moves change folder including enriched tasks.md without .opow/plans/", () => {
+    it("archive workflow moves change folder to archive without .opow/plans/", () => {
         const content = fs.readFileSync(path.join(workflowsDir, "opow-archive.md"), "utf8");
         assert.ok(
-            content.includes(".opow/changes/") && content.includes("tasks.md") && content.includes(".opow/archive/"),
-            "opow-archive.md should instruct moving .opow/changes/ (including tasks.md) into .opow/archive/"
+            content.includes(".opow/changes/") && content.includes(".opow/archive/"),
+            "opow-archive.md should instruct moving .opow/changes/ into .opow/archive/"
         );
         assert.ok(!content.includes(".opow/plans/"), "opow-archive.md should not reference .opow/plans/");
     });

@@ -17,7 +17,7 @@ description: Execute the implementation plan using strict TDD and Subagents, the
      GIT_COMMON=$(cd "$(git rev-parse --git-common-dir 2>/dev/null)" && pwd -P)
      ```
    - If not isolated (`GIT_DIR == GIT_COMMON`), immediately create and switch:
-     1. Verify `.worktrees` is ignored: `git check-ignore -q .worktrees || (echo ".worktrees/" >> .gitignore && git commit -am "chore: ignore .worktrees")`
+     1. Verify `.worktrees` is ignored: `git check-ignore -q .worktrees/ || (echo ".worktrees/" >> .gitignore && git commit -am "chore: ignore .worktrees")`
      2. Create worktree: `git worktree add .worktrees/<change-name> -b feat/<change-name>`
    - **CRITICAL CONSTRAINT**: ALL subsequent file edits, tool calls, and test executions MUST target the `.worktrees/<change-name>/` directory. NEVER touch the root workspace during implementation.
    - Run baseline tests inside `.worktrees/<change-name>/` to verify clean state before proceeding.

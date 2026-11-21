@@ -31,7 +31,7 @@ Only when no native tool is available:
 1. **Directory priority:** Declared instruction preference > existing `.worktrees/` > existing `worktrees/` > default `.worktrees/`.
 2. **Safety check (project-local dirs):** MUST verify ignored before creating:
    ```bash
-   git check-ignore -q .worktrees 2>/dev/null || git check-ignore -q worktrees 2>/dev/null
+   git check-ignore -q .worktrees/ 2>/dev/null || git check-ignore -q worktrees/ 2>/dev/null
    ```
    If NOT ignored, add to `.gitignore` and commit before proceeding.
 3. **Create & enter:**
