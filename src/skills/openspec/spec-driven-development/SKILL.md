@@ -12,7 +12,7 @@ Use this skill whenever you are defining, designing, or implementing a new featu
 **No code without a spec. No spec without unambiguous Acceptance Criteria.**
 
 OpenSpec treats specifications as living system documentation with an explicit lifecycle:
-$$\text{Propose (Explore \& Spec)} \longrightarrow \text{Plan} \longrightarrow \text{Apply (TDD Execution)} \longrightarrow \text{Verify} \longrightarrow \text{Archive (Merge into Living Specs)}$$
+$$\text{Propose (Explore \& Spec)} \longrightarrow \text{Plan} \longrightarrow \text{Implement \& Verify (TDD)} \longrightarrow \text{Archive (Merge into Living Specs)}$$
 
 ---
 
@@ -113,13 +113,12 @@ For frontend or UI/UX features, text specifications alone can leave ambiguity in
 
 ---
 
-## 4. The 5-Step Development Loop
+## 4. The 4-Step Development Loop
 
 1. **`/spec` (Explore & Spec)**: Brainstorm requirements (`brainstorming`), audit codebase and dependencies (`openspec-explore`), and author `.opow/changes/<change-id>/` (`proposal.md`, `design.md`, `tasks.md`, delta `specs/`). Populate `Affected Files & Context Manifest` in `design.md` and link all tasks in `tasks.md` directly to concrete file paths.
 2. **`writing-plans` (`/plan`)**: Break down `tasks.md` into atomic TDD steps in `.opow/plans/<change-id>.plan.md`, inheriting explicit file manifests and test targets.
-3. **`test-driven-development` (`/implement`)**: Set up an isolated workspace via `using-git-worktrees` (`.worktrees/<change-id>`), then implement each task using Red-Green-Refactor + subagents.
-4. **`/verify` (`verification-before-completion`)**: Validate 100% Acceptance Criteria and automated test suites.
-5. **`/archive`**: Merge delta specs into living specs (`.opow/specs/`), merge feature branch into `main`, clean up `.worktrees/<change-id>`, move the change folder to `.opow/archive/<change-id>/`, and move `.opow/plans/<change-id>.plan.md` to `.opow/archive/<change-id>/plan.md`.
+3. **`/implement` (`test-driven-development` + `verification-before-completion`)**: Set up an isolated workspace via `using-git-worktrees` (`.worktrees/<change-id>`), implement each task using Red-Green-Refactor + subagents, then validate 100% of Delta Acceptance Criteria and automated test suites before handoff.
+4. **`/archive`**: Merge delta specs into living specs (`.opow/specs/`), merge feature branch into `main`, clean up `.worktrees/<change-id>`, move the change folder to `.opow/archive/<change-id>/`, and move `.opow/plans/<change-id>.plan.md` to `.opow/archive/<change-id>/plan.md`.
 
 *(Note: `/explore` remains available as an optional standalone spike command for lightweight investigations without scaffolding files).*
 

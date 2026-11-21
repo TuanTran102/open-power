@@ -1,10 +1,10 @@
 ---
-description: Execute the implementation plan using strict Test-Driven Development (TDD) and Subagents, ticking off tasks.md.
+description: Execute the implementation plan using strict TDD and Subagents, then verify 100% of Delta Acceptance Criteria and automated tests before archiving.
 ---
 
 # Implement Workflow (/implement)
 
-**Purpose**: Execute the implementation plan using isolated Git Worktrees, strict Test-Driven Development (TDD), and Subagents.
+**Purpose**: Execute the implementation plan using isolated Git Worktrees, strict Test-Driven Development (TDD), and Subagents, and validate 100% of Delta Acceptance Criteria and automated test coverage before handoff to `/archive`.
 
 ## Steps
 
@@ -44,8 +44,16 @@ description: Execute the implementation plan using strict Test-Driven Developmen
 5. **Task Completion**:
    - Check off `- [x]` in `.opow/changes/<change-name>/tasks.md` and repeat until all tasks are complete.
 
-6. **Handoff to Verify (DO NOT CLOSE WORKTREE)**:
+6. **Final Verification Gate (`verification-before-completion`)**:
+   - **Run Full Automated Test Suite**: Execute all project tests inside `.worktrees/<change-name>/` (e.g. `npm test` or `pytest`) and ensure a 100% pass rate.
+   - **Step-by-step Delta Acceptance Criteria Check**:
+     - Invoke `verification-before-completion`.
+     - Open `.opow/changes/<change-name>/specs/*.spec.md`.
+     - Walk through every single scenario (*Given - When - Then*) in the `ADDED` and `MODIFIED` sections.
+   - **Verify Living Spec Ready**: Confirm all delta requirements are implemented and ready to merge into `.opow/specs/`.
+
+7. **Handoff to Archive (DO NOT CLOSE WORKTREE)**:
    - **CRITICAL**: DO NOT merge branches, delete, or clean up `.worktrees/<change-name>`.
    - **CRITICAL**: DO NOT invoke `finishing-a-development-branch`. Worktrees are managed solely by `/archive`.
-   - Keep the worktree intact and transition immediately to `/verify`.
+   - Keep the worktree intact for user review/UAT and inform the user that implementation and verification are complete and ready for `/archive`.
 

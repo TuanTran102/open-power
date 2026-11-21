@@ -48,10 +48,10 @@ describe("skills / content validation", () => {
         assert.ok(content.includes(".pen"));
     });
 
-    it("validates spec-driven-development skill includes 5-step development loop", () => {
+    it("validates spec-driven-development skill includes 4-step development loop", () => {
         const skillPath = path.join(__dirname, "../../src/skills/openspec/spec-driven-development/SKILL.md");
         const content = fs.readFileSync(skillPath, "utf8");
-        assert.ok(content.includes("5-Step Development Loop") || content.includes("5-Step"));
+        assert.ok(content.includes("4-Step Development Loop") || content.includes("4-Step"));
         assert.ok(content.includes("openspec-explore"));
     });
 
@@ -66,17 +66,17 @@ describe("skills / content validation", () => {
         assert.ok(content.includes("execute"));
     });
 
-    it("validates subagent-driven-development hands off to /verify for OpenSpec plans", () => {
+    it("validates subagent-driven-development runs verification before /archive for OpenSpec plans", () => {
         const skillPath = path.join(__dirname, "../../src/skills/upstream/subagent-driven-development/SKILL.md");
         const content = fs.readFileSync(skillPath, "utf8");
-        assert.ok(content.includes("/verify"), "subagent-driven-development should reference /verify");
+        assert.ok(content.includes("verification-before-completion") && content.includes("/archive"), "subagent-driven-development should reference verification-before-completion and /archive");
         assert.ok(content.includes("OpenSpec") || content.includes(".opow"), "subagent-driven-development should reference OpenSpec/.opow");
     });
 
-    it("validates executing-plans hands off to /verify for OpenSpec plans", () => {
+    it("validates executing-plans runs verification before /archive for OpenSpec plans", () => {
         const skillPath = path.join(__dirname, "../../src/skills/upstream/executing-plans/SKILL.md");
         const content = fs.readFileSync(skillPath, "utf8");
-        assert.ok(content.includes("/verify"), "executing-plans should reference /verify");
+        assert.ok(content.includes("verification-before-completion") && content.includes("/archive"), "executing-plans should reference verification-before-completion and /archive");
         assert.ok(content.includes("OpenSpec") || content.includes(".opow"), "executing-plans should reference OpenSpec/.opow");
     });
 

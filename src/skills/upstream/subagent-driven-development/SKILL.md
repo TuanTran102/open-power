@@ -486,7 +486,7 @@ alone.
 
 ### Handoff and Lifecycle
 - **OpenSpec / OpenPower Workflows:** If executing a plan within OpenSpec (e.g. plan located in `.opow/plans/` or `.opow/changes/`), do NOT remove the git worktree or merge/delete the feature branch. Keep the worktree intact and announce:
-  `Done! All implementation tasks complete. Handoff to /verify.`
+  `Done! All implementation tasks complete. Run final verification (verification-before-completion) before /archive.`
 - **Standalone Plans:** For standalone plans outside OpenSpec, use `superpowers:finishing-a-development-branch`.
 
 ## Common Rationalizations

@@ -8,7 +8,7 @@ description: Merge verified delta specs into living specs (.opow/specs/) and mov
 
 ## Prerequisites
 
-- `/verify` workflow has completed with **100% test pass rate** and all Acceptance Criteria verified.
+- `/implement` workflow (including its `verification-before-completion` gate) has completed with **100% test pass rate** and all Delta Acceptance Criteria verified.
 
 ## Steps
 

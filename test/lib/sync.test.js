@@ -229,7 +229,8 @@ describe("sync & target lifecycle", () => {
         assert.ok(manifest.workflows.includes("spec"));
         assert.ok(manifest.workflows.includes("plan"));
         assert.ok(manifest.workflows.includes("implement"));
-        assert.ok(manifest.workflows.includes("verify"));
+        assert.ok(manifest.workflows.includes("archive"));
+        assert.ok(!manifest.workflows.includes("verify"));
         assert.ok(manifest.workflows.includes("sync-spec"));
         assert.equal(manifest.sourceCommit, getUpstreamCommit());
 

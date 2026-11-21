@@ -6,13 +6,12 @@ const path = require("path");
 describe("workflows / slash commands", () => {
     const workflowsDir = path.join(__dirname, "../../src/templates/workflows");
 
-    it("contains all 7 standard workflows", () => {
+    it("contains all 6 standard workflows", () => {
         const requiredWorkflows = [
             "explore.md",
             "spec.md",
             "plan.md",
             "implement.md",
-            "verify.md",
             "archive.md",
             "sync-spec.md",
         ];
@@ -20,6 +19,7 @@ describe("workflows / slash commands", () => {
             const wfPath = path.join(workflowsDir, wf);
             assert.ok(fs.existsSync(wfPath), `Missing workflow: ${wf}`);
         }
+        assert.ok(!fs.existsSync(path.join(workflowsDir, "verify.md")), "verify.md should be merged into implement.md");
     });
 
     it("archive workflow describes merging delta specs to living specs", () => {
@@ -49,10 +49,12 @@ describe("workflows / slash commands", () => {
         assert.ok(content.toLowerCase().includes("codebase"));
     });
 
-    it("implement workflow guides isolated Git Worktree setup", () => {
+    it("implement workflow guides isolated Git Worktree setup and final verification gate", () => {
         const content = fs.readFileSync(path.join(workflowsDir, "implement.md"), "utf8");
         assert.ok(content.includes("using-git-worktrees"));
         assert.ok(content.includes(".worktrees/"));
+        assert.ok(content.includes("verification-before-completion"));
+        assert.ok(content.includes("/archive"));
     });
 
     it("spec workflow guides capturing concrete file paths into design.md and tasks.md", () => {

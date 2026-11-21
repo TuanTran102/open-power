@@ -61,7 +61,7 @@ function install(targetArg) {
         console.log(`\nCommit: ${manifest.sourceCommit}`);
     }
 
-    console.log(`\n🎉 Done! Slash commands (/explore, /spec, /plan, /implement, /verify, /archive, /sync-spec) & skills are ready.`);
+    console.log(`\n🎉 Done! Slash commands (/explore, /spec, /plan, /implement, /archive, /sync-spec) & skills are ready.`);
 }
 
 module.exports = { install };
