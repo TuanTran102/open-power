@@ -12,6 +12,7 @@ description: Optional lightweight investigation to audit codebase, evaluate tech
    - Activate `openspec-explore`.
 
 2. **Investigate Codebase & Run Spikes**:
+   - Check `.opow/specs/` first: list domain folders and selectively read ONLY the relevant `.opow/specs/<domain>/spec.md` (capabilities, contracts, and `Key Files / Code Map`) before grepping the codebase.
    - Trace existing control flows, schemas, and API contracts.
    - Identify which files/services would be affected by the requested feature.
    - Check for potential breaking changes or technical constraints.

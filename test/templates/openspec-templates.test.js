@@ -60,4 +60,11 @@ describe("templates / openspec", () => {
         assert.match(livingSpecContent, /^---\n[\s\S]*?domain:/, "living.spec.md missing domain in YAML frontmatter");
         assert.match(livingSpecContent, /Changelog|History/, "living.spec.md missing Changelog section for auditability");
     });
+
+    it("living.spec.md template contains Key Files / Code Map with Source Files and Test Files", () => {
+        const content = fs.readFileSync(path.join(templatesDir, "living.spec.md"), "utf8");
+        assert.ok(content.includes("Key Files / Code Map") || content.includes("Key Files"), "living.spec.md should include Key Files / Code Map");
+        assert.ok(content.includes("Source Files"), "living.spec.md should include Source Files entry");
+        assert.ok(content.includes("Test Files"), "living.spec.md should include Test Files entry");
+    });
 });

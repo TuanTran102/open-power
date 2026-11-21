@@ -18,19 +18,23 @@ Bridge the gap between product intent and codebase reality:
 
 ## 1. Investigation Workflow
 
-1. **Locate Core Files**:
-   - Grep and inspect relevant entry points, services, and tests.
-   - Trace data flow from input to storage / output.
+1. **Load Relevant Living Specs First (Selective)**:
+   - List `.opow/specs/` domain directories; read ONLY the matching `.opow/specs/<domain>/spec.md` file(s) (never load unrelated domains into context).
+   - Use the Living Spec's capabilities, contracts, and `Key Files / Code Map` as the baseline for `MODIFIED`/`REMOVED` delta specs and targeted code inspection.
 
-2. **Assess Technical Constraints & Feasibility**:
+2. **Locate Core Files**:
+   - Start from the Living Spec's `Key Files / Code Map` when available; fall back to targeted grep only for unmapped or new areas.
+   - Inspect relevant entry points, services, and tests, and trace data flow from input to storage / output.
+
+3. **Assess Technical Constraints & Feasibility**:
    - Check framework versions, data schemas, and runtime limits.
    - Run lightweight probes / spikes if behavior is uncertain.
 
-3. **Identify Breaking Changes**:
+4. **Identify Breaking Changes**:
    - Will existing endpoints or function signatures change?
    - Will database schemas or configuration files require migration?
 
-4. **Map to OpenSpec Artifacts & Context Manifest**:
+5. **Map to OpenSpec Artifacts & Context Manifest**:
    - Summarize findings into:
      - **Proposal context**: What modules need changes and why.
      - **Affected Files & Context Manifest**: Compile concrete file paths for Target Files to Modify, Target Files to Create, Reference/Dependency Files, and Test Files to eliminate downstream repo searches.

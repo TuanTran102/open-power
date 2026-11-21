@@ -10,7 +10,11 @@ description: Author a structured OpenSpec change proposal (proposal.md, design.m
 
 1. **Clarification, Exploration & Brainstorming**:
    - Invoke `brainstorming`, `openspec-explore`, and `spec-driven-development`.
-   - **Audit Codebase**: Trace existing control flows, schemas, APIs, and identify affected files/modules or potential breaking changes. Record concrete file paths and test paths.
+   - **Read Relevant Living Specs First (Selective)**:
+     - List domain folders under `.opow/specs/` (do **NOT** read all specs blindly).
+     - Read ONLY the relevant `.opow/specs/<domain>/spec.md` file(s) matching the requested feature.
+     - Use existing capabilities, contracts, and `Key Files / Code Map` as the authoritative baseline for `MODIFIED`/`REMOVED` delta requirements and to jump straight to target files instead of broad repo grepping.
+   - **Audit Codebase**: Verify current code starting from `Key Files / Code Map` (using targeted searches only for unmapped/new areas), trace existing control flows, schemas, APIs, identify affected files/modules or potential breaking changes, and note any spec drift discovered. Record concrete file paths and test paths.
    - **Product Intent & Edge Cases**: Discuss requirements, constraints, and scope with the user.
 
 2. **Initialize Change Workspace**:

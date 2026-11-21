@@ -86,5 +86,20 @@ describe("skills / content validation", () => {
         assert.ok(content.includes("/archive"), "finishing-a-development-branch should reference /archive");
         assert.ok(content.includes("OpenSpec") || content.includes(".opow"), "finishing-a-development-branch should reference OpenSpec/.opow");
     });
+
+    it("validates openspec-explore selectively loads .opow/specs/ and Key Files before grepping code", () => {
+        const skillPath = path.join(__dirname, "../../src/skills/openspec/openspec-explore/SKILL.md");
+        const content = fs.readFileSync(skillPath, "utf8");
+        assert.ok(content.includes(".opow/specs/"), "openspec-explore should instruct loading .opow/specs/");
+        assert.ok(content.includes("Key Files"), "openspec-explore should reference Key Files before grepping code");
+    });
+
+    it("validates spec-driven-development documents selective Living Spec reading in /spec and Key Files sync in /archive", () => {
+        const skillPath = path.join(__dirname, "../../src/skills/openspec/spec-driven-development/SKILL.md");
+        const content = fs.readFileSync(skillPath, "utf8");
+        assert.ok(content.includes(".opow/specs/"), "spec-driven-development should reference .opow/specs/");
+        assert.ok(content.includes("Key Files"), "spec-driven-development should document Key Files / Code Map sync");
+        assert.ok(content.includes("Selective Living Spec"), "spec-driven-development should document selective Living Spec grounding");
+    });
 });
 

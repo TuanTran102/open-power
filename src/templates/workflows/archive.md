@@ -15,12 +15,15 @@ description: Merge verified delta specs into living specs (.opow/specs/) and mov
 1. **Locate Change Artifacts**:
    - Open `.opow/changes/YYYYMMDDHHmmss-<slug>/`.
    - Read delta specs in `.opow/changes/YYYYMMDDHHmmss-<slug>/specs/`.
+   - Read `design.md` (specifically `## 3. Affected Files & Context Manifest`) to collect finalized source and test file paths.
 
 2. **Merge into Living Specs (`.opow/specs/`) & Record Changelog**:
    - For each modified domain, update or create `.opow/specs/<domain>/spec.md`:
      - Apply `ADDED` requirements to the living spec.
      - Update `MODIFIED` requirements in the living spec.
      - Deprecate or remove `REMOVED` requirements from the living spec.
+     - Sync `Key Files / Code Map` from `design.md`'s `Affected Files & Context Manifest` (add newly created files, keep modified files current, remove deleted files) so future `/spec` runs avoid broad repo searches.
+     - Keep the living spec lean and focused on current active behavior (remove superseded rules; detailed history stays in `.opow/archive/`).
      - Append entry to the `## Changelog & Audit History` section with date, `change_id`, summary, and author.
 
 3. **Update User Documentation & README**:

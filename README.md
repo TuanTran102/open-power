@@ -144,10 +144,10 @@ opow uninstall -a
 
 | Slash Command | Purpose | Underlying Skills |
 |---|---|---|
-| **`/spec [name]`** | Audit codebase (`openspec-explore`), brainstorm, and create `.opow/changes/<name>/` (`proposal`, `design`, `tasks`, delta `specs/`) | `brainstorming`, `openspec-explore`, `spec-driven-development` |
+| **`/spec [name]`** | Selectively load `.opow/specs/<domain>/spec.md`, audit codebase (`openspec-explore`), brainstorm, and create `.opow/changes/<name>/` (`proposal`, `design`, `tasks`, delta `specs/`) | `brainstorming`, `openspec-explore`, `spec-driven-development` |
 | **`/plan [name]`** | Transform change proposal into atomic TDD implementation plan in `.opow/plans/<name>.plan.md` | `writing-plans` |
 | **`/implement`** | Set up isolated workspace (`.worktrees/<name>`), execute tasks with strict TDD & Subagents, and verify 100% of Delta Acceptance Criteria & tests | `using-git-worktrees`, `test-driven-development`, `subagent-driven-development`, `verification-before-completion` |
-| **`/archive`** | Merge delta specs into Living Specs (`.opow/specs/`), merge code into main, clean up worktree, and move change + plan to `.opow/archive/` | `spec-driven-development` |
+| **`/archive`** | Merge delta specs & sync `Key Files / Code Map` into Living Specs (`.opow/specs/`), merge code into main, clean up worktree, and move change + plan to `.opow/archive/` | `spec-driven-development` |
 | **`/explore`** *(Optional)* | Standalone fast spike to audit codebase, dependencies, and evaluate feasibility without scaffolding files | `openspec-explore` |
 | **`/sync-spec`** | Audit code drift or Git diff and reverse-sync into OpenSpec living specs or proposals | `openspec-sync` |
 
@@ -157,7 +157,7 @@ opow uninstall -a
 ### Step-by-Step Example
 
 1. **Explore & Author Change Proposal**: Type `/spec user-auth`
-   > Agent investigates existing auth flows/schemas (`openspec-explore`), brainstorms requirements, and drafts `proposal.md`, `design.md`, `tasks.md`, and delta specs (`specs/auth.spec.md`) with `ADDED` / `MODIFIED` / `REMOVED` criteria in `.opow/changes/user-auth/`.
+   > Agent selectively reads `.opow/specs/<domain>/spec.md` (baseline capabilities & `Key Files / Code Map`), investigates existing auth flows/schemas (`openspec-explore`), brainstorms requirements, and drafts `proposal.md`, `design.md`, `tasks.md`, and delta specs (`specs/auth.spec.md`) with `ADDED` / `MODIFIED` / `REMOVED` criteria in `.opow/changes/user-auth/`.
 
 2. **Generate the Plan**: Type `/plan user-auth`
    > Agent breaks the spec into atomic tasks linked to each Acceptance Criterion and saves to `.opow/plans/user-auth.plan.md`.
@@ -166,7 +166,7 @@ opow uninstall -a
    > Agent creates an isolated Git Worktree (`.worktrees/user-auth` on branch `feat/user-auth`) via `using-git-worktrees`, authors failing tests (Red), writes minimal code to pass (Green), refactors, ticks off `tasks.md`, then runs the full test suite and verifies 100% of Acceptance Criteria in `.opow/changes/user-auth/specs/` via `verification-before-completion` (keeping the worktree intact for review).
 
 4. **Archive, Merge & Clean Up**: Type `/archive`
-   > Agent merges delta specs into `.opow/specs/auth/spec.md` (Living Specs), merges `feat/user-auth` into `main`, removes `.worktrees/user-auth`, and moves the change folder and plan to `.opow/archive/user-auth/`.
+   > Agent merges delta specs and syncs `Key Files / Code Map` from `design.md` into `.opow/specs/auth/spec.md` (Living Specs), merges `feat/user-auth` into `main`, removes `.worktrees/user-auth`, and moves the change folder and plan to `.opow/archive/user-auth/`.
 
 
 ---
@@ -215,7 +215,9 @@ opow uninstall -a
 
 ---
 
-## Maintainer Workflow (Updating Upstream Skills)
+## Maintainer Workflow
+
+### Updating Upstream Skills
 
 To pull the latest upstream skills from `obra/superpowers` into the `open-power` package repository:
 
@@ -226,6 +228,54 @@ npm run sync:upstream
 # Run the test suite to verify compatibility
 npm test
 ```
+
+### Benchmarking Flow Changes (`npm run bench`)
+
+Zero-dependency hybrid harness in `scripts/benchmark.js` to evaluate workflow/skill changes on both static prompt budget and real runtime session logs:
+
+#### 1. Commands
+
+```bash
+# Diff uncommitted worktree changes against HEAD (~est. tokens across src/)
+npm run bench -- static
+
+# Diff static prompt tokens between two specific git commits/refs
+npm run bench -- static --base HEAD~1 --head HEAD
+
+# Print the current worktree static snapshot (no diff) as Markdown tables
+npm run bench -- static --no-diff --md
+
+# Parse real session JSONL log (auto-detects Antigravity, Claude Code, Codex)
+npm run bench -- session <path/to/log.jsonl> [--format agy|claude|codex] [--md|--json]
+
+# A/B comparison across multiple runs (aggregates by median)
+npm run bench -- compare \
+  --label-a Old --a runA1.jsonl,runA2.jsonl,runA3.jsonl --pass-a 2/3 \
+  --label-b New --b runB1.jsonl,runB2.jsonl,runB3.jsonl --pass-b 3/3 \
+  --md
+```
+
+#### 2. Default Session Log Locations
+
+- **Antigravity**: `~/.gemini/antigravity/brain/<conversation-id>/.system_generated/logs/transcript.jsonl`
+- **Claude Code**: `~/.claude/projects/<project-slug>/<session-id>.jsonl`
+- **Codex**: `~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl`
+
+#### 3. Interpreting Results
+
+| Metric | Meaning | Better When |
+|---|---|---|
+| `~est. tokens` (static) | Heuristic static prompt size per category and per flow (`/explore`, `/spec`, `/plan`, `/implement`, `/archive`, `/sync-spec`) | Small or justified by runtime savings |
+| `Uncached Input` | Fresh non-cached input tokens billed/processed | **Lower** |
+| `Cache Hit %` | Prompt cache reuse (`cache_read / total_input`) | **Higher** |
+| `Output` | Tokens generated by the model | **Lower** or unchanged |
+| `LLM Steps` | Model invocation turns | **Lower** |
+| `User Turns` | Human follow-up prompts / corrections (friction) | **Lower** |
+| `reads + searches` | File reads and repo search calls (measures Context Manifest / Code Map efficiency) | **Lower** |
+| `Tokens / Passing Task` | Total tokens divided by passing runs (`--pass-a` / `--pass-b`) | **Lower** |
+
+- **Verdict**: `BETTER` (key axes improved, none regressed), `WORSE` (only regressions), `MIXED` (trade-offs across axes, e.g. cheaper tokens but lower pass rate), or `NEUTRAL` (changes within noise thresholds).
+- **Warnings**: Automatically flagged when `uncached_input` rises `>10%`, `reads + searches` rises `>20%`, `user_turns` increases, or `pass_rate_pct` drops.
 
 ---
 

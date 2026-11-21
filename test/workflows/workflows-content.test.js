@@ -122,6 +122,25 @@ describe("workflows / slash commands", () => {
             "archive.md should guide updating living spec changelog"
         );
     });
+
+    it("spec workflow selectively reads .opow/specs/ and Key Files before auditing codebase", () => {
+        const content = fs.readFileSync(path.join(workflowsDir, "spec.md"), "utf8");
+        assert.ok(content.includes(".opow/specs/"), "spec.md should instruct listing/reading .opow/specs/");
+        assert.ok(content.includes("NOT") && content.toLowerCase().includes("all specs"), "spec.md should warn against reading all specs blindly");
+        assert.ok(content.includes("Key Files"), "spec.md should use Key Files as baseline before auditing codebase");
+    });
+
+    it("explore workflow checks .opow/specs/ first before grepping codebase", () => {
+        const content = fs.readFileSync(path.join(workflowsDir, "explore.md"), "utf8");
+        assert.ok(content.includes(".opow/specs/"), "explore.md should instruct checking .opow/specs/ first");
+        assert.ok(content.includes("Key Files"), "explore.md should reference Key Files / Code Map");
+    });
+
+    it("archive workflow reads design.md Context Manifest and syncs Key Files into .opow/specs/", () => {
+        const content = fs.readFileSync(path.join(workflowsDir, "archive.md"), "utf8");
+        assert.ok(content.includes("design.md") && content.includes("Context Manifest"), "archive.md should read design.md Context Manifest");
+        assert.ok(content.includes("Key Files"), "archive.md should sync Key Files into .opow/specs/");
+    });
 });
 
 

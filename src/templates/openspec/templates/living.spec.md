@@ -7,8 +7,12 @@ last_updated: YYYY-MM-DDTHH:mm:ssZ
 # Living Spec: [Domain Name]
 
 ## 1. Domain Overview
-- **Purpose**: System of record for [Domain Name] functionality.
+- **Purpose**: System of record for [Domain Name] functionality (current active behavior only; historical rationale lives in `.opow/archive/`).
 - **Owner / Subsystem**: Core responsible modules.
+- **Key Files / Code Map**:
+  *(Synced from `design.md` Context Manifest on `/archive` so future `/spec` runs jump straight to relevant code)*
+  - **Source Files**: `[path/to/module]`
+  - **Test Files**: `[path/to/test]`
 
 ## 2. Capabilities & Rules
 
