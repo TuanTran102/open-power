@@ -15,7 +15,8 @@
         "start": "node bin/cli.js",
         "test": "node --test",
         "sync:upstream": "node scripts/sync-upstream.js",
-        "bench": "node scripts/benchmark.js"
+        "bench": "node scripts/benchmark.js",
+        "bench:link": "node scripts/benchmark.js link"
     },
     "engines": {
         "node": ">=16"

@@ -1,281 +1,435 @@
 #!/usr/bin/env node
 
-const { benchmarkStatic, formatStaticReport } = require("./bench/static");
-const { parseTranscriptFile, formatSessionReport } = require("./bench/transcript");
-const { parsePassInfo, compareRuns, formatCompareReport } = require("./bench/compare");
-const { gradeTask, formatTaskList, formatGradeReport } = require("./bench/tasks");
-const { runBenchmarkSuite, formatRunReport } = require("./bench/runner");
+const childProcess = require("child_process");
+const fs = require("fs");
+const os = require("os");
+const path = require("path");
+
+const { resolveSha, exportVariant, changedFiles } = require("./bench/git-src");
+const { computeStaticSnapshot, diffStatic } = require("./bench/static");
+const { listTasks, getTask } = require("./bench/tasks");
+const { prepareWorkspace } = require("./bench/workspace");
+const { parseSession, defaultBrainDir } = require("./bench/transcript");
+const { aggregate, renderMarkdown } = require("./bench/report");
 
 const HELP_TEXT = `Usage: npm run bench -- <command> [options]
 
 Commands:
-  static [--base <ref>] [--head <ref|WORKTREE>] [--no-diff] [--json|--md]
-      Measure prompt token budget (~est. tokens) across src/ and diff git refs.
-      Defaults: --base HEAD --head WORKTREE
+  prepare [options]   Export A/B variants, build isolated workspaces, output JSON plan
+      --base <ref>        Base git ref for A (default: HEAD)
+      --head <ref>        Head git ref or WORKTREE for B (default: WORKTREE)
+      --project <path>    Copy an existing opow project instead of golden fixtures
+      --task <ids|all>    Comma-separated golden task IDs or "all" (default: all)
+      --prompt "<text>"   Custom task prompt (required with --project)
+      --check "<cmd>"     Optional shell command to grade custom --prompt (exit 0 = pass)
+      --runs <N>          Runs per variant (default: 1)
+      --target <name>     opow install target (default: antigravity)
+      --brain <dir>       Override Antigravity brain directory
 
-  session <file1> [file2 ...] [--format agy|claude|codex] [--no-subagents] [--json|--md]
-      Parse real session JSONL logs (Antigravity, Claude Code, Codex).
-      Tracks subagents recursively by default (Main / Subagents / Total + Waste + Compliance).
+  record --run <dir> --job <id> --conv <conversationId>
+      Record a subagent conversationId for a prepared job
 
-  compare --a <file[,file...]> --b <file[,file...]> [options] [--json|--md]
-      Compare group A vs B sessions using medians across multiple runs.
-      Options: --label-a <name> --label-b <name> --pass-a <P/N> --pass-b <P/N>
-               --format agy|claude|codex --no-subagents
+  report --run <dir>
+      Parse transcripts, grade workspaces, and write report.md + report.json
 
-  tasks [--json|--md]
-      List built-in golden benchmark tasks.
+  clean --run <dir>
+      Remove temporary workspaces for a run while keeping reports
 
-  grade --task <id> --cwd <dir> [--transcript <file>] [--no-subagents] [--json|--md]
-      Grade a workspace against a golden task's deterministic checks.
-
-  run --task <id[,id...]|all> --runner <claude|codex|cmd> [options] [--json|--md]
-      Run golden tasks in isolated git workspaces, grade automatically, and compare A/B.
-      Options: --runner-cmd <tpl> --runs <N> --ab --setup-a <cmd> --setup-b <cmd>
-               --label-a <name> --label-b <name> --out-dir <dir> --timeout <ms> --no-subagents
+  link
+      Install bench-ab skill and /bench workflow into .agent/
 `;
 
-function pushCommaSeparated(target, value) {
-    for (const item of String(value).split(",")) {
-        const trimmed = item.trim();
-        if (trimmed) target.push(trimmed);
-    }
+function formatTimestamp(d = new Date()) {
+    const pad = (n) => String(n).padStart(2, "0");
+    return (
+        d.getFullYear() +
+        pad(d.getMonth() + 1) +
+        pad(d.getDate()) +
+        pad(d.getHours()) +
+        pad(d.getMinutes()) +
+        pad(d.getSeconds())
+    );
 }
 
-/**
- * Parse CLI arguments for the benchmark harness.
- * @param {string[]} argv
- * @returns {object}
- */
 function parseArgs(argv) {
     const positional = [];
     const options = {
-        a: [],
-        b: [],
-        outputFormat: "text",
-        noDiff: false,
-        includeSubagents: true,
-        ab: false,
+        base: "HEAD",
+        head: "WORKTREE",
+        task: "all",
+        runs: 1,
+        target: "antigravity",
     };
 
-    const args = [...argv];
     let i = 0;
-    while (i < args.length) {
-        const token = args[i];
-        if (token === "--") {
+    while (i < argv.length) {
+        const tok = argv[i];
+        if (tok === "--") {
             i += 1;
             continue;
         }
-        if (token === "-h" || token === "--help") {
+        if (tok === "-h" || tok === "--help") {
             options.help = true;
             i += 1;
             continue;
         }
-        if (token === "--json") {
-            options.outputFormat = "json";
-            i += 1;
-            continue;
-        }
-        if (token === "--md") {
-            options.outputFormat = "md";
-            i += 1;
-            continue;
-        }
-        if (token === "--no-diff") {
-            options.noDiff = true;
-            i += 1;
-            continue;
-        }
-        if (token === "--no-subagents") {
-            options.includeSubagents = false;
-            i += 1;
-            continue;
-        }
-        if (token === "--ab") {
-            options.ab = true;
-            i += 1;
-            continue;
-        }
-
-        if (token.startsWith("--")) {
-            const eqIdx = token.indexOf("=");
-            const key = eqIdx !== -1 ? token.slice(2, eqIdx) : token.slice(2);
-            let value;
-            if (eqIdx !== -1) {
-                value = token.slice(eqIdx + 1);
+        if (tok.startsWith("--")) {
+            const eq = tok.indexOf("=");
+            const key = eq !== -1 ? tok.slice(2, eq) : tok.slice(2);
+            let val;
+            if (eq !== -1) {
+                val = tok.slice(eq + 1);
             } else {
-                if (i + 1 >= args.length) {
+                if (i + 1 >= argv.length) {
                     throw new Error(`Missing value for option --${key}`);
                 }
-                value = args[++i];
+                val = argv[++i];
             }
-
-            if (key === "a") pushCommaSeparated(options.a, value);
-            else if (key === "b") pushCommaSeparated(options.b, value);
-            else if (key === "base") options.base = value;
-            else if (key === "head") options.head = value;
-            else if (key === "format") options.format = value;
-            else if (key === "label-a") options.labelA = value;
-            else if (key === "label-b") options.labelB = value;
-            else if (key === "pass-a") options.passA = value;
-            else if (key === "pass-b") options.passB = value;
-            else if (key === "cwd") options.cwd = value;
-            else if (key === "task") options.task = value;
-            else if (key === "runner") options.runner = value;
-            else if (key === "runner-cmd") options.runnerCmd = value;
-            else if (key === "runs") options.runs = Number(value);
-            else if (key === "setup-a") options.setupA = value;
-            else if (key === "setup-b") options.setupB = value;
-            else if (key === "out-dir") options.outDir = value;
-            else if (key === "timeout") options.timeout = Number(value);
-            else if (key === "transcript") options.transcript = value;
-            else throw new Error(`Unknown option: --${key}`);
-
+            if (key === "runs") {
+                const n = Number(val);
+                if (!Number.isInteger(n) || n < 1) {
+                    throw new Error(`Invalid --runs value: ${val}`);
+                }
+                options.runs = n;
+            } else {
+                options[key] = val;
+            }
             i += 1;
             continue;
         }
-
-        positional.push(token);
+        positional.push(tok);
         i += 1;
     }
 
-    const command = positional[0] || "help";
-    return {
-        command,
-        args: positional.slice(1),
-        options,
-    };
+    return { command: positional[0] || null, options };
 }
 
-/**
- * Execute benchmark CLI command and return process exit code.
- * @param {string[]} argv
- * @param {object} [io]
- * @returns {number}
- */
-function runCli(argv, io = {}) {
-    const stdout = io.stdout || ((msg) => console.log(msg));
-    const stderr = io.stderr || ((msg) => console.error(msg));
-    const defaultCwd = io.cwd || process.cwd();
+function ensureBenchGitignore(repoRoot) {
+    const gitignorePath = path.join(repoRoot, ".gitignore");
+    if (!fs.existsSync(gitignorePath)) {
+        fs.writeFileSync(gitignorePath, ".bench/\n", "utf8");
+        return;
+    }
+    const content = fs.readFileSync(gitignorePath, "utf8");
+    const lines = content.split(/\r?\n/).map((l) => l.trim());
+    if (!lines.includes(".bench/") && !lines.includes(".bench")) {
+        const prefix = content.length > 0 && !content.endsWith("\n") ? "\n" : "";
+        fs.writeFileSync(gitignorePath, `${content}${prefix}.bench/\n`, "utf8");
+    }
+}
 
+function buildSubagentPrompt(wsDir, taskPrompt) {
+    return [
+        `Benchmark job. Work ONLY inside ${wsDir} (absolute paths; \`cd ${wsDir}\` for every command).`,
+        `Your ONLY rules/skills/workflows are in ${wsDir}/.agent/ — read the relevant ones there before acting and IGNORE any skills/rules/workflows listed in your system prompt.`,
+        `Never read/modify outside ${wsDir}. Do not ask questions; assume reasonably.`,
+        `Task: ${taskPrompt}`,
+        `Finish with \`DONE: <one line>\`.`,
+    ].join(" ");
+}
+
+function cmdPrepare(options, repoRoot = path.resolve(__dirname, "..")) {
+    const baseRef = options.base || "HEAD";
+    const headRef = options.head || "WORKTREE";
+
+    const changes = changedFiles(baseRef, headRef, repoRoot);
+    if (changes.length === 0) {
+        throw new Error(`No changes detected in bin/, src/, or package.json between ${baseRef} and ${headRef}.`);
+    }
+
+    const projectPath = options.project ? path.resolve(options.project) : null;
+    if (projectPath) {
+        if (!fs.existsSync(projectPath) || !fs.statSync(projectPath).isDirectory()) {
+            throw new Error(`Project path does not exist or is not a directory: ${projectPath}`);
+        }
+        if (!options.prompt || !options.prompt.trim()) {
+            throw new Error(`Project mode (--project) requires --prompt "<text>".`);
+        }
+    }
+
+    let taskDefs;
+    if (options.prompt) {
+        taskDefs = [{ id: "custom", prompt: options.prompt.trim(), isCustom: true }];
+    } else {
+        const requested = options.task === "all"
+            ? listTasks().map((t) => t.id)
+            : String(options.task).split(",").map((s) => s.trim()).filter(Boolean);
+        if (requested.length === 0) {
+            throw new Error("No tasks selected.");
+        }
+        taskDefs = requested.map((id) => {
+            const t = getTask(id);
+            if (!t) throw new Error(`Unknown golden task: ${id}`);
+            return { id: t.id, prompt: t.prompt, taskObj: t, isCustom: false };
+        });
+    }
+
+    const ts = formatTimestamp();
+    const runDir = path.join(repoRoot, ".bench", ts);
+    const tmpRunDir = path.join(os.tmpdir(), "opow-bench", ts);
+    fs.mkdirSync(runDir, { recursive: true });
+    fs.mkdirSync(tmpRunDir, { recursive: true });
+    ensureBenchGitignore(repoRoot);
+
+    const srcA = path.join(tmpRunDir, "src-A");
+    const srcB = path.join(tmpRunDir, "src-B");
+    exportVariant(baseRef, srcA, repoRoot);
+    exportVariant(headRef, srcB, repoRoot);
+
+    const baseSha = resolveSha(baseRef, repoRoot);
+    const warnings = [];
+    const jobs = [];
+
+    for (let run = 1; run <= options.runs; run += 1) {
+        for (const t of taskDefs) {
+            for (const variant of ["A", "B"]) {
+                const id = `${variant}-${t.id}-${run}`;
+                const wsDir = path.join(tmpRunDir, id);
+                const variantSrc = variant === "A" ? srcA : srcB;
+                const res = prepareWorkspace({
+                    variantSrc,
+                    wsDir,
+                    task: t.isCustom ? null : t.taskObj,
+                    projectPath,
+                    target: options.target || "antigravity",
+                });
+                for (const w of res.warnings || []) {
+                    if (!warnings.includes(w)) warnings.push(w);
+                }
+                jobs.push({
+                    id,
+                    variant,
+                    task: t.id,
+                    run,
+                    workspace: wsDir,
+                    prompt: buildSubagentPrompt(wsDir, t.prompt),
+                });
+            }
+        }
+    }
+
+    const plan = {
+        ts,
+        repoRoot,
+        runDir,
+        tmpRunDir,
+        srcA,
+        srcB,
+        baseRef,
+        baseSha,
+        headRef,
+        projectPath,
+        tasks: taskDefs.map((t) => t.id),
+        customPrompt: options.prompt || null,
+        check: options.check || null,
+        runs: options.runs,
+        target: options.target || "antigravity",
+        brainDir: options.brain || defaultBrainDir(),
+        changes,
+        warnings,
+        jobs,
+    };
+
+    fs.writeFileSync(path.join(runDir, "plan.json"), JSON.stringify(plan, null, 2) + "\n", "utf8");
+
+    const output = {
+        runDir,
+        jobs: jobs.map(({ id, variant, task, run, workspace, prompt }) => ({
+            id,
+            variant,
+            task,
+            run,
+            workspace,
+            prompt,
+        })),
+    };
+    return { plan, output };
+}
+
+function cmdRecord(options) {
+    if (!options.run || !options.job || !options.conv) {
+        throw new Error("record requires --run <dir> --job <id> --conv <conversationId>");
+    }
+    const runDir = path.resolve(options.run);
+    const jobsPath = path.join(runDir, "jobs.json");
+    let map = {};
+    if (fs.existsSync(jobsPath)) {
+        map = JSON.parse(fs.readFileSync(jobsPath, "utf8"));
+    }
+    map[options.job] = options.conv;
+    fs.writeFileSync(jobsPath, JSON.stringify(map, null, 2) + "\n", "utf8");
+    return { recorded: options.job, conv: options.conv };
+}
+
+function gradeCustomCheck(checkCmd, wsDir) {
     try {
-        const parsed = parseArgs(argv);
-        const { command, args, options } = parsed;
-
-        if (options.help || command === "help") {
-            stdout(HELP_TEXT);
-            return 0;
-        }
-
-        if (command === "static") {
-            const result = benchmarkStatic({
-                base: options.noDiff ? null : options.base,
-                head: options.head,
-                cwd: options.cwd || defaultCwd,
-            });
-            stdout(formatStaticReport(result, options.outputFormat));
-            return 0;
-        }
-
-        if (command === "session") {
-            if (args.length === 0) {
-                throw new Error("Please provide at least one transcript file path.");
-            }
-            const sessions = args.map((file) =>
-                parseTranscriptFile(file, {
-                    format: options.format,
-                    includeSubagents: options.includeSubagents,
-                })
-            );
-            stdout(formatSessionReport(sessions, options.outputFormat));
-            return 0;
-        }
-
-        if (command === "compare") {
-            if (options.a.length === 0 || options.b.length === 0) {
-                throw new Error("Both --a and --b transcript file lists are required.");
-            }
-            const sessionsA = options.a.map((file) =>
-                parseTranscriptFile(file, {
-                    format: options.format,
-                    includeSubagents: options.includeSubagents,
-                })
-            );
-            const sessionsB = options.b.map((file) =>
-                parseTranscriptFile(file, {
-                    format: options.format,
-                    includeSubagents: options.includeSubagents,
-                })
-            );
-            const passA = options.passA !== undefined
-                ? parsePassInfo(options.passA, sessionsA.length)
-                : null;
-            const passB = options.passB !== undefined
-                ? parsePassInfo(options.passB, sessionsB.length)
-                : null;
-
-            const result = compareRuns(sessionsA, sessionsB, {
-                labelA: options.labelA || "A",
-                labelB: options.labelB || "B",
-                passA,
-                passB,
-            });
-            stdout(formatCompareReport(result, options.outputFormat));
-            return 0;
-        }
-
-        if (command === "tasks") {
-            stdout(formatTaskList(options.outputFormat));
-            return 0;
-        }
-
-        if (command === "grade") {
-            if (!options.task) {
-                throw new Error("--task <id> is required for grade.");
-            }
-            const targetCwd = options.cwd || defaultCwd;
-            const transcript = options.transcript
-                ? parseTranscriptFile(options.transcript, {
-                    format: options.format,
-                    includeSubagents: options.includeSubagents,
-                })
-                : null;
-            const result = gradeTask(options.task, targetCwd, transcript);
-            stdout(formatGradeReport(result, options.outputFormat));
-            return result.passed ? 0 : 1;
-        }
-
-        if (command === "run") {
-            const result = runBenchmarkSuite({
-                task: options.task || "all",
-                runner: options.runner || "cmd",
-                runnerCmd: options.runnerCmd,
-                runs: options.runs,
-                ab: options.ab,
-                setupA: options.setupA,
-                setupB: options.setupB,
-                labelA: options.labelA,
-                labelB: options.labelB,
-                outDir: options.outDir,
-                timeout: options.timeout,
-                includeSubagents: options.includeSubagents,
-            });
-            stdout(formatRunReport(result, options.outputFormat));
-            return 0;
-        }
-
-        throw new Error(`Unknown command "${command}". Run with --help to see usage.`);
+        childProcess.execSync(checkCmd, {
+            cwd: wsDir,
+            encoding: "utf8",
+            stdio: ["ignore", "pipe", "pipe"],
+            timeout: 60000,
+        });
+        return { pass: true, checks: [{ name: "custom_check", pass: true, detail: "exit 0" }] };
     } catch (err) {
-        stderr(`Error: ${err.message}`);
-        return 1;
+        return {
+            pass: false,
+            checks: [{ name: "custom_check", pass: false, detail: (err.stderr || err.message || "").slice(0, 180) }],
+        };
+    }
+}
+
+function cmdReport(options) {
+    if (!options.run) {
+        throw new Error("report requires --run <dir>");
+    }
+    const runDir = path.resolve(options.run);
+    const planPath = path.join(runDir, "plan.json");
+    if (!fs.existsSync(planPath)) {
+        throw new Error(`plan.json not found in ${runDir}`);
+    }
+    const plan = JSON.parse(fs.readFileSync(planPath, "utf8"));
+    const jobsPath = path.join(runDir, "jobs.json");
+    const convMap = fs.existsSync(jobsPath) ? JSON.parse(fs.readFileSync(jobsPath, "utf8")) : {};
+
+    const gradedJobs = plan.jobs.map((job) => {
+        const convId = convMap[job.id];
+        if (!convId) {
+            return { ...job, convId: null, status: "FAILED", error: "no convId recorded", pass: false, checks: [], session: null };
+        }
+        const session = parseSession(convId, { brainDir: plan.brainDir });
+        if (!session) {
+            return { ...job, convId, status: "FAILED", error: `transcript not found for ${convId}`, pass: false, checks: [], session: null };
+        }
+
+        let gradeRes = { pass: null, checks: [] };
+        if (!plan.customPrompt) {
+            const taskObj = getTask(job.task);
+            if (taskObj) {
+                gradeRes = taskObj.grade(job.workspace, session);
+            }
+        } else if (plan.check) {
+            gradeRes = gradeCustomCheck(plan.check, job.workspace);
+        }
+
+        return {
+            ...job,
+            convId,
+            status: "OK",
+            pass: gradeRes.pass,
+            checks: gradeRes.checks,
+            session,
+        };
+    });
+
+    let staticDiff = null;
+    if (fs.existsSync(plan.srcA) && fs.existsSync(plan.srcB)) {
+        staticDiff = diffStatic(computeStaticSnapshot(plan.srcA), computeStaticSnapshot(plan.srcB));
+    }
+
+    const agg = aggregate(gradedJobs, plan.warnings || []);
+    const reportJsonPath = path.join(runDir, "report.json");
+    const reportMdPath = path.join(runDir, "report.md");
+
+    const reportData = {
+        meta: {
+            ts: plan.ts,
+            baseRef: plan.baseRef,
+            baseSha: plan.baseSha,
+            headRef: plan.headRef,
+            projectPath: plan.projectPath,
+            tasks: plan.tasks,
+            customPrompt: Boolean(plan.customPrompt),
+            runs: plan.runs,
+            runDir,
+            reportJsonPath,
+            tmpRunDir: plan.tmpRunDir,
+        },
+        changes: plan.changes,
+        staticDiff,
+        agg,
+        jobs: gradedJobs,
+    };
+
+    const markdown = renderMarkdown(reportData);
+    fs.writeFileSync(reportJsonPath, JSON.stringify(reportData, null, 2) + "\n", "utf8");
+    fs.writeFileSync(reportMdPath, markdown, "utf8");
+
+    return { markdown, reportData, reportMdPath, reportJsonPath };
+}
+
+function cmdClean(options) {
+    if (!options.run) {
+        throw new Error("clean requires --run <dir>");
+    }
+    const runDir = path.resolve(options.run);
+    const planPath = path.join(runDir, "plan.json");
+    if (!fs.existsSync(planPath)) {
+        throw new Error(`plan.json not found in ${runDir}`);
+    }
+    const plan = JSON.parse(fs.readFileSync(planPath, "utf8"));
+    if (plan.tmpRunDir && fs.existsSync(plan.tmpRunDir)) {
+        fs.rmSync(plan.tmpRunDir, { recursive: true, force: true });
+    }
+    return { cleaned: plan.tmpRunDir };
+}
+
+function cmdLink(repoRoot = path.resolve(__dirname, "..")) {
+    const srcSkill = path.join(repoRoot, "scripts", "bench", "agent", "skills", "bench-ab");
+    const dstSkill = path.join(repoRoot, ".agent", "skills", "bench-ab");
+    const srcWf = path.join(repoRoot, "scripts", "bench", "agent", "workflows", "bench.md");
+    const dstWf = path.join(repoRoot, ".agent", "workflows", "bench.md");
+
+    fs.mkdirSync(path.dirname(dstSkill), { recursive: true });
+    fs.rmSync(dstSkill, { recursive: true, force: true });
+    fs.cpSync(srcSkill, dstSkill, { recursive: true });
+
+    fs.mkdirSync(path.dirname(dstWf), { recursive: true });
+    fs.copyFileSync(srcWf, dstWf);
+
+    return { skill: dstSkill, workflow: dstWf };
+}
+
+function main() {
+    const { command, options } = parseArgs(process.argv.slice(2));
+    if (options.help || !command) {
+        process.stdout.write(HELP_TEXT);
+        return;
+    }
+
+    if (command === "prepare") {
+        const { output } = cmdPrepare(options);
+        process.stdout.write(JSON.stringify(output, null, 2) + "\n");
+    } else if (command === "record") {
+        const res = cmdRecord(options);
+        process.stdout.write(JSON.stringify(res) + "\n");
+    } else if (command === "report") {
+        const { markdown } = cmdReport(options);
+        process.stdout.write(markdown);
+    } else if (command === "clean") {
+        const res = cmdClean(options);
+        process.stdout.write(JSON.stringify(res) + "\n");
+    } else if (command === "link") {
+        const res = cmdLink();
+        process.stdout.write(`Linked bench-ab skill -> ${res.skill}\nLinked /bench workflow -> ${res.workflow}\n`);
+    } else {
+        throw new Error(`Unknown command: ${command}\n\n${HELP_TEXT}`);
     }
 }
 
 if (require.main === module) {
-    process.exitCode = runCli(process.argv.slice(2));
+    try {
+        main();
+    } catch (err) {
+        process.stderr.write(`Error: ${err.message}\n`);
+        process.exit(1);
+    }
 }
 
 module.exports = {
-    HELP_TEXT,
     parseArgs,
-    runCli,
+    cmdPrepare,
+    cmdRecord,
+    cmdReport,
+    cmdClean,
+    cmdLink,
 };
