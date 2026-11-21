@@ -236,7 +236,7 @@ Zero-dependency hybrid harness in `scripts/benchmark.js` to evaluate workflow/sk
 #### 1. Commands
 
 ```bash
-# Diff uncommitted worktree changes against HEAD (~est. tokens across src/)
+# Diff uncommitted worktree changes against HEAD (~est. tokens across src/) (default)
 npm run bench -- static
 
 # Diff static prompt tokens between two specific git commits/refs
