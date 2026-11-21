@@ -3,6 +3,8 @@
 const { benchmarkStatic, formatStaticReport } = require("./bench/static");
 const { parseTranscriptFile, formatSessionReport } = require("./bench/transcript");
 const { parsePassInfo, compareRuns, formatCompareReport } = require("./bench/compare");
+const { gradeTask, formatTaskList, formatGradeReport } = require("./bench/tasks");
+const { runBenchmarkSuite, formatRunReport } = require("./bench/runner");
 
 const HELP_TEXT = `Usage: npm run bench -- <command> [options]
 
@@ -11,13 +13,25 @@ Commands:
       Measure prompt token budget (~est. tokens) across src/ and diff git refs.
       Defaults: --base HEAD --head WORKTREE
 
-  session <file1> [file2 ...] [--format agy|claude|codex] [--json|--md]
+  session <file1> [file2 ...] [--format agy|claude|codex] [--no-subagents] [--json|--md]
       Parse real session JSONL logs (Antigravity, Claude Code, Codex).
+      Tracks subagents recursively by default (Main / Subagents / Total + Waste + Compliance).
 
   compare --a <file[,file...]> --b <file[,file...]> [options] [--json|--md]
       Compare group A vs B sessions using medians across multiple runs.
       Options: --label-a <name> --label-b <name> --pass-a <P/N> --pass-b <P/N>
-               --format agy|claude|codex
+               --format agy|claude|codex --no-subagents
+
+  tasks [--json|--md]
+      List built-in golden benchmark tasks.
+
+  grade --task <id> --cwd <dir> [--transcript <file>] [--no-subagents] [--json|--md]
+      Grade a workspace against a golden task's deterministic checks.
+
+  run --task <id[,id...]|all> --runner <claude|codex|cmd> [options] [--json|--md]
+      Run golden tasks in isolated git workspaces, grade automatically, and compare A/B.
+      Options: --runner-cmd <tpl> --runs <N> --ab --setup-a <cmd> --setup-b <cmd>
+               --label-a <name> --label-b <name> --out-dir <dir> --timeout <ms> --no-subagents
 `;
 
 function pushCommaSeparated(target, value) {
@@ -39,6 +53,8 @@ function parseArgs(argv) {
         b: [],
         outputFormat: "text",
         noDiff: false,
+        includeSubagents: true,
+        ab: false,
     };
 
     const args = [...argv];
@@ -69,10 +85,20 @@ function parseArgs(argv) {
             i += 1;
             continue;
         }
+        if (token === "--no-subagents") {
+            options.includeSubagents = false;
+            i += 1;
+            continue;
+        }
+        if (token === "--ab") {
+            options.ab = true;
+            i += 1;
+            continue;
+        }
 
         if (token.startsWith("--")) {
             const eqIdx = token.indexOf("=");
-            let key = eqIdx !== -1 ? token.slice(2, eqIdx) : token.slice(2);
+            const key = eqIdx !== -1 ? token.slice(2, eqIdx) : token.slice(2);
             let value;
             if (eqIdx !== -1) {
                 value = token.slice(eqIdx + 1);
@@ -93,6 +119,15 @@ function parseArgs(argv) {
             else if (key === "pass-a") options.passA = value;
             else if (key === "pass-b") options.passB = value;
             else if (key === "cwd") options.cwd = value;
+            else if (key === "task") options.task = value;
+            else if (key === "runner") options.runner = value;
+            else if (key === "runner-cmd") options.runnerCmd = value;
+            else if (key === "runs") options.runs = Number(value);
+            else if (key === "setup-a") options.setupA = value;
+            else if (key === "setup-b") options.setupB = value;
+            else if (key === "out-dir") options.outDir = value;
+            else if (key === "timeout") options.timeout = Number(value);
+            else if (key === "transcript") options.transcript = value;
             else throw new Error(`Unknown option: --${key}`);
 
             i += 1;
@@ -146,7 +181,10 @@ function runCli(argv, io = {}) {
                 throw new Error("Please provide at least one transcript file path.");
             }
             const sessions = args.map((file) =>
-                parseTranscriptFile(file, { format: options.format })
+                parseTranscriptFile(file, {
+                    format: options.format,
+                    includeSubagents: options.includeSubagents,
+                })
             );
             stdout(formatSessionReport(sessions, options.outputFormat));
             return 0;
@@ -157,10 +195,16 @@ function runCli(argv, io = {}) {
                 throw new Error("Both --a and --b transcript file lists are required.");
             }
             const sessionsA = options.a.map((file) =>
-                parseTranscriptFile(file, { format: options.format })
+                parseTranscriptFile(file, {
+                    format: options.format,
+                    includeSubagents: options.includeSubagents,
+                })
             );
             const sessionsB = options.b.map((file) =>
-                parseTranscriptFile(file, { format: options.format })
+                parseTranscriptFile(file, {
+                    format: options.format,
+                    includeSubagents: options.includeSubagents,
+                })
             );
             const passA = options.passA !== undefined
                 ? parsePassInfo(options.passA, sessionsA.length)
@@ -176,6 +220,46 @@ function runCli(argv, io = {}) {
                 passB,
             });
             stdout(formatCompareReport(result, options.outputFormat));
+            return 0;
+        }
+
+        if (command === "tasks") {
+            stdout(formatTaskList(options.outputFormat));
+            return 0;
+        }
+
+        if (command === "grade") {
+            if (!options.task) {
+                throw new Error("--task <id> is required for grade.");
+            }
+            const targetCwd = options.cwd || defaultCwd;
+            const transcript = options.transcript
+                ? parseTranscriptFile(options.transcript, {
+                    format: options.format,
+                    includeSubagents: options.includeSubagents,
+                })
+                : null;
+            const result = gradeTask(options.task, targetCwd, transcript);
+            stdout(formatGradeReport(result, options.outputFormat));
+            return result.passed ? 0 : 1;
+        }
+
+        if (command === "run") {
+            const result = runBenchmarkSuite({
+                task: options.task || "all",
+                runner: options.runner || "cmd",
+                runnerCmd: options.runnerCmd,
+                runs: options.runs,
+                ab: options.ab,
+                setupA: options.setupA,
+                setupB: options.setupB,
+                labelA: options.labelA,
+                labelB: options.labelB,
+                outDir: options.outDir,
+                timeout: options.timeout,
+                includeSubagents: options.includeSubagents,
+            });
+            stdout(formatRunReport(result, options.outputFormat));
             return 0;
         }
 

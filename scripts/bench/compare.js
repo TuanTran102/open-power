@@ -67,6 +67,10 @@ function aggregateSessions(sessions, passInfo = null) {
         total_input: median(sessions.map((s) => s.tokens.total_input)),
         output: median(sessions.map((s) => s.tokens.output)),
         total: median(sessions.map((s) => s.tokens.total)),
+        main_total: median(sessions.map((s) => s.breakdown?.main?.tokens?.total ?? s.tokens.total)),
+        subagent_total: median(sessions.map((s) => s.breakdown?.subagents?.tokens?.total ?? 0)),
+        subagent_count: median(sessions.map((s) => s.breakdown?.subagents?.count ?? 0)),
+        subagent_share_pct: round1(median(sessions.map((s) => s.breakdown?.subagent_token_share_pct ?? 0))),
         peak_context: median(sessions.map((s) => s.tokens.peak_context || 0)),
         cache_hit_pct: round1(median(sessions.map((s) => s.tokens.cache_hit_pct))),
         llm_steps: median(sessions.map((s) => s.steps.llm_steps)),
@@ -79,7 +83,12 @@ function aggregateSessions(sessions, passInfo = null) {
         commands: median(sessions.map((s) => s.tools.byCategory.commands)),
         subagents: median(sessions.map((s) => s.tools.byCategory.subagents)),
         other: median(sessions.map((s) => s.tools.byCategory.other)),
+        rereads: median(sessions.map((s) => s.waste?.rereads ?? 0)),
+        tool_errors: median(sessions.map((s) => s.waste?.tool_errors ?? 0)),
+        edit_retries: median(sessions.map((s) => s.waste?.edit_retries ?? 0)),
+        skills_read_count: median(sessions.map((s) => s.compliance?.skills_read?.length ?? 0)),
         duration_ms: median(sessions.map((s) => s.duration_ms)),
+        active_duration_ms: median(sessions.map((s) => s.active_duration_ms ?? s.duration_ms)),
     };
 
     if (passInfo) {
@@ -219,6 +228,27 @@ function compareRuns(sessionsA, sessionsB, options = {}) {
         warnings.push(`Exploration calls (reads + searches) increased from ${expA} to ${expB}.`);
     }
 
+    // 8. Subagent & Waste warnings
+    if (deltas.subagent_total) {
+        if (deltas.subagent_total.pct !== null && deltas.subagent_total.pct > 25) {
+            warnings.push(`Subagent tokens increased by +${deltas.subagent_total.pct}%.`);
+        } else if (
+            aggA.metrics.subagent_total === 0 &&
+            aggB.metrics.subagent_total > 0 &&
+            aggB.metrics.subagent_share_pct >= 15
+        ) {
+            warnings.push(
+                `Subagent usage introduced (${aggB.metrics.subagent_share_pct}% of total tokens).`
+            );
+        }
+    }
+    if (deltas.tool_errors && deltas.tool_errors.diff >= 2 && (deltas.tool_errors.pct === null || deltas.tool_errors.pct > 50)) {
+        warnings.push(`Tool errors increased from ${aggA.metrics.tool_errors} to ${aggB.metrics.tool_errors}.`);
+    }
+    if (deltas.rereads && deltas.rereads.diff >= 2 && (deltas.rereads.pct === null || deltas.rereads.pct > 30)) {
+        warnings.push(`File re-reads (waste) increased from ${aggA.metrics.rereads} to ${aggB.metrics.rereads}.`);
+    }
+
     let verdict = "neutral";
     if (improved > 0 && regressed === 0) verdict = "better";
     else if (regressed > 0 && improved === 0) verdict = "worse";
@@ -239,7 +269,7 @@ function compareRuns(sessionsA, sessionsB, options = {}) {
 
 function fmtValue(key, val) {
     if (val === null || val === undefined) return "n/a";
-    if (key === "duration_ms") return formatDuration(val);
+    if (key === "duration_ms" || key === "active_duration_ms") return formatDuration(val);
     if (key.endsWith("_pct")) return `${val}%`;
     return Number(val).toLocaleString("en-US");
 }
@@ -247,7 +277,7 @@ function fmtValue(key, val) {
 function fmtDelta(key, delta) {
     if (!delta || delta.diff === null) return "n/a";
     const sign = delta.diff > 0 ? "+" : "";
-    const diffStr = key === "duration_ms"
+    const diffStr = key === "duration_ms" || key === "active_duration_ms"
         ? `${delta.diff > 0 ? "+" : delta.diff < 0 ? "-" : ""}${formatDuration(Math.abs(delta.diff))}`
         : `${sign}${Number(delta.diff).toLocaleString("en-US")}`;
     const pctStr = delta.pct !== null && !key.endsWith("_pct")
@@ -273,6 +303,10 @@ function formatCompareReport(result, format = "text") {
         ["cache_write", "Cache Write"],
         ["total_input", "Total Input"],
         ["output", "Output"],
+        ["main_total", "Main Total"],
+        ["subagent_total", "Subagent Total"],
+        ["subagent_count", "Subagent Count"],
+        ["subagent_share_pct", "Subagent Share %"],
         ["total", "Total Tokens"],
         ["peak_context", "Peak Context"],
         ["cache_hit_pct", "Cache Hit %"],
@@ -284,7 +318,12 @@ function formatCompareReport(result, format = "text") {
         ["writes", "  writes"],
         ["commands", "  commands"],
         ["subagents", "  subagents"],
-        ["duration_ms", "Duration"],
+        ["rereads", "Re-reads (waste)"],
+        ["tool_errors", "Tool Errors"],
+        ["edit_retries", "Edit Retries"],
+        ["skills_read_count", "Skills Read"],
+        ["duration_ms", "Wall Duration"],
+        ["active_duration_ms", "Active Duration"],
     ];
 
     if ("pass_rate_pct" in result.deltas) {

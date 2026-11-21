@@ -17,6 +17,7 @@ const {
     categorizeTool,
     detectFormat,
     parseTranscriptFile,
+    formatSessionReport,
 } = require("../../scripts/bench/transcript");
 const {
     median,
@@ -24,6 +25,14 @@ const {
     compareRuns,
     formatCompareReport,
 } = require("../../scripts/bench/compare");
+const {
+    listTasks,
+    setupTaskWorkspace,
+    gradeTask,
+} = require("../../scripts/bench/tasks");
+const {
+    runBenchmarkSuite,
+} = require("../../scripts/bench/runner");
 
 function runGit(args, cwd) {
     return childProcess.execFileSync("git", args, {
@@ -567,5 +576,343 @@ describe("scripts / benchmark CLI e2e", () => {
             () => childProcess.execFileSync(process.execPath, [cliPath, "session", path.join(tempDir, "missing.jsonl")], { stdio: "pipe" }),
             (err) => err.status === 1
         );
+    });
+});
+
+describe("scripts / bench / subagents, waste, compliance", () => {
+    let tempDir;
+
+    beforeEach(() => {
+        tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "opow-bench-deep-"));
+    });
+
+    afterEach(() => {
+        fs.rmSync(tempDir, { recursive: true, force: true });
+    });
+
+    it("recursively discovers Antigravity subagents (parent -> child -> grandchild), prevents cycles, and supports --no-subagents", () => {
+        const mainId = "11111111-1111-1111-1111-111111111111";
+        const childId = "22222222-2222-2222-2222-222222222222";
+        const grandId = "33333333-3333-3333-3333-333333333333";
+
+        const makeLogPath = (id) => path.join(tempDir, id, ".system_generated", "logs", "transcript.jsonl");
+        for (const id of [mainId, childId, grandId]) {
+            fs.mkdirSync(path.dirname(makeLogPath(id)), { recursive: true });
+        }
+
+        fs.writeFileSync(
+            makeLogPath(mainId),
+            [
+                JSON.stringify({ step_index: 0, type: "USER_INPUT", created_at: "2026-11-21T06:00:00Z", content: "start" }),
+                JSON.stringify({
+                    step_index: 1,
+                    type: "PLANNER_RESPONSE",
+                    created_at: "2026-11-21T06:00:05Z",
+                    model: "gemini-4-neon",
+                    input_tokens: 1000,
+                    cache_read_tokens: 2000,
+                    output_tokens: 200,
+                    tool_calls: [{ name: "invoke_subagent", args: { Prompt: "go" } }],
+                }),
+                JSON.stringify({
+                    step_index: 2,
+                    type: "GENERIC",
+                    created_at: "2026-11-21T06:00:06Z",
+                    content: `Created the following subagent:\n{\n  "conversationId": "${childId}"\n}`,
+                }),
+            ].join("\n")
+        );
+
+        fs.writeFileSync(
+            makeLogPath(childId),
+            [
+                JSON.stringify({ step_index: 0, type: "USER_INPUT", created_at: "2026-11-21T06:00:06Z", content: "child task" }),
+                JSON.stringify({
+                    step_index: 1,
+                    type: "PLANNER_RESPONSE",
+                    created_at: "2026-11-21T06:00:10Z",
+                    model: "gemini-4-neon",
+                    input_tokens: 500,
+                    cache_read_tokens: 4000,
+                    output_tokens: 100,
+                    tool_calls: [{ name: "read_file", args: { Path: "src/a.js" } }],
+                }),
+                JSON.stringify({
+                    step_index: 2,
+                    type: "GENERIC",
+                    created_at: "2026-11-21T06:00:11Z",
+                    content: `Created the following subagent:\n{\n  "conversationId": "${grandId}"\n}`,
+                }),
+            ].join("\n")
+        );
+
+        // Grandchild references mainId back to test cycle protection
+        fs.writeFileSync(
+            makeLogPath(grandId),
+            [
+                JSON.stringify({ step_index: 0, type: "USER_INPUT", created_at: "2026-11-21T06:00:11Z", content: "grand task" }),
+                JSON.stringify({
+                    step_index: 1,
+                    type: "PLANNER_RESPONSE",
+                    created_at: "2026-11-21T06:00:14Z",
+                    model: "gemini-4-flash",
+                    input_tokens: 300,
+                    cache_read_tokens: 700,
+                    output_tokens: 50,
+                    tool_calls: [{ name: "grep_search", args: { Query: "foo" } }],
+                }),
+                JSON.stringify({
+                    step_index: 2,
+                    type: "GENERIC",
+                    created_at: "2026-11-21T06:00:15Z",
+                    content: `Created the following subagent:\n{\n  "conversationId": "${mainId}"\n}`,
+                }),
+            ].join("\n")
+        );
+
+        const full = parseTranscriptFile(makeLogPath(mainId));
+        assert.equal(full.breakdown.subagents.count, 2);
+        assert.equal(full.breakdown.subagents.max_depth, 2);
+        assert.equal(full.breakdown.main.tokens.total, 3200);
+        assert.equal(full.breakdown.subagents.tokens.total, 5650);
+        assert.equal(full.tokens.total, 8850);
+        assert.equal(full.tokens.peak_context, 4500);
+        assert.equal(full.steps.user_turns, 1);
+        assert.equal(full.steps.llm_steps, 3);
+        assert.equal(full.breakdown.subagent_token_share_pct, 63.8);
+
+        const md = formatSessionReport([full], "md");
+        assert.match(md, /\| Main \|/);
+        assert.match(md, /\| Subagents \(n=2, 63\.8%\) \|/);
+        assert.match(md, /\| \*\*Total\*\* \|/);
+
+        const noSub = parseTranscriptFile(makeLogPath(mainId), { includeSubagents: false });
+        assert.equal(noSub.breakdown.subagents.count, 0);
+        assert.equal(noSub.tokens.total, 3200);
+    });
+
+    it("discovers Claude Code subagents in <sessionId>/subagents/agent-*.jsonl", () => {
+        const mainFile = path.join(tempDir, "sess-123.jsonl");
+        const subDir = path.join(tempDir, "sess-123", "subagents");
+        fs.mkdirSync(subDir, { recursive: true });
+
+        fs.writeFileSync(
+            mainFile,
+            [
+                JSON.stringify({ type: "user", isSidechain: false, timestamp: "2026-11-21T06:00:00Z", sessionId: "sess-123", message: { role: "user", content: "hi" } }),
+                JSON.stringify({ type: "assistant", timestamp: "2026-11-21T06:00:05Z", sessionId: "sess-123", message: { id: "m1", model: "claude-sonnet", usage: { input_tokens: 500, cache_read_input_tokens: 1000, output_tokens: 100 }, content: [{ type: "tool_use", id: "t1", name: "Agent", input: {} }] } }),
+            ].join("\n")
+        );
+        fs.writeFileSync(
+            path.join(subDir, "agent-a1.jsonl"),
+            [
+                JSON.stringify({ type: "user", isSidechain: true, timestamp: "2026-11-21T06:00:06Z", sessionId: "sess-123", message: { role: "user", content: "sub" } }),
+                JSON.stringify({ type: "assistant", timestamp: "2026-11-21T06:00:09Z", sessionId: "sess-123", message: { id: "m2", model: "claude-haiku", usage: { input_tokens: 200, cache_read_input_tokens: 300, output_tokens: 50 }, content: [{ type: "tool_use", id: "t2", name: "Read", input: { file_path: "README.md" } }] } }),
+            ].join("\n")
+        );
+
+        const parsed = parseTranscriptFile(mainFile);
+        assert.equal(parsed.breakdown.subagents.count, 1);
+        assert.equal(parsed.breakdown.main.tokens.total, 1600);
+        assert.equal(parsed.breakdown.subagents.tokens.total, 550);
+        assert.equal(parsed.tokens.total, 2150);
+        assert.equal(parsed.steps.user_turns, 1);
+    });
+
+    it("discovers Codex subagents via parent_thread_id in sibling rollout files", () => {
+        const mainFile = path.join(tempDir, "rollout-main.jsonl");
+        const childFile = path.join(tempDir, "rollout-child.jsonl");
+
+        fs.writeFileSync(
+            mainFile,
+            [
+                JSON.stringify({ timestamp: "2026-11-21T06:00:00Z", type: "session_meta", payload: { id: "thread-main" } }),
+                JSON.stringify({ timestamp: "2026-11-21T06:00:01Z", type: "event_msg", payload: { type: "task_started" } }),
+                JSON.stringify({ timestamp: "2026-11-21T06:00:04Z", type: "event_msg", payload: { type: "token_count", info: { last_token_usage: { input_tokens: 1000 }, total_token_usage: { input_tokens: 1000, cached_input_tokens: 500, output_tokens: 100 } } } }),
+            ].join("\n")
+        );
+        fs.writeFileSync(
+            childFile,
+            [
+                JSON.stringify({ timestamp: "2026-11-21T06:00:02Z", type: "session_meta", payload: { id: "thread-sub", source: { subagent: { thread_spawn: { parent_thread_id: "thread-main" } } } } }),
+                JSON.stringify({ timestamp: "2026-11-21T06:00:03Z", type: "event_msg", payload: { type: "token_count", info: { last_token_usage: { input_tokens: 600 }, total_token_usage: { input_tokens: 600, cached_input_tokens: 200, output_tokens: 50 } } } }),
+            ].join("\n")
+        );
+
+        const parsed = parseTranscriptFile(mainFile);
+        assert.equal(parsed.breakdown.subagents.count, 1);
+        assert.equal(parsed.tokens.total, 1750);
+    });
+
+    it("tracks waste (rereads with write invalidation, tool_errors, edit_retries), active_duration_ms, and compliance", () => {
+        const file = path.join(tempDir, "waste.jsonl");
+        const lines = [
+            JSON.stringify({ step_index: 0, type: "USER_INPUT", created_at: "2026-11-21T06:00:00Z", content: "go" }),
+            JSON.stringify({
+                step_index: 1,
+                type: "PLANNER_RESPONSE",
+                created_at: "2026-11-21T06:00:04Z",
+                model: "m1",
+                input_tokens: 100,
+                cache_read_tokens: 0,
+                output_tokens: 50,
+                tool_calls: [
+                    { name: "read_file", args: { Path: ".agent/skills/test-driven-development/SKILL.md" } },
+                    { name: "read_file", args: { Path: "src/app.js", StartLine: 1, EndLine: 20 } },
+                    { name: "read_file", args: { Path: "src/app.js", StartLine: 1, EndLine: 20 } }, // waste reread
+                ],
+            }),
+            // 10-minute user idle gap before next USER_INPUT
+            JSON.stringify({ step_index: 2, type: "USER_INPUT", created_at: "2026-11-21T06:10:04Z", content: "continue" }),
+            JSON.stringify({
+                step_index: 3,
+                type: "PLANNER_RESPONSE",
+                created_at: "2026-11-21T06:10:08Z",
+                model: "m1",
+                input_tokens: 100,
+                cache_read_tokens: 0,
+                output_tokens: 50,
+                tool_calls: [
+                    { name: "edit_file", args: { Path: "src/app.js" } },
+                    { name: "read_file", args: { Path: "src/app.js", StartLine: 1, EndLine: 20 } }, // valid post-edit read, NOT waste
+                    { name: "run_command", args: { CommandLine: "npm test" } },
+                    { name: "run_command", args: { CommandLine: 'git commit -m "[20261121185000] fix: bug"' } },
+                ],
+            }),
+            JSON.stringify({ step_index: 4, type: "GENERIC", created_at: "2026-11-21T06:10:09Z", status: "DONE", content: "Command exited with code 1." }),
+            JSON.stringify({
+                step_index: 5,
+                type: "PLANNER_RESPONSE",
+                created_at: "2026-11-21T06:10:11Z",
+                model: "m1",
+                input_tokens: 100,
+                cache_read_tokens: 0,
+                output_tokens: 50,
+                tool_calls: [{ name: "edit_file", args: { Path: "src/app.js" } }], // edit retry after error
+            }),
+        ];
+        fs.writeFileSync(file, lines.join("\n"));
+
+        const parsed = parseTranscriptFile(file);
+        assert.equal(parsed.waste.rereads, 1);
+        assert.deepEqual(parsed.waste.reread_files, ["src/app.js"]);
+        assert.equal(parsed.waste.tool_errors, 1);
+        assert.equal(parsed.waste.edit_retries, 1);
+        assert.equal(parsed.active_duration_ms, 11000); // 4s + 4s + 1s + 2s (excludes 600s user gap)
+        assert.ok(parsed.duration_ms > 600000);
+        assert.deepEqual(parsed.compliance.skills_read, ["test-driven-development"]);
+        assert.equal(parsed.compliance.tests_run, 1);
+        assert.equal(parsed.compliance.commits_total, 1);
+        assert.equal(parsed.compliance.commits_with_spec_prefix, 1);
+    });
+});
+
+describe("scripts / bench / tasks & automated A/B runner", () => {
+    let tempDir;
+
+    beforeEach(() => {
+        tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "opow-bench-tasks-"));
+    });
+
+    afterEach(() => {
+        fs.rmSync(tempDir, { recursive: true, force: true });
+    });
+
+    it("lists and grades all 4 golden tasks (failing baseline vs passing solution)", () => {
+        const tasks = listTasks();
+        assert.equal(tasks.length, 4);
+
+        // 1. bugfix-tdd
+        const d1 = path.join(tempDir, "t1");
+        setupTaskWorkspace("bugfix-tdd", d1);
+        assert.equal(gradeTask("bugfix-tdd", d1).passed, false);
+        fs.writeFileSync(
+            path.join(d1, "src", "pricing.js"),
+            [
+                "function applyDiscount(price, pct) {",
+                "    if (typeof pct !== 'number' || !Number.isFinite(pct) || pct < 0 || pct > 100) {",
+                "        throw new RangeError('Invalid discount percentage');",
+                "    }",
+                "    return Math.round(price * (1 - pct / 100) * 100) / 100;",
+                "}",
+                "module.exports = { applyDiscount };",
+                "",
+            ].join("\n")
+        );
+        fs.appendFileSync(path.join(d1, "test", "pricing.test.js"), "\n// added edge test\n");
+        assert.equal(gradeTask("bugfix-tdd", d1).passed, true);
+
+        // 2. feature-spec-plan
+        const d2 = path.join(tempDir, "t2");
+        setupTaskWorkspace("feature-spec-plan", d2);
+        assert.equal(gradeTask("feature-spec-plan", d2).passed, false);
+        const cDir = path.join(d2, ".opow", "changes", "add-rate-limiter");
+        fs.mkdirSync(path.join(cDir, "specs", "rate-limit"), { recursive: true });
+        fs.writeFileSync(path.join(cDir, "proposal.md"), "# Proposal");
+        fs.writeFileSync(path.join(cDir, "design.md"), "# Design");
+        fs.writeFileSync(path.join(cDir, "tasks.md"), "- [ ] Task");
+        fs.writeFileSync(path.join(cDir, "specs", "rate-limit", "spec.md"), "- Given x\n- When y\n- Then z");
+        assert.equal(gradeTask("feature-spec-plan", d2).passed, true);
+
+        // 3. explore-impact
+        const d3 = path.join(tempDir, "t3");
+        setupTaskWorkspace("explore-impact", d3);
+        assert.equal(gradeTask("explore-impact", d3).passed, false);
+        fs.writeFileSync(
+            path.join(d3, "IMPACT_REPORT.md"),
+            "Files: config.js, session.js, auth.js\nSymbols: TOKEN_TTL_SEC, createSession, isExpired\n"
+        );
+        assert.equal(gradeTask("explore-impact", d3).passed, true);
+
+        // 4. skill-sync-rule
+        const d4 = path.join(tempDir, "t4");
+        setupTaskWorkspace("skill-sync-rule", d4);
+        assert.equal(gradeTask("skill-sync-rule", d4).passed, false);
+        const updatedRule = "# Brief Rule\n\nbe brief\nMax 3 bullet points per section\n";
+        fs.writeFileSync(path.join(d4, "src", "rules", "brief.md"), updatedRule);
+        fs.writeFileSync(path.join(d4, ".agent", "rules", "brief.md"), updatedRule);
+        assert.equal(gradeTask("skill-sync-rule", d4).passed, true);
+    });
+
+    it("executes automated A/B benchmark run via --runner cmd with subagent logs", () => {
+        const mockAgentPath = path.join(tempDir, "mock-agent.js");
+        fs.writeFileSync(
+            mockAgentPath,
+            [
+                "const fs = require('fs');",
+                "const path = require('path');",
+                "const cwd = process.env.BENCH_CWD;",
+                "const log = process.env.BENCH_LOG;",
+                "const variant = process.env.BENCH_VARIANT;",
+                "fs.writeFileSync(path.join(cwd, 'IMPACT_REPORT.md'), variant === 'B' ? 'config.js session.js auth.js TOKEN_TTL_SEC createSession isExpired' : 'incomplete');",
+                "const subId = 'aaaa1111-1111-1111-1111-111111111111';",
+                "const subPath = path.join(path.dirname(log), `${subId}.jsonl`);",
+                "fs.writeFileSync(subPath, JSON.stringify({ step_index: 0, type: 'PLANNER_RESPONSE', created_at: '2026-11-21T06:00:02Z', model: 'm1', input_tokens: variant === 'B' ? 100 : 300, cache_read_tokens: 200, output_tokens: 50, tool_calls: [{ name: 'read_file', args: { Path: 'src/config.js' } }] }));",
+                "fs.writeFileSync(log, [",
+                "  JSON.stringify({ step_index: 0, type: 'USER_INPUT', created_at: '2026-11-21T06:00:00Z', content: 'go' }),",
+                "  JSON.stringify({ step_index: 1, type: 'PLANNER_RESPONSE', created_at: '2026-11-21T06:00:01Z', model: 'm1', input_tokens: variant === 'B' ? 400 : 1000, cache_read_tokens: 500, output_tokens: 100, tool_calls: [{ name: 'invoke_subagent', args: {} }] }),",
+                "  JSON.stringify({ step_index: 2, type: 'GENERIC', created_at: '2026-11-21T06:00:02Z', content: `Created the following subagent:\\n{\"conversationId\": \"${subId}\"}` }),",
+                "].join('\\n'));",
+            ].join("\n")
+        );
+
+        const outDir = path.join(tempDir, "suite-out");
+        const result = runBenchmarkSuite({
+            task: "explore-impact",
+            runner: "cmd",
+            runnerCmd: `${process.execPath} ${mockAgentPath}`,
+            runs: 1,
+            ab: true,
+            labelA: "Old",
+            labelB: "New",
+            outDir,
+        });
+
+        assert.equal(result.mode, "ab");
+        assert.deepEqual(result.passCounts.A, { passed: 0, total: 1 });
+        assert.deepEqual(result.passCounts.B, { passed: 1, total: 1 });
+        assert.equal(result.comparison.verdict, "better");
+        assert.equal(result.comparison.b.metrics.subagent_count, 1);
+        assert.equal(result.comparison.b.metrics.pass_rate_pct, 100);
     });
 });

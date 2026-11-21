@@ -5,11 +5,7 @@ description: Use when about to claim work is complete, fixed, or passing, before
 
 # Verification Before Completion
 
-## Overview
-
-**Core principle:** Evidence before claims, always.
-
-**Violating the letter of this rule is violating the spirit of this rule.**
+**Core principle:** Evidence before claims, always. Violating the letter of this rule violates the spirit.
 
 ## The Iron Law
 
@@ -21,100 +17,31 @@ If you haven't run the verification command in this message, you cannot claim it
 
 ## The Gate Function
 
-```
-BEFORE claiming any status or expressing satisfaction:
+Before claiming any status, completion, or satisfaction:
+1. **IDENTIFY:** What command proves this claim?
+2. **RUN:** Execute the FULL command (fresh, complete).
+3. **READ:** Full output, exit code, failure count.
+4. **VERIFY:** Confirm output supports the claim (if NO, state actual status with evidence; if YES, state claim WITH evidence).
+5. **ONLY THEN:** Make the claim.
 
-1. IDENTIFY: What command proves this claim?
-2. RUN: Execute the FULL command (fresh, complete)
-3. READ: Full output, check exit code, count failures
-4. VERIFY: Does output confirm the claim?
-   - If NO: State actual status with evidence
-   - If YES: State claim WITH evidence
-5. ONLY THEN: Make the claim
-
-Skip any step = lying, not verifying
-```
-
-## Common Failures
+## Evidence Requirements
 
 | Claim | Requires | Not Sufficient |
-|-------|----------|----------------|
-| Tests pass | Test command output: 0 failures | Previous run, "should pass" |
-| Linter clean | Linter output: 0 errors | Partial check, extrapolation |
-| Build succeeds | Build command: exit 0 | Linter passing, logs look good |
-| Bug fixed | Test original symptom: passes | Code changed, assumed fixed |
-| Regression test works | Red-green cycle verified | Test passes once |
-| Agent completed | VCS diff shows changes | Agent reports "success" |
-| Requirements met | Line-by-line checklist | Tests passing |
+|---|---|---|
+| Tests pass | Fresh test output: 0 failures | Previous run, "should pass" |
+| Linter / Build clean | Fresh command output: exit 0 | Partial check, linter ≠ compiler |
+| Bug fixed | Original symptom test passes | Code changed, assumed fixed |
+| Regression test works | Red-green verified (fails without fix, passes with fix) | Passes once |
+| Agent completed | VCS diff + independent verification | Agent reports "success" |
+| Requirements met | Line-by-line spec/plan checklist verified | Tests passing alone |
 
-## Red Flags - STOP
+## Red Flags — STOP
 
-- Using "should", "probably", "seems to"
-- Expressing satisfaction before verification ("Great!", "Perfect!", "Done!", etc.)
-- About to commit/push/PR without verification
-- Trusting agent success reports
-- Relying on partial verification
-- Thinking "just this once"
-- Tired and wanting work over
-- **ANY wording implying success without having run verification**
-
-## Rationalization Prevention
-
-| Excuse | Reality |
-|--------|---------|
-| "Should work now" | RUN the verification |
-| "I'm confident" | Confidence ≠ evidence |
-| "Just this once" | No exceptions |
-| "Linter passed" | Linter ≠ compiler |
-| "Agent said success" | Verify independently |
-| "I'm tired" | Exhaustion ≠ excuse |
-| "Partial check is enough" | Partial proves nothing |
-| "Different words so rule doesn't apply" | Spirit over letter |
-
-## Key Patterns
-
-**Tests:**
-```
-✅ [Run test command] [See: 34/34 pass] "All tests pass"
-❌ "Should pass now" / "Looks correct"
-```
-
-**Regression tests (TDD Red-Green):**
-```
-✅ Write → Run (pass) → Revert fix → Run (MUST FAIL) → Restore → Run (pass)
-❌ "I've written a regression test" (without red-green verification)
-```
-
-**Build:**
-```
-✅ [Run build] [See: exit 0] "Build passes"
-❌ "Linter passed" (linter doesn't check compilation)
-```
-
-**Requirements:**
-```
-✅ Re-read plan → Create checklist → Verify each → Report gaps or completion
-❌ "Tests pass, phase complete"
-```
-
-**Agent delegation:**
-```
-✅ Agent reports success → Check VCS diff → Verify changes → Report actual state
-❌ Trust agent report
-```
+- Using "should", "probably", "seems to", or expressing satisfaction ("Great!", "Done!", "Perfect!") before verifying
+- Committing, creating PRs, moving to next task, or delegating without fresh verification
+- Trusting subagent success reports without checking VCS diff
+- Relying on partial checks or rationalizing "just this once" / "I'm confident" / "spirit over letter"
 
 ## When To Apply
 
-**ALWAYS before:**
-- ANY variation of success/completion claims
-- ANY expression of satisfaction
-- ANY positive statement about work state
-- Committing, PR creation, task completion
-- Moving to next task
-- Delegating to agents
-
-**Rule applies to:**
-- Exact phrases
-- Paraphrases and synonyms
-- Implications of success
-- ANY communication suggesting completion/correctness
+Always before any claim of completion, fix, pass, or satisfaction — including paraphrases and synonyms — and before committing, PR creation, or task handoff.

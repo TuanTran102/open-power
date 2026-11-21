@@ -111,5 +111,29 @@ describe("skills / content validation", () => {
         const sddContent = fs.readFileSync(sddPath, "utf8");
         assert.ok(sddContent.includes("200 lines") && sddContent.includes("progressively"), "spec-driven-development should instruct progressive reading for large specs");
     });
+
+    it("validates distilled upstream skills retain core gates and stay compact", () => {
+        const tddPath = path.join(__dirname, "../../src/skills/upstream/test-driven-development/SKILL.md");
+        const tddContent = fs.readFileSync(tddPath, "utf8");
+        assert.ok(tddContent.includes("NO PRODUCTION CODE WITHOUT A FAILING TEST FIRST"), "TDD should retain Iron Law");
+        assert.ok(tddContent.includes("Red-Green-Refactor"), "TDD should retain Red-Green-Refactor");
+        assert.ok(tddContent.includes("writing-good-tests.md"), "TDD should retain writing-good-tests.md link");
+        assert.ok(tddContent.includes("Red Flags"), "TDD should retain Red Flags");
+        assert.ok(tddContent.split(/\r?\n/).length <= 130, "distilled TDD skill should stay <= 130 lines");
+
+        const sddPath = path.join(__dirname, "../../src/skills/upstream/subagent-driven-development/SKILL.md");
+        const sddContent = fs.readFileSync(sddPath, "utf8");
+        assert.ok(sddContent.includes("Ruling:"), "subagent-driven-development should retain Ruling format");
+        assert.ok(sddContent.includes("progress.md"), "subagent-driven-development should retain progress.md ledger");
+        assert.ok(sddContent.includes("Round 5") || sddContent.includes("Max 5 Rounds"), "subagent-driven-development should retain 5-round fix loop/breaker");
+        assert.ok(sddContent.split(/\r?\n/).length <= 180, "distilled subagent-driven-development skill should stay <= 180 lines");
+
+        const brainPath = path.join(__dirname, "../../src/skills/upstream/brainstorming/SKILL.md");
+        const brainContent = fs.readFileSync(brainPath, "utf8");
+        assert.ok(brainContent.includes("<HARD-GATE>"), "brainstorming should retain HARD-GATE");
+        assert.ok(brainContent.includes("Spike") && brainContent.includes("Bounded") && brainContent.includes("Architectural"), "brainstorming should retain Three Paths");
+        assert.ok(brainContent.includes("Spec Self-Review"), "brainstorming should retain Spec Self-Review");
+        assert.ok(brainContent.split(/\r?\n/).length <= 130, "distilled brainstorming skill should stay <= 130 lines");
+    });
 });
 

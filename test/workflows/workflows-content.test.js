@@ -148,6 +148,18 @@ describe("workflows / slash commands", () => {
         const specContent = fs.readFileSync(path.join(workflowsDir, "spec.md"), "utf8");
         assert.ok(specContent.includes("200 lines") && specContent.includes("grep"), "spec.md should instruct progressive reading for large specs");
     });
+
+    it("implement workflow specifies lazy-loading subagent-driven-development only when delegating independent tasks", () => {
+        const content = fs.readFileSync(path.join(workflowsDir, "implement.md"), "utf8");
+        assert.ok(
+            content.toLowerCase().includes("lazy-load") && content.includes("subagent-driven-development"),
+            "implement.md should specify lazy-loading subagent-driven-development"
+        );
+        assert.ok(
+            content.includes("independent tasks"),
+            "implement.md should limit subagent-driven-development loading to independent tasks"
+        );
+    });
 });
 
 

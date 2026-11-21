@@ -32,8 +32,8 @@ description: Execute the implementation plan using strict TDD and Subagents, the
    - **Refactor**: Clean up the code while keeping all tests green.
    - **Commit**: Commit changes using the spec timestamp prefix: `git commit -m "[<timestamp>] <type>: <message>"` (e.g. `[20260902171500] feat: handle restart focus`).
 
-4. **Bounded Subagent Delegation (Optional)**:
-   - For isolated tasks, invoke `subagent-driven-development` to dispatch independent workers.
+4. **Bounded Subagent Delegation (Optional — Lazy-Load)**:
+   - **Lazy-load only**: Do NOT read or invoke `subagent-driven-development` upfront when executing small or sequential tasks directly; invoke it **only when** dispatching 2+ independent tasks to subagents.
    - **Bounded Context Handoff**: When delegating to a subagent, the prompt MUST provide:
      1. Exact target file path(s) to modify or create.
      2. Exact test file path(s) and specific test command.
