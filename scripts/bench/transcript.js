@@ -144,7 +144,7 @@ function computeDurationMs(timestamps) {
     return count >= 2 ? Math.max(0, max - min) : 0;
 }
 
-function buildTokenSummary(uncachedInput, cacheRead, cacheWrite, output, totalInputOverride = null) {
+function buildTokenSummary(uncachedInput, cacheRead, cacheWrite, output, totalInputOverride = null, peakContext = 0) {
     const totalInput = totalInputOverride !== null
         ? totalInputOverride
         : uncachedInput + cacheRead + cacheWrite;
@@ -157,6 +157,7 @@ function buildTokenSummary(uncachedInput, cacheRead, cacheWrite, output, totalIn
         total_input: totalInput,
         output,
         total,
+        peak_context: peakContext,
         cache_hit_pct: cacheHitPct,
     };
 }
@@ -208,6 +209,7 @@ function parseAntigravity(records) {
     let uncachedInput = 0;
     let cacheRead = 0;
     let output = 0;
+    let peakContext = 0;
     let llmSteps = 0;
     let userTurns = 0;
     let errors = 0;
@@ -221,9 +223,12 @@ function parseAntigravity(records) {
 
         if (r.type === "PLANNER_RESPONSE") {
             llmSteps += 1;
-            uncachedInput += Number(r.input_tokens) || 0;
-            cacheRead += Number(r.cache_read_tokens) || 0;
+            const stepIn = Number(r.input_tokens) || 0;
+            const stepCache = Number(r.cache_read_tokens) || 0;
+            uncachedInput += stepIn;
+            cacheRead += stepCache;
             output += Number(r.output_tokens) || 0;
+            peakContext = Math.max(peakContext, stepIn + stepCache);
             if (r.model) models.add(r.model);
             if (Array.isArray(r.tool_calls)) {
                 for (const tc of r.tool_calls) {
@@ -240,7 +245,7 @@ function parseAntigravity(records) {
     return {
         format: "antigravity",
         models: Array.from(models),
-        tokens: buildTokenSummary(uncachedInput, cacheRead, 0, output),
+        tokens: buildTokenSummary(uncachedInput, cacheRead, 0, output, null, peakContext),
         steps: { llm_steps: llmSteps, user_turns: userTurns, errors },
         tools,
         duration_ms: computeDurationMs(timestamps),
@@ -317,6 +322,7 @@ function parseClaude(records) {
     let cacheRead = 0;
     let cacheWrite = 0;
     let output = 0;
+    let peakContext = 0;
     const models = new Set();
     const tools = emptyToolStats();
 
@@ -324,10 +330,14 @@ function parseClaude(records) {
         if (entry.model) models.add(entry.model);
         if (entry.isError) errors += 1;
         if (entry.usage) {
-            uncachedInput += Number(entry.usage.input_tokens) || 0;
-            cacheRead += Number(entry.usage.cache_read_input_tokens) || 0;
-            cacheWrite += Number(entry.usage.cache_creation_input_tokens) || 0;
+            const uIn = Number(entry.usage.input_tokens) || 0;
+            const uCacheRead = Number(entry.usage.cache_read_input_tokens) || 0;
+            const uCacheWrite = Number(entry.usage.cache_creation_input_tokens) || 0;
+            uncachedInput += uIn;
+            cacheRead += uCacheRead;
+            cacheWrite += uCacheWrite;
             output += Number(entry.usage.output_tokens) || 0;
+            peakContext = Math.max(peakContext, uIn + uCacheRead + uCacheWrite);
         }
         for (const name of entry.toolUsesById.values()) {
             recordTool(tools, name);
@@ -340,7 +350,7 @@ function parseClaude(records) {
     return {
         format: "claude",
         models: Array.from(models),
-        tokens: buildTokenSummary(uncachedInput, cacheRead, cacheWrite, output),
+        tokens: buildTokenSummary(uncachedInput, cacheRead, cacheWrite, output, null, peakContext),
         steps: {
             llm_steps: assistantByMsgId.size,
             user_turns: userTurns,
@@ -359,6 +369,7 @@ function parseClaude(records) {
  */
 function parseCodex(records) {
     let lastTotalUsage = null;
+    let peakContext = 0;
     let tokenCountSteps = 0;
     let assistantMessageSteps = 0;
     let taskStartedTurns = 0;
@@ -383,6 +394,10 @@ function parseCodex(records) {
                 if (payload.info.total_token_usage) {
                     lastTotalUsage = payload.info.total_token_usage;
                 }
+                const lastIn = Number(payload.info.last_token_usage?.input_tokens) || 0;
+                if (lastIn > peakContext) {
+                    peakContext = lastIn;
+                }
             } else if (payload.type === "task_started") {
                 taskStartedTurns += 1;
             } else if (payload.type === "error" || payload.type === "turn_aborted") {
@@ -403,11 +418,14 @@ function parseCodex(records) {
     const cacheWrite = Number(lastTotalUsage?.cache_write_input_tokens) || 0;
     const uncachedInput = Math.max(0, totalInput - cacheRead - cacheWrite);
     const output = Number(lastTotalUsage?.output_tokens) || 0;
+    if (peakContext === 0 && tokenCountSteps === 1) {
+        peakContext = totalInput;
+    }
 
     return {
         format: "codex",
         models: Array.from(models),
-        tokens: buildTokenSummary(uncachedInput, cacheRead, cacheWrite, output, totalInput),
+        tokens: buildTokenSummary(uncachedInput, cacheRead, cacheWrite, output, totalInput, peakContext),
         steps: {
             llm_steps: tokenCountSteps > 0 ? tokenCountSteps : assistantMessageSteps,
             user_turns: taskStartedTurns > 0 ? taskStartedTurns : userMessageTurns,
@@ -495,7 +513,7 @@ function formatSessionReport(sessions, format = "text") {
         if (format === "md") {
             lines.push(`### Session: \`${s.file}\` (${s.format})`);
             lines.push(`- **Models**: ${s.models.join(", ") || "-"}`);
-            lines.push(`- **Tokens**: uncached=${formatNum(s.tokens.uncached_input)} | cache_read=${formatNum(s.tokens.cache_read)} | cache_write=${formatNum(s.tokens.cache_write)} | total_input=${formatNum(s.tokens.total_input)} | output=${formatNum(s.tokens.output)} | **cache_hit=${s.tokens.cache_hit_pct}%**`);
+            lines.push(`- **Tokens**: uncached=${formatNum(s.tokens.uncached_input)} | cache_read=${formatNum(s.tokens.cache_read)} | cache_write=${formatNum(s.tokens.cache_write)} | total_input=${formatNum(s.tokens.total_input)} | output=${formatNum(s.tokens.output)} | peak=${formatNum(s.tokens.peak_context)} | **cache_hit=${s.tokens.cache_hit_pct}%**`);
             lines.push(`- **Steps**: llm_steps=${s.steps.llm_steps}, user_turns=${s.steps.user_turns}, errors=${s.steps.errors}, duration=${formatDuration(s.duration_ms)}`);
             lines.push(`- **Tools (${s.tools.total})**: reads=${cats.reads}, searches=${cats.searches}, writes=${cats.writes}, commands=${cats.commands}, subagents=${cats.subagents}, other=${cats.other}`);
             if (s.skippedLines > 0) {
@@ -508,7 +526,7 @@ function formatSessionReport(sessions, format = "text") {
                 `  Tokens:      uncached=${formatNum(s.tokens.uncached_input)}  cache_read=${formatNum(s.tokens.cache_read)}  cache_write=${formatNum(s.tokens.cache_write)}  output=${formatNum(s.tokens.output)}`
             );
             lines.push(
-                `               total_input=${formatNum(s.tokens.total_input)}  total=${formatNum(s.tokens.total)}  cache_hit=${s.tokens.cache_hit_pct}%`
+                `               total_input=${formatNum(s.tokens.total_input)}  total=${formatNum(s.tokens.total)}  peak=${formatNum(s.tokens.peak_context)}  cache_hit=${s.tokens.cache_hit_pct}%`
             );
             lines.push(
                 `  Steps:       llm_steps=${s.steps.llm_steps}  user_turns=${s.steps.user_turns}  errors=${s.steps.errors}  duration=${formatDuration(s.duration_ms)}`

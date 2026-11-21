@@ -13,3 +13,6 @@ node_modules/
 # Open-Power & AI Agents
 .superpowers/
 .design/
+local_docs/
+AGENTS.md
+CLAUDE.md

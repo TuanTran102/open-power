@@ -67,6 +67,7 @@ function aggregateSessions(sessions, passInfo = null) {
         total_input: median(sessions.map((s) => s.tokens.total_input)),
         output: median(sessions.map((s) => s.tokens.output)),
         total: median(sessions.map((s) => s.tokens.total)),
+        peak_context: median(sessions.map((s) => s.tokens.peak_context || 0)),
         cache_hit_pct: round1(median(sessions.map((s) => s.tokens.cache_hit_pct))),
         llm_steps: median(sessions.map((s) => s.steps.llm_steps)),
         user_turns: median(sessions.map((s) => s.steps.user_turns)),
@@ -167,7 +168,27 @@ function compareRuns(sessionsA, sessionsB, options = {}) {
         regressed += 1;
     }
 
-    // 4. Friction (user turns)
+    // 4. Total tokens (prevents masking cache-heavy bloat behind cache hits)
+    const totalDelta = deltas.total;
+    if (totalDelta.pct !== null) {
+        if (totalDelta.pct <= -5) improved += 1;
+        else if (totalDelta.pct >= 5) regressed += 1;
+        if (totalDelta.pct > 15) {
+            warnings.push(`Total tokens increased by +${totalDelta.pct}%.`);
+        }
+    }
+
+    // 5. Peak context
+    const peakDelta = deltas.peak_context;
+    if (peakDelta && peakDelta.pct !== null) {
+        if (peakDelta.pct <= -5) improved += 1;
+        else if (peakDelta.pct >= 5) regressed += 1;
+        if (peakDelta.pct > 15) {
+            warnings.push(`Peak context increased by +${peakDelta.pct}%.`);
+        }
+    }
+
+    // 6. Friction (user turns) & LLM step bloat
     if (deltas.user_turns.diff < 0) {
         improved += 1;
     } else if (deltas.user_turns.diff > 0) {
@@ -176,8 +197,13 @@ function compareRuns(sessionsA, sessionsB, options = {}) {
             `User turns (friction) increased from ${aggA.metrics.user_turns} to ${aggB.metrics.user_turns}.`
         );
     }
+    if (deltas.llm_steps.pct !== null && deltas.llm_steps.pct > 20) {
+        warnings.push(
+            `LLM steps increased by +${deltas.llm_steps.pct}% (${aggA.metrics.llm_steps} -> ${aggB.metrics.llm_steps}).`
+        );
+    }
 
-    // 5. Exploration overhead (reads + searches)
+    // 7. Exploration overhead (reads + searches)
     const expA = aggA.metrics.reads + aggA.metrics.searches;
     const expB = aggB.metrics.reads + aggB.metrics.searches;
     const expDiff = expB - expA;
@@ -248,6 +274,7 @@ function formatCompareReport(result, format = "text") {
         ["total_input", "Total Input"],
         ["output", "Output"],
         ["total", "Total Tokens"],
+        ["peak_context", "Peak Context"],
         ["cache_hit_pct", "Cache Hit %"],
         ["llm_steps", "LLM Steps"],
         ["user_turns", "User Turns"],

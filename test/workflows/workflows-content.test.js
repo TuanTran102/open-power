@@ -141,6 +141,13 @@ describe("workflows / slash commands", () => {
         assert.ok(content.includes("design.md") && content.includes("Context Manifest"), "archive.md should read design.md Context Manifest");
         assert.ok(content.includes("Key Files"), "archive.md should sync Key Files into .opow/specs/");
     });
+
+    it("explore and spec workflows instruct progressive reading for large specs (>200 lines)", () => {
+        const exploreContent = fs.readFileSync(path.join(workflowsDir, "explore.md"), "utf8");
+        assert.ok(exploreContent.includes("200 lines") && exploreContent.includes("grep"), "explore.md should instruct progressive reading for large specs");
+        const specContent = fs.readFileSync(path.join(workflowsDir, "spec.md"), "utf8");
+        assert.ok(specContent.includes("200 lines") && specContent.includes("grep"), "spec.md should instruct progressive reading for large specs");
+    });
 });
 
 

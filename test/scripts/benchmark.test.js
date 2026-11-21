@@ -224,6 +224,7 @@ describe("scripts / bench / transcript", () => {
         assert.equal(parsed.tokens.total_input, 11000);
         assert.equal(parsed.tokens.output, 500);
         assert.equal(parsed.tokens.total, 11500);
+        assert.equal(parsed.tokens.peak_context, 6000);
         assert.equal(parsed.tokens.cache_hit_pct, 86.4);
         assert.equal(parsed.steps.llm_steps, 2);
         assert.equal(parsed.steps.user_turns, 1);
@@ -313,6 +314,7 @@ describe("scripts / bench / transcript", () => {
         assert.equal(parsed.tokens.cache_write, 200);
         assert.equal(parsed.tokens.total_input, 800);
         assert.equal(parsed.tokens.output, 80);
+        assert.equal(parsed.tokens.peak_context, 800);
         assert.equal(parsed.steps.llm_steps, 1);
         assert.equal(parsed.steps.user_turns, 2);
         assert.equal(parsed.tools.total, 2);
@@ -341,6 +343,9 @@ describe("scripts / bench / transcript", () => {
                 payload: {
                     type: "token_count",
                     info: {
+                        last_token_usage: {
+                            input_tokens: 1000,
+                        },
                         total_token_usage: {
                             input_tokens: 1000,
                             cached_input_tokens: 600,
@@ -366,6 +371,9 @@ describe("scripts / bench / transcript", () => {
                 payload: {
                     type: "token_count",
                     info: {
+                        last_token_usage: {
+                            input_tokens: 4000,
+                        },
                         total_token_usage: {
                             input_tokens: 5000,
                             cached_input_tokens: 4000,
@@ -387,6 +395,7 @@ describe("scripts / bench / transcript", () => {
         assert.equal(parsed.tokens.uncached_input, 1000);
         assert.equal(parsed.tokens.output, 450);
         assert.equal(parsed.tokens.total, 5450);
+        assert.equal(parsed.tokens.peak_context, 4000);
         assert.equal(parsed.tokens.cache_hit_pct, 80);
         assert.equal(parsed.steps.llm_steps, 2);
         assert.equal(parsed.steps.user_turns, 1);
@@ -477,6 +486,19 @@ describe("scripts / bench / compare", () => {
         assert.equal(resMixed.verdict, "mixed");
         assert.equal(resMixed.b.metrics.tokens_per_passing_task, null);
         assert.ok(resMixed.warnings.some((w) => /Pass rate dropped/.test(w)));
+    });
+
+    it("compareRuns flags MIXED when uncached drops but total tokens and llm_steps spike", () => {
+        const base = [makeSession({ uncached: 5000, cache: 5000, out: 1000, steps: 10, turns: 1, reads: 10, searches: 0 })];
+        const bloatedCache = [makeSession({ uncached: 2000, cache: 12000, out: 1000, steps: 15, turns: 1, reads: 10, searches: 0 })];
+        // base total = 11000, bloatedCache total = 15000 (+36.4%), steps 10 -> 15 (+50%)
+        const res = compareRuns(base, bloatedCache);
+        assert.equal(res.verdict, "mixed");
+        assert.ok(res.warnings.some((w) => /Total tokens increased/.test(w)));
+        assert.ok(res.warnings.some((w) => /LLM steps increased/.test(w)));
+
+        const md = formatCompareReport(res, "md");
+        assert.match(md, /\| Peak Context \|/);
     });
 });
 

@@ -101,5 +101,15 @@ describe("skills / content validation", () => {
         assert.ok(content.includes("Key Files"), "spec-driven-development should document Key Files / Code Map sync");
         assert.ok(content.includes("Selective Living Spec"), "spec-driven-development should document selective Living Spec grounding");
     });
+
+    it("validates openspec-explore and spec-driven-development instruct progressive reading for large specs", () => {
+        const explorePath = path.join(__dirname, "../../src/skills/openspec/openspec-explore/SKILL.md");
+        const exploreContent = fs.readFileSync(explorePath, "utf8");
+        assert.ok(exploreContent.includes("200 lines") && exploreContent.includes("grep"), "openspec-explore should instruct progressive reading for large specs");
+
+        const sddPath = path.join(__dirname, "../../src/skills/openspec/spec-driven-development/SKILL.md");
+        const sddContent = fs.readFileSync(sddPath, "utf8");
+        assert.ok(sddContent.includes("200 lines") && sddContent.includes("progressively"), "spec-driven-development should instruct progressive reading for large specs");
+    });
 });
 

@@ -18,8 +18,9 @@ Bridge the gap between product intent and codebase reality:
 
 ## 1. Investigation Workflow
 
-1. **Load Relevant Living Specs First (Selective)**:
-   - List `.opow/specs/` domain directories; read ONLY the matching `.opow/specs/<domain>/spec.md` file(s) (never load unrelated domains into context).
+1. **Load Relevant Living Specs First (Selective & Progressive)**:
+   - List `.opow/specs/` domain directories; select ONLY the matching `.opow/specs/<domain>/spec.md` file(s) (never load unrelated domains into context).
+   - **Progressive Reading for Large Specs (>200 lines)**: NEVER read an entire large spec file blindly upfront. Read only the first ~80 lines (Overview + `Key Files / Code Map`), then grep `### Requirement:` / `### Capability:` or feature keywords and read ONLY the matching line ranges needed for `MODIFIED`/`REMOVED` delta specs (skip unrelated capabilities and changelog history).
    - Use the Living Spec's capabilities, contracts, and `Key Files / Code Map` as the baseline for `MODIFIED`/`REMOVED` delta specs and targeted code inspection.
 
 2. **Locate Core Files**:

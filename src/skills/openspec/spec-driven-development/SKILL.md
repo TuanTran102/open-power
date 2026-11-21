@@ -115,7 +115,7 @@ For frontend or UI/UX features, text specifications alone can leave ambiguity in
 
 ## 4. The 4-Step Development Loop
 
-1. **`/spec` (Explore & Spec)**: List `.opow/specs/` and selectively read relevant `<domain>/spec.md` files (baseline capabilities + `Key Files / Code Map`), brainstorm requirements (`brainstorming`), audit codebase and dependencies (`openspec-explore`), and author `.opow/changes/<change-id>/` (`proposal.md`, `design.md`, `tasks.md`, delta `specs/`). Populate `Affected Files & Context Manifest` in `design.md` and link all tasks in `tasks.md` directly to concrete file paths.
+1. **`/spec` (Explore & Spec)**: List `.opow/specs/` and selectively, progressively read relevant `<domain>/spec.md` files (Overview + `Key Files / Code Map` first; for specs >200 lines, grep and read only matching requirement sections), brainstorm requirements (`brainstorming`), audit codebase and dependencies (`openspec-explore`), and author `.opow/changes/<change-id>/` (`proposal.md`, `design.md`, `tasks.md`, delta `specs/`). Populate `Affected Files & Context Manifest` in `design.md` and link all tasks in `tasks.md` directly to concrete file paths.
 2. **`writing-plans` (`/plan`)**: Break down `tasks.md` into atomic TDD steps in `.opow/plans/<change-id>.plan.md`, inheriting explicit file manifests and test targets.
 3. **`/implement` (`test-driven-development` + `verification-before-completion`)**: Set up an isolated workspace via `using-git-worktrees` (`.worktrees/<change-id>`), implement each task using Red-Green-Refactor + subagents, then validate 100% of Delta Acceptance Criteria and automated test suites before handoff.
 4. **`/archive`**: Merge delta specs into living specs (`.opow/specs/`) and sync `Key Files / Code Map` from `design.md`, merge feature branch into `main`, clean up `.worktrees/<change-id>`, move the change folder to `.opow/archive/<change-id>/`, and move `.opow/plans/<change-id>.plan.md` to `.opow/archive/<change-id>/plan.md`.
@@ -127,7 +127,7 @@ For frontend or UI/UX features, text specifications alone can leave ambiguity in
 ## 5. File Manifest Pipeline & Bounded Subagent Execution
 
 To eliminate token waste and redundant codebase searches across workflows:
-1. **Selective Living Spec Grounding (Closed Read-Write Loop)**: `/spec` lists `.opow/specs/` and reads only relevant `<domain>/spec.md` (`Key Files / Code Map` + active contracts) before searching code; `/archive` writes updated `Key Files / Code Map` back from `design.md` and keeps Living Specs lean.
+1. **Selective Living Spec Grounding (Closed Read-Write Loop)**: `/spec` lists `.opow/specs/` and progressively reads only the relevant `<domain>/spec.md` (Overview + `Key Files / Code Map` first, and for specs >200 lines grepping and reading only matching requirement sections instead of loading full spec files into context) before searching code; `/archive` writes updated `Key Files / Code Map` back from `design.md` and keeps Living Specs lean.
 2. **Explicit File Manifest Pipeline**: `/spec` records exact file paths into `design.md` (`Affected Files & Context Manifest`) and `tasks.md`. `/plan` carries these concrete paths forward into atomic plan steps.
 3. **Bounded Subagent Delegation**: When dispatching subagents in `/implement`, provide exact target files, test files, and test commands. Subagents are strictly forbidden from executing unconstrained repo grepping or open-ended workspace exploration when paths are already defined in the plan.
 
