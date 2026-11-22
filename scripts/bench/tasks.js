@@ -28,7 +28,11 @@ function initGitRepo(workDir, commitMsg = "chore: initial fixture") {
 
 function getGitChangedFiles(workDir) {
     try {
-        const tracked = runGit(["diff", "--name-only", "HEAD"], workDir)
+        const rootCommit = runGit(["rev-list", "--max-parents=0", "HEAD"], workDir)
+            .split(/\r?\n/)
+            .map((s) => s.trim())
+            .filter(Boolean)[0] || "HEAD";
+        const tracked = runGit(["diff", "--name-only", rootCommit], workDir)
             .split(/\r?\n/)
             .filter(Boolean);
         const untracked = runGit(["ls-files", "--others", "--exclude-standard"], workDir)

@@ -254,6 +254,34 @@ describe("golden task graders", () => {
         const passRes = task.grade(ws);
         assert.equal(passRes.pass, true);
     });
+
+    it("bugfix-tdd passes when changes are committed to main", () => {
+        const ws = makeTempDir("bench-task-committed-");
+        const task = getTask("bugfix-tdd");
+        task.setup(ws);
+
+        fs.writeFileSync(
+            path.join(ws, "src", "pricing.js"),
+            [
+                "function applyDiscount(price, pct) {",
+                "    if (!Number.isFinite(pct) || pct < 0 || pct > 100) throw new RangeError('Invalid pct');",
+                "    return Math.round(price * (1 - pct / 100) * 100) / 100;",
+                "}",
+                "module.exports = { applyDiscount };",
+            ].join("\n")
+        );
+        fs.appendFileSync(
+            path.join(ws, "test", "pricing.test.js"),
+            "\n// committed test update\n"
+        );
+        childProcess.execFileSync("git", ["add", "."], { cwd: ws });
+        childProcess.execFileSync("git", ["commit", "-m", "fix: applyDiscount"], { cwd: ws });
+
+        const passRes = task.grade(ws);
+        assert.equal(passRes.pass, true);
+        const testsUpdated = passRes.checks.find((c) => c.name === "tests_updated");
+        assert.equal(testsUpdated.pass, true);
+    });
 });
 
 describe("end-to-end prepare -> record -> report -> clean", () => {
